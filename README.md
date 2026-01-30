@@ -8,6 +8,14 @@ Currently (2026) does not compile with recent versions of LaTeX...  Working on t
 The PDF version of the thesis can be found at the [University of Melbourne library](http://cat.lib.unimelb.edu.au/record=b2867173).
 
 
+List of changes
+---------------
+
+List of changes in order for the LaTeX file to compile are:
+
+* Replaced the deprecated [doublespace](https://ctan.org/pkg/doublespace?lang=en) package with [setspace](https://ctan.org/pkg/setspace).
+
+
 About PhD Thesis
 ----------------
 
