@@ -8,7 +8,10 @@
 \usepackage{bibcheck}
 
 \usepackage{colortab}     %%  Coloured tables (\LCC and \ECC commands)
-\usepackage{doublespace}
+
+%\usepackage{doublespace}
+\usepackage{setspace}     %%  Substitute for deprecated doublespace package (2026/01/30)
+
 \usepackage{dpfloat}      %%  Double-paged floats
 %\usepackage[light]{draftcopy}
 
@@ -22,7 +25,8 @@
 \usepackage{longtable}
 \usepackage{multirow}     %%  Span multiple rows
 
-\usepackage[square,comma]{natbib_citeref}  %%  For bibliographies
+%\usepackage[square,comma]{natbib_citeref}  %%  For bibliographies
+\usepackage[square,comma]{natbib}  %%  Substitute with standard package (2026/01/30)
 %%%\usepackage{backref}
 %%%\usepackage[pageref]{backrefx}
 \usepackage{citeref}  %%  Must be loaded after natbib_citeref

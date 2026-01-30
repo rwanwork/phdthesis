@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-##  Script replaces \color[rgb]{0,0,0} is a pstex_t file to nothing.
+##  Script replaces \color[rgb]{0,0,0} in a pstex_t file to nothing.
 ##  Date:  2002/09/05
 
 use diagnostics;
