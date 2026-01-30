@@ -5,6 +5,8 @@ LaTeX source code for my PhD thesis, submitted in late 2003
 
 Currently (2026) does not compile with recent versions of LaTeX...  Working on this...
 
+The PDF version of the thesis can be found at the [University of Melbourne library](http://cat.lib.unimelb.edu.au/record=b2867173).
+
 
 About PhD Thesis
 ----------------
