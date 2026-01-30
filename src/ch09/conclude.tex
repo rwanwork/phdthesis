@@ -1,0 +1,207 @@
+\newchapter{Summary}{chap:summary}
+
+This thesis details the
+compromises required in order to satisfy the two opposing
+tasks of compression and phrase browsing.
+While a compression system reduces the size of a document by
+removing any redundancies,
+a retrieval system generally augments redundant information to the
+document in order to facilitate efficient access.  These 
+two document management methods usually exist in 
+isolation; but this thesis considers the costs and benefits
+of combining them.  Throughout, the compromise
+between retrieval and compression has translated into a 
+balance between disk space and retrieval time.
+
+\chapref{chap:tc} began with an overview of the foundations
+of text compression, and continued by listing three
+complete compression systems (\gzip, \bzip,
+and \ppmd) and two coding mechanisms (arithmetic coding and
+Huffman coding) as examples.
+In \chapref{chap:repair}, a fourth compression program called 
+\repair \citep{lm00:procieee} was introduced.  Character-based
+\repair, as it was later called, reduces the length of a document
+(or message) by recursively replacing the most frequently 
+occurring pair of symbols with a new symbol until no pair of 
+adjacent symbols exists twice or more in the message.
+\repair produces a phrase hierarchy which is encoded
+using chiastic slide and interpolative coding, and a sequence
+whose coding is varied.
+
+The \repair system forms the basis of the 
+retrieval system in this thesis because of two other properties.  
+As a dictionary-based compression mechanism, the decoding 
+time is fast, an important concern for interactive retrieval
+systems.  Also, the phrase hierarchy is
+both compact and rich with information.  After encoding, it 
+occupies only 0.223 bpc compared to the original data, 
+but contains information about the characters in
+the document and the relationships they form to make partial
+or complete words and phrases.  A retrieval system based on
+browsing these symbols has the
+advantage of not requiring any of the auxiliary data structures 
+to be permanently stored.
+\chapref{chap:repair} concluded by noting three drawbacks to 
+character-based \repair, which are addressed by the enhancements that
+form the main body of this thesis.
+
+\chapref{chap:prepair} added a pre-processing step to \repair
+called \prepair.  The \prepair system separates a message
+into two alternating streams of word tokens and non-word tokens.
+Each of these streams is accompanied by a lexicon.  Word tokens
+are also case folded and stemmed in the interest of reducing
+the size of the word lexicons, resulting in a total of seven
+streams.  
+Pairing rules are augmented to \repair to prevent phrases
+from straddling punctuation marks.
+Combining all of these additions results in a system called
+punctuation-aligned \repair.  The phrase hierarchy,
+coupled with the word lexicon, now contains the words that 
+occur in the document and the relationships they form to make
+phrases.
+
+In order to tackle the problem of memory usage,
+\chapref{chap:remerge} first described how \citet{lm00:procieee}
+segments a large message into blocks.
+Then, \remerge was described as a method of combining compressed
+blocks in phases.  An extension to \remerge 
+which allows text to be appended to a previously compressed
+document is also presented.
+
+\chapref{chap:review} looks at alternative encoding mechanisms 
+for the reduced word sequence and the three
+modifier streams (case folding, stemming, and non-words).
+The reduced word sequence is encoded with
+a byte-aligned coder called \review, while the modifiers 
+are encoded with an indexed variant of \shuff.  The decision
+to switch to these methods from \shuff was based on improved
+access times rather than compression effectiveness.
+
+Attention shifted from compression to phrase 
+browsing in \chapref{chap:rephine}.  The \rephine system 
+enables the symbols
+that make up the phrase hierarchy to be browsed, and the 
+contexts in which they occur to be retrieved.  Symbols
+can be extended, or broken into their components.
+Once a symbol of interest has been isolated, the reduced word
+sequence is searched for the symbol in question,
+and the contexts are
+displayed one-by-one.  Further refinement through the 
+inclusion of case folding, stemming, and intervening non-word
+characters is also possible.
+
+\chapref{chap:web} takes a detour from the primary theme of the
+thesis by looking at the issue of web page delivery and compression.
+
+\newsection{Putting it all together}{sec:summary-all}
+
+The systems mentioned from \chapref{chap:repair} to
+\chapref{chap:rephine} work in concert to provide document storage 
+and browsing.  Together, they are nicknamed
+\restore, and are summarised in \figref{fig:conclude-restore}.
+In the figure, boxes indicate the major components that comprise
+\restore, while lines between them indicate the flow of data.
+On the right side of the figure, the
+matching chapter of each system is shown.
+
+\fig{\includegraphics*{./restore.eps}}
+{A sketch of the overall \restore system, with relevant
+chapters indicated.}{Sketch of the \restore system}
+{fig:conclude-restore}
+
+As the pieces of \restore came together, the loss in
+compression effectiveness in order to satisfy browsing has
+been noted throughout the thesis.  Overall, the compression 
+effectiveness of the \news document has
+worsened from 1.674 bpc with \ppmd to 2.523 bpc with 
+punctuation-aligned \repair.  Similarly, by
+building a retrieval system on top of a compression mechanism,
+drawbacks become apparent.  For example, the browser
+is unable to accurately judge the usefulness of symbols in 
+the phrase hierarchy, and resorts to displaying all of them 
+instead.  This is the equilibrium point between compression
+and browsing for \restore.  
+
+Opportunities exist for future work that may end
+up bringing compression and browsing closer together.  
+For example, as
+\figref{fig:prepair-bargraph-all} on \pgref{fig:prepair-bargraph-all}
+shows, the modifiers add almost 1.0 bpc to the compressed message
+when encoded independently with \shuff.  Compression levels would probably
+improve if these three streams were compressed together, so that 
+the context for any one stream is formed from the two remaining
+ones.  While compression levels closer to character-based \repair
+might then be attained, the effect on browsing would need to 
+be re-assessed.
+
+\secref{sec:rephine-summary} gave few directions for possible
+improvements to phrase browsing.  One suggestion is
+filtering primitives and phrases from \rephine so that only
+useful ones are shown.  Alternatively, a ranking scheme can
+be adopted which shows interesting symbols at the top of a
+\rephine window.  Another important direction for \restore is
+to modify the appending phase of \remerge (\secref{sec:remerge-append}
+on \pgref{sec:remerge-append}) to allow novel words to be
+handled.  Then, documents larger than \mib{1,000} can be processed.
+
+\newsection{Towards the Future}{sec:summary-future}
+
+Compression and information retrieval are both well-studied
+areas in the field of document management.  However, the 
+successful coupling of these two areas offers new opportunities
+for future work.  Effective storage and improved accessibility 
+ensure that collected data can accumulate while still remaining
+useful.
+
+But is there room in information retrieval for phrase browsing?
+This question can be divided into two parts.  First, is there a need
+for phrase browsing?  Also, are there challenges in developing
+phrase browsing?  
+
+A closer look at how people approach new books will help in addressing 
+the first question.  Indexes and 
+table of contents help people expedite their search for information
+between book covers.  However,
+the words and phrases that lie on these pages also allow the 
+reader to browse the book, essentially
+for free.  No extra amount of work needs to be expended 
+by the author or the publisher to facilitate browsing.  
+If electronic documents are extensions of books, then it is 
+expected that the
+tools already available for the latter will be useful for the former.
+
+So, the problem for phrase browsing is to adapt concepts
+from printed matter to electronic media.  Solutions employed
+by index-based systems cannot be replicated for phrase
+browsing.  While metrics such as precision and recall
+have been established for querying, the effectiveness of phrase browsing
+is more difficult to measure.  Precision and recall 
+indicate how well a system has performed and how it
+compares to other systems.
+While phrase browsing can be assessed through 
+user studies, precise work in this area is notoriously difficult.
+Also, the techniques and data structures
+for index-based systems differ from what is needed
+in a phrase browsing system.
+
+In an ideal situation, 
+an information retrieval system should provide a selection
+of tools which can appeal to a variety of users.  Index-based
+querying and phrase browsing are two possible tools, and just as
+this thesis has looked at combining compression with phrase browsing,
+another area of work may lie in combining multiple information
+retrieval techniques into a single, succinct system.
+
+Not only are tools merging to form more complex systems, but 
+the format of data is changing as well.
+While this thesis has presented techniques for browsing 
+compressed document collections in \sgml markup, the documents
+have been treated like flat text.  As more documents are published
+electronically with \sgml or \xml markup, compressing and
+browsing them using the tags is becoming another important 
+direction for the future.
+The structural information in these document formats might
+improve compression levels and allow users to selectively
+browse parts of the documents.
+
+

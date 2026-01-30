@@ -1,0 +1,362 @@
+\newchapter{Porter Stemming Algorithm}{chap:porter}
+
+The Porter stemming algorithm was originally described 
+by \citet{porter80:program} and later reprinted in 1997.  
+The algorithm is used
+in the word-based and punctuation-aligned \repair variants
+to stem 
+words to their root form by removing word suffixes.  
+\chapref{chap:prepair} provides details of
+the different methods of selecting phrases for \repair 
+and how the word-based pre-processor, \prepair, 
+incorporates the algorithm.
+This appendix provides information specific to the
+stemming algorithm, with emphasis on the modifiers for
+stemming reversal.
+
+The version of the algorithm employed by \prepair 
+transforms an English word 
+into its root form by applying a sequence of six independent
+steps for suffix removal.  Step 0 is the first step and
+consists of a single action.
+Step 1 is composed of multiple
+sub-steps (1a to 1c), unlike Steps 2, 3, and 4.
+And step 5 consists of 
+two sub-steps (5a and 5b), applied one after the other.  
+Each step consists of rules which 
+either remove characters from the end of the word, or change
+characters at the end of the word, or do a combination of both.
+A rule is applied if a certain set of conditions is met.  
+Some possible conditions include a match on the suffix,
+or a minimum number of consonant and vowel 
+combinations before the stem.  
+
+Some changes to the traditional implementation of the 
+Porter stemming algorithm were necessary for 
+the implementation found in \prepair.  
+The differences are as follows:
+
+\begin{enumerate}
+\item If a word ends in ``logi'', then the final ``i'' is
+removed. (New rule for step 2)
+\item If a word ends in ``bli'', then the final ``i'' is
+changed to an ``e''.  (Updated rule for step 2.)
+\item Words of length 3 characters or less, or 
+which are \sgml tags that end with a ``\tg'' character are 
+not processed.
+\item Seven contractions which include the apostrophe are 
+removed in step 0.
+\end{enumerate}
+
+The first two changes were suggested by 
+\citeauthor{porter80:program} on the web page created for 
+the algorithm, located at 
+\myurl{http://www.tartarus.org/~martin/PorterStemmer/}.  
+The last two changes were added specifically for \prepair.
+The third change prevents short words from being
+stemmed further and improves overall efficiency.  In an \sgml
+document, word tokens which end with a ``\tg'' character
+would not be stemmed according to the algorithm.  The 
+modification to the algorithm allows \prepair to identify 
+tags immediately, without attempting to stem them.  
+The last change introduces a step 0 to the stemming
+mechanism in \prepair for the removal of certain suffixes
+which include an apostrophe.  The seven contractions
+identified by step 0 are some of the most common ones in
+English \citep[pg.~217]{fm93:book}.  In particular, they
+include contractions where a verb occurs with the 
+word ``not'', or when a pronoun is followed by an 
+auxiliary verb.  In other cases not covered by these rules,
+the apostrophe is treated as a non-word during parsing.
+For example, ``o'clock'' contains two word tokens,
+with the first one being the letter ``o'' by itself.
+As an example of the apostrophe handling, 
+the word ``king's'' is first treated as a single word token.
+Step 0 removes the apostrophe
+and the ``s'', since the ``s'' is too short to be useful for 
+phrase browsing.  The alternative would result in
+``king'' and ``s'' being processed as two separate word tokens,
+to the detriment of any subsequent phrase searching.
+
+In this investigation, stemming is required for compression,
+and must be reversible.
+To achieve reversibility, a modifier is stored along with the
+stemmed word to indicate which rules must be applied to invert the
+stemming process.  While the stemming process requires 
+knowledge about the length of the word token and the 
+characters which precede the stem, the inverse is more mechanical
+and applies the steps from 5b to 0 without checking the word.
+Moreover, in the algorithm, several rules within a step
+remove the same suffix, but based on different conditions on the
+characters preceding the suffix.  Since the inverse of all of
+these rules add the same suffix back, they can be combined
+into a single modifier.
+The first rule of every step indicates
+that the step was not used.  Only one rule is 
+applied per step.
+
+\tabref{tab:porter-bits} lists the steps in the order 
+in which they are applied 
+when decoding.  Since each step is 
+independent of other steps, a modifier for a word token is
+23 bits in length.  The table
+also lists the number of rules per step.  In a few cases,
+the number of possible rules that can be represented by 
+the bits allocated exceeds the actual number of rules.  For
+example, 5 bits for step 4 can account for 32 rules.  
+While the size of the modifier could be reduced by merging
+steps, the steps were separated due to encoding and decoding
+efficiency reasons.  \chapref{chap:review} takes a closer
+look at the distribution of stemming modifiers when 
+coding the stream of stemming modifiers is examined.
+
+\tab{ccc}
+{\multirow{2}*{Step} & Number   & Number  \\
+                         & of Rules & of Bits \\}
+{
+5b     & \D2        & \D1       \\
+5a     & \D2        & \D1       \\
+\D4    & 20         & \D5       \\
+\D3    & \D8        & \D3       \\
+\D2    & 15         & \D4       \\
+1c     & \D2        & \D1       \\
+1b     & \D7       & \D3       \\
+1a     & \D3        & \D2       \\
+0      & \D8        & \D3       \\
+\hline
+Total: & 67         & 23      \\
+}
+{
+The steps in \prepair's version of the Porter 
+stemming algorithm.  The steps are listed in the order they
+are used when decoding.  The second column lists the number
+of rules in each step.  The number of bits required 
+to express which rule was used in that step is shown in the third 
+column.  In total, a 23-bit modifier is required for each word 
+token to indicate how to reverse the stemming.}
+{Steps in \prepair's version of the Porter stemming algorithm}
+{tab:porter-bits}
+
+The remainder of this appendix shows the decoding rules for
+each step.  Each rule applies changes to the current word, 
+\stem.  
+In the following tables, most rules appear in the 
+following form:  \stemchange{e}{ional}.  
+This means that the letter ``e'' which ends the word is
+replaced with ``ional''.  
+Other rules may simply append the suffix on to the word,
+without any prior changes to the word.
+
+As an example of how stemming is reversed, suppose the initial
+stemmed word token is ``commun'' and its corresponding modifier 
+is:  { 0, (2, 0, 0), 7, 1, 5, (0, 0) }.  Step 0 is represented
+by the first ``0'', and parentheses
+have been inserted around the composite steps 1 and 5 
+to improve legibility. \tabref{tab:porter-example} demonstrates 
+how the modifier is used to recover the original word,
+``communications'', starting from step 5b.
+
+\tab{ccl}
+{
+Step & Value & Word (\stem) \\
+}
+{
+     &      & commun \\
+5b   & 0    & commun \\
+5a   & 0    & commun \\
+4    & 5    & communic \\
+3    & 1    & communicate \\
+2    & 7    & communication \\
+1c   & 0    & communication \\
+1b   & 0    & communication \\
+1a   & 2    & communications \\
+0    & 0    & communications \\
+}{Example of transforming the word ``commun'' back to the
+original word ``communications'' using its corresponding
+modifier, starting from step 5b.  No changes are
+applied to the word whenever rule 0 is found.}
+{Example of reversing stemming}
+{tab:porter-example}
+
+\fig{
+\begin{tabularx}{14cm}{XX}
+  \begin{tabular}[t]{cp{4cm}}
+  \hline
+  Value & \multicolumn{1}{c}{Rule} \\
+  \hline
+  0 & No change to \stem \\
+  1 & Double final letter in \stem \\
+  \hline
+  \end{tabular}
+
+  & 
+
+  \begin{tabular}[t]{cp{4cm}}
+  \hline
+  Value & \multicolumn{1}{c}{Rule} \\
+  \hline
+  0 & No change to \stem \\
+  1 & \stemadd{e} \\
+  \hline
+  \end{tabular}                         \\
+
+  \multicolumn{1}{c}{(b) Step 5b requires 1 bit.} & \multicolumn{1}{c}{(a) Step 5a requires 1 bit.} \\
+\end{tabularx}
+}{Porter stemming algorithm -- step 5.}{Porter stemming algorithm -- step 5}
+{fig:porter-5}
+
+\fig{
+\begin{tabularx}{14cm}{XX}
+  \begin{tabular}[t]{cp{4cm}}
+  \hline
+  Value & \multicolumn{1}{c}{Rule} \\
+  \hline
+  0  & No change to \stem \\
+  1  & \stemadd{al} \\
+  2  & \stemadd{ance} \\
+  3  & \stemadd{ence} \\
+  4  & \stemadd{er} \\
+  5  & \stemadd{ic} \\
+  6  & \stemadd{able} \\
+  7  & \stemadd{ible} \\
+  8  & \stemadd{ant} \\
+  9  & \stemadd{ement} \\
+  \hline
+  \end{tabular}
+
+  &
+
+  \begin{tabular}[t]{cp{4cm}}
+  \hline
+  Value & \multicolumn{1}{c}{Rule} \\
+  \hline
+  10 & \stemadd{ment} \\
+  11 & \stemadd{ent} \\
+  12 & \stemadd{ion} \\
+  13 & \stemadd{ou} \\
+  14 & \stemadd{ism} \\
+  15 & \stemadd{ate} \\
+  16 & \stemadd{iti} \\
+  17 & \stemadd{ous} \\
+  18 & \stemadd{ive} \\
+  19 & \stemadd{ize} \\
+  \hline
+  \end{tabular}               \\
+  \multicolumn{2}{c}{Step 4 requires 5 bits.} \\
+\end{tabularx}
+}{Porter stemming algorithm -- step 4.}{Porter stemming algorithm -- step 4}
+{fig:porter-4}
+
+
+\fig{
+\begin{tabularx}{14cm}{XX}
+  \begin{tabular}[t]{cp{4cm}}
+  \hline
+  Value & \multicolumn{1}{c}{Rule} \\
+  \hline
+  0 & No change to \stem \\
+  1 & \stemadd{ate} \\
+  2 & \stemadd{ative} \\
+  3 & \stemadd{ize} \\
+  4 & \stemadd{iti} \\
+  5 & \stemadd{al} \\
+  6 & \stemadd{ful} \\
+  7 & \stemadd{ness} \\
+  \hline
+  \end{tabular}
+
+  &
+
+  \begin{tabular}[t]{cp{4cm}}
+  \hline
+  Value & \multicolumn{1}{c}{Rule} \\
+  \hline
+  \D0 & No change to \stem \\
+  \D1 & \stemchange{e}{ional} \\
+  \D2 & \stemadd{al} \\
+  \D3 & \stemchange{e}{i} \\
+  \D4 & \stemadd{r} \\
+  \D5 & \stemadd{li} \\
+  \D6 & \stemchange{e}{ation} \\
+  \D7 & \stemchange{e}{ion} \\
+  \D8 & \stemchange{e}{or} \\
+  \D9 & \stemadd{ism} \\
+  10  & \stemadd{ness} \\
+  11  & \stemadd{iti} \\
+  12  & \stemchange{e}{iti} \\
+  13  & \stemchange{le}{iliti} \\
+  14  & \stemadd{i}                    \\
+  \hline
+  \end{tabular}               \\
+  \multicolumn{1}{c}{(a) Step 3 requires 3 bits.} & \multicolumn{1}{c}{(b) Step 2 requires 4 bits.} \\
+\end{tabularx}
+}{Porter stemming algorithm -- steps 3 and 2.}{Porter stemming algorithm -- steps 3 and 2}
+{fig:porter-32}
+
+\fig{
+\begin{tabularx}{14cm}{XX}
+  \begin{tabular}[t]{cp{4cm}}
+  \hline
+  Value & \multicolumn{1}{c}{Rule} \\
+  \hline
+  0  & No change to \stem \\
+  1  & \stemchange{i}{y} \\
+  \hline
+  \end{tabular}
+
+  &
+
+  \begin{tabular}[t]{cp{4cm}}
+  \hline
+  Value & \multicolumn{1}{c}{Rule} \\
+  \hline
+  0  & No change to \stem \\
+  1  & \stemadd{ed} \\
+  2  & \stemadd{d} \\
+  3  & Double the final letter in \stem\ and then apply \stemadd{ed} \\
+  4  & \stemadd{ing} \\
+  5  & \stemchange{e}{ing} \\
+  6  & Double the final letter in \stem\ and then apply \stemadd{ing} \\
+  \hline
+  \end{tabular}                       \\
+
+  \multicolumn{1}{c}{(c) Step 1c requires 1 bit.} & \multicolumn{1}{c}{(b) Step 1b requires 3 bits.} \\
+
+  \begin{tabular}[t]{cp{4cm}}
+  \hline
+  Value & \multicolumn{1}{c}{Rule} \\
+  \hline
+  0  & No change to \stem \\
+  1  & \stemadd{es} \\
+  2  & \stemadd{s} \\
+  \hline
+  \end{tabular}
+
+  & \\
+  \multicolumn{1}{c}{(a) Step 1a requires 2 bits.} & \\
+\end{tabularx}
+}{Porter stemming algorithm -- step 1.}{Porter stemming algorithm -- step 1}
+{fig:porter-1}
+
+
+\fig{
+  \begin{tabularx}{7cm}{X}
+  \begin{tabular}[t]{cp{4cm}}
+  \hline
+  Value & \multicolumn{1}{c}{Rule} \\
+  \hline
+  0  &  No change to \stem \\
+  1  &  \stemadd{'d} \\
+  2  &  \stemadd{'m} \\
+  3  &  \stemadd{'s} \\
+  4  &  \stemadd{'t} \\
+  5  &  \stemadd{'ll} \\
+  6  &  \stemadd{'re} \\
+  7  &  \stemadd{'ve} \\
+  \hline
+  \end{tabular}                       \\
+  \multicolumn{1}{c}{Step 0 requires 3 bits.} \\
+  \end{tabularx}
+}{Porter stemming algorithm -- step 0.}{Porter stemming algorithm -- step 0}
+{fig:porter-0}
+

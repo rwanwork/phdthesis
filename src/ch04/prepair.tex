@@ -1,0 +1,1596 @@
+\newchapter{Selecting Phrases for Browsing}{chap:prepair}
+
+The previous chapter showed how \repair reduces a message by
+repeatedly selecting active phrases, replacing their corresponding
+active pairs with new symbols, and adding these new symbols
+to the phrase hierarchy.  Active phrases are chosen in order of
+decreasing number of active pairs, with ties broken by choosing
+the active phrase created first.
+
+\repair's approach to phrase construction uses primitives as the
+smallest building block in the phrase hierarchy.
+In the previous chapter, primitives were defined as
+the \eascii representations used in the message.  However, 
+people do not view messages as characters, but as clusters of
+alphabetic characters which form words with 
+whitespace characters in between.
+A user that browses phrases drawn
+from a \repair phrase hierarchy should be presented with 
+meaningful words rather than arbitrary strings of characters that 
+might not align with word boundaries.  In order to accomplish
+this, \repair needs to treat whitespace and non-whitespace
+characters differently.
+
+This chapter considers the problem of how \repair can build a
+phrase hierarchy made up of useful phrases for
+browsing.  The policy used by \repair to select phrases based on
+decreasing frequency alone is insufficient for this purpose.
+Three alternative methods are considered which complement
+\repair's phrase selection heuristic.  
+
+The remainder of this chapter is structured as follows.  
+In \secref{sec:prepair-intro}, an overview of information
+retrieval and compression systems which operate on words rather
+than characters is provided, along with the definition of ``word''
+that is used in this chapter.
+Then, the three methods of extending
+\repair are examined.  In \secref{sec:prepair-align},
+the first method adds rules to \repair in order to align words 
+to the word boundaries implied by the non-words that 
+surround them.  The second method introduces
+a word-based pre-processing phase which explicitly separates a
+document into two streams:  one for words and the other for non-words.
+In \secref{sec:prepair-puncbased}, a third method combines the first two
+methods by using the word-based pre-processing step with a
+new set of rules for punctuation marks.
+\secref{sec:prepair-expt} compares these three methods, and shows the
+impact of the changes through experiments.
+Finally, the chapter 
+concludes with a summary of the three methods described.
+
+\newsection{Forming Words from Characters}{sec:prepair-intro}
+
+\repair, as described in the last chapter, views documents at the
+character level.  However, people read and understand documents as a
+sequence of words.  In a retrieval system, the query terms 
+that a user provides and the results that the system returns
+should be in the form of words.  Just as index-based retrieval systems 
+build indexes using words, so should a phrase
+browsing system using \repair.
+
+Information retrieval systems generally parse their input 
+into three different classes of symbols:  word symbols, inter-word
+symbols, and special processing symbols 
+\citep{kowalski97:book}.  Documents are treated as an
+alternating sequence of word symbols and inter-word symbols (or
+non-word symbols).  Some retrieval systems also make use of special 
+processing symbols for separating documents
+\citep{wmb99:book} or for indicating meta-data, such as
+\sgml tags.
+
+Symbols are encoded individually by a compression system
+which assume a memoryless source.  Because the characters
+that form words in a document do not appear independently,
+word-based mechanisms have also been employed for compression.
+A word-based compression system requires
+choices to be made with respect
+to how the document is parsed.  When a document is parsed as 
+words, similar to a retrieval system, suitable definitions of 
+words, non-words, and special processing symbols (if any) are 
+required.  These different symbol types may exist in the 
+reduced message as different streams, or as a single, unified
+stream.  Finally, some methods of parsing a message into words
+replaces the words with references to a lexicon (or dictionary) 
+that also needs to be encoded and transmitted.
+
+\citet{bstw86:cacm} devised a word-based parsing scheme which
+separated a message into two alternating streams:  one of 
+alphanumeric symbols and another of non-alphanumeric symbols.
+A move-to-front scheme (MTF) followed by Huffman coding was
+used to encode word references.  \citet{moffat89:spe}
+undertook experiments on the \citeauthor{bstw86:cacm}\ scheme, 
+and also extended character-based \ppm to word-based \ppm
+and found improvement in compression effectiveness with a
+first-order model, but little additional improvement with a 
+second-order model.  An alternating sequence of words and non-words
+was also used, with a 20 character limit on each.  \citet{hc92:dcc} 
+investigated word-based compression for \lzb, where the 
+lexicon was transmitted implicitly by using an escape 
+mechanism to indicate the appearance of a new word.  
+They also investigated first-order context modelling
+by conditioning a word based on the parts-of-speech
+(noun, verb, article, adjective, or other) of the
+preceding word.  The parts-of-speech of words were
+determined through dictionary look-up.  Words that
+did not appear in the dictionary were assigned to
+the category that would achieve the best compression.
+\citet{im01:dcc} devised a compression
+scheme that combined block sorting with
+a word-based model.  Words and non-words were limited to
+12 characters each and a single lexicon was produced
+by adapting the {\em {spaceless words}} approach of
+\citet{mnzb00:tis}.  The spaceless words approach
+combines the word and non-word lexicons into a single
+lexicon.  During decoding, a space character is
+added after every word.  If a word is followed by an
+explicitly coded non-word, then no space is added and
+the non-word is decoded in its place instead.  
+\citet{im01:dcc} reported a compression ratio of 1.69 bpc
+for \wsja when combining word-based block sorting
+with a suitable coder.
+
+\citet{nw97:cj}, parsed semi-structured documents 
+into words so that 
+\sequitur could be applied to references to words in
+the word lexicon.  In semi-structured data, words may
+be conditioned on other words that are not immediately
+adjacent.  As a trivial example, a closing tag in an 
+\sgml message appears because of an opening tag earlier
+in the message.  \sequitur used heuristics based on the
+amount of gain that could be obtained from a distant
+word prediction.  Experiments showed that \sequitur attained
+better compression effectiveness than other systems, including
+\gzip and a \ppm implementation using escape method C, for a
+sample semi-structured document.  Compression
+effectiveness further improved when the heuristics were 
+employed.
+
+The changes to \repair described in this chapter reflect
+previous work in word-based compression.  However, some
+different choices were made because the goal of this
+investigation is to balance phrase browsing with compression.
+Before discussing word-based compression for \repair,
+some definitions are required.  A word character is any
+alphabetic or numeric character in the \eascii character
+set.  In order to accommodate the \sgml test 
+data used in this thesis, the three characters ``\tl'', ``\tg'', 
+and ``/'' are also considered to be word characters.  Any other 
+symbol, including whitespace and punctuation marks, are 
+non-word characters.  No special processing symbols are
+defined at this time. 
+A sequence of contiguous word (or non-word) 
+characters is a {\emph {token}}.  A document is viewed as
+an alternating sequence of word tokens and non-word tokens.
+
+The original version of 
+\repair described by \citet{lm00:procieee} and in
+\chapref{chap:repair} is called character-based \repair.  This
+distinction is required in order to differentiate it from
+three additional word-aware versions of \repair that are 
+described in the next three sections.
+
+\newsection{Word-aligned \repair}{sec:prepair-align}
+
+The first method of processing a document as words is called
+{\emph {word-aligned \repair.}}  Word-aligned \repair augments
+rules to the part of the \repair algorithm that decides
+which pairs of symbols are permitted as active pairs.
+
+\figref{fig:prepair-short-phrases} provides the motivation
+behind this variation of \repair.  The figure expands the
+phrases generated by character-based \repair in
+\tabref{tab:repair-short} on \pgref{tab:repair-short} into 
+all primitives.  The phrases in \figref{fig:prepair-short-phrases}
+are listed in the order in which they are added to the phrase
+hierarchy.  Three of these eight phrases contain the space character,
+a non-word symbol.  While browsing phrases with non-word 
+symbols is visually unappealing, a more noticeable problem is
+its effect on the choice of phrases made by \repair.  Since the
+phrases ``{\tvs}w'' and ``d{\tvs}'' in \figref{fig:prepair-short-phrases}
+occur with a higher frequency in
+the message than ``wo'' and ``od'', the likelihood of the word ``wood''
+from being formed as a phrase is reduced.  The
+problem is more obvious with longer documents and is caused 
+by all non-word symbols, not just the space character.
+
+\fig{\begin{tabular}{l}
+\input{woodchuck-short-phrases}
+\end{tabular}}
+{Expanding the phrases from the example of 
+\tabref{tab:repair-short} into all primitives.}
+{Expanding the phrases of \tabref{tab:repair-short}}
+{fig:prepair-short-phrases}
+
+
+Word-aligned \repair solves this problem by introducing the four
+rules shown in \tabref{tab:prepair-wa-rules}.  As each phrase
+is added to the phrase hierarchy, it is labelled as a word 
+symbol (W), a non-word symbol (N), or a mixture (M).  The 
+primitives (characters) are also labelled as 
+``W'' or ``N'' during initialisation.  When
+two adjacent symbols are being considered as potential active
+pairs, the word-aligned rules are consulted.  The second
+and third columns represent the classification of the 
+two symbols under consideration.  The first and fourth columns 
+represent the surrounding context in which that pair of symbols occurs
+in the sequence. An ``X'' indicates that the classification is
+unimportant.  If the pair of symbols satisfies any one of the four
+rules, then it can become an active pair.  
+The fifth column of the table indicates the category of the 
+corresponding symbol after it has been added to the phrase 
+hierarchy.  For example, when an active phrase representing 
+active pairs composed of two non-word symbols is added to the
+phrase hierarchy, it is also classified as a non-word symbol.
+The last column provides examples which satisfy each
+rule, with boxes representing the two symbols that are
+being considered as an active pair.
+
+\tab{cccccc}{Before-left & Left & Right & After-right & Result & Example \\}
+{ \\ [-2.5ex]
+X        & N & N & X       & N & woodchuck\greyboxline{{\tvs}}\greyboxline{{\tvs}}chuck{\tvs}{\tvs}wood \\ [0.5ex]
+ X        & W & W & X       & W & woodchuck{\tvs}{\tvs}\greyboxline{chu}\greyboxline{ck}{\tvs}{\tvs}wood \\ [0.5ex]
+ X        & M & M & X       & M & \greyboxline{woodchuck{\tvs}{\tvs}}\greyboxline{chuck{\tvs}{\tvs}}wood \\ [0.5ex]
+{ N {\textbar} M } & W & N & {W {\textbar} M} & M & woodchuck{\tvs}{\tvs}\greyboxline{chuck}\greyboxline{{\tvs}{\tvs}}wood \\ [0.5ex]
+}
+{The rules used by word-aligned \repair for deciding when a pair
+of symbols can become active pairs.  If a pair of adjacent symbols
+satisfy any of the four rules, then it becomes an active pair.}
+{Word-aligned \repair rules}{tab:prepair-wa-rules}
+
+The alignment of words is caused by the fourth rule.
+The fourth rule ensures that a word symbol can only be
+combined with a non-word symbol, forming a mixed symbol,
+if both of them are 
+{\emph {complete}}.  A complete word is a sequence of one
+or more word symbols, such that on both sides of it, 
+there are only non-words.  A similar definition applies to 
+non-words.  As there is only one such rule, words can only
+be left components of mixed symbols, and non-words can only
+be right components.  The first three rules simply allow 
+longer phrases of the same type to be formed.
+
+These four rules are applied at two locations
+in the \repair algorithm of \algref{alg:repair-alg}.  They
+are used when the message is initially scanned 
+(step \ref{algline:repair-alg:scan}), and after an active 
+pair replacement is made and the frequency counts of the
+newly introduced symbol with its adjacent neighbours is incremented 
+(step \ref{algline:repair-alg:incrcount}).  This
+ensures that the active pair counts for active phrases only include
+active pairs that satisfy one of these rules.  During recursive
+pairing, even though the sequence changes from the time
+when an active pair is identified to when 
+it is replaced, the classification of active pairs remains
+correct.  The first three rules classifies pairs of symbols
+regardless of their contexts.  More importantly, changes in the 
+sequence do not affect pairs classified using the fourth rule.  
+Suppose a pair of symbols is classified as
+a mixed pair when the symbol preceding the left component
+is a non-word symbol.  Later, when this pair is replaced,
+the preceding non-word symbol may have become part of a mixed
+symbol.  But since all mixed phrases start with a word
+symbol and end with a non-word symbol, the fourth rule still 
+holds for this active pair.
+
+\tabref{tab:woodchuck-short-wa} shows word-aligned \repair applied
+to the same ``Woodchuck'' message, with the third column showing
+the expanded phrases.  The expansion of phrase \tc{6} is 
+the word ``wood'', as desired.  The pair ``d{\tvs}'' does not
+exist as a phrase because, in this message, ``d'' does not appear
+by itself as a complete word.  As another example, 
+\figref{fig:woodchuck-complete-wa-phrases} shows the expanded phrases
+generated by word-aligned \repair when it is applied to the
+complete ``Woodchuck'' message (see \pgref{fig:tc-woodchuck}).
+The word-alignment rules ensure that word symbols and non-word
+symbols continue to grow until they are surrounded by symbols of
+a different type.  Then, mixed symbols are created by having
+complete word symbols combine with complete non-word symbols on
+the right.  In the figure, every symbol represents phrases
+that are either part of an English word, a complete English
+word, or an alternating sequence of complete words followed by 
+complete non-words.  In this example, the longest non-word symbol 
+is only one symbol long (the space character, {\tvs}), 
+so complete non-word phrases that are longer than one primitive 
+do not exist in the phrase hierarchy.
+
+\tab{lll}
+{\multicolumn{1}{c}{Sequence} & \multicolumn{1}{c}{Phrase hierarchy} & \multicolumn{1}{c}{Expanded phrases} \\}
+{\input{woodchuck-short-wa}}
+{Applying word-aligned \repair to the same brief ``Woodchuck'' 
+message used in \tabref{tab:repair-short} on 
+\pgref{tab:repair-short}.}
+{Sample application of word-aligned \repair}
+{tab:woodchuck-short-wa}
+
+\fig{\begin{tabular}{llll}
+\input{woodchuck-complete-wa-phrases}
+\end{tabular}}
+{Expanded phrases generated by word-aligned \repair on the
+complete ``Woodchuck'' message, in the order in which
+they were added to the phrase hierarchy.  In front of 
+each phrase, its word-aligned category is shown.
+No phrases in this example are non-words (N).}
+{Word-aligned \repair phrases}
+{fig:woodchuck-complete-wa-phrases}
+
+In a phrase hierarchy with $|\Sigma|$ primitives and $|\rho|$
+phrases, word-aligned \repair requires an extra
+$(|\Sigma| + |\rho|)$ words of memory compared to 
+character-based \repair.  Every primitive and phrase in the 
+phrase hierarchy is assigned a category.  Since the categories 
+can be represented in 2 bits, an implementation which conserves
+memory is possible which only uses an extra $2(|\Sigma| + |\rho|)$ 
+bits.  
+Categories could also be assigned to each symbol in
+the sequence.  However, for a message of length $n$,
+this approach requires $n$ words of
+memory, which is typically larger than $(|\Sigma| + |\rho|)$.
+Furthermore, augmenting categories to the sequence is
+unnecessary because the category of a symbol in
+the sequence is the same as its category in the phrase.
+The phrase ``wood'' is a word symbol (W), regardless of the context
+in which it appears.  When an occurrence of ``wood'' 
+is considered as a component of an active pair, then its
+adjacent neighbours in the sequence are checked.
+
+There are two advantages to word-aligned \repair.  First, the 
+alignment performed by word-aligned \repair operates
+transparent to the decompressor.  
+The augmented rules only affect the compressor.
+Second, word-aligned \repair allows compound words 
+like ``woodchuck'' to be split up into its constituent
+words, provided they exist elsewhere in the message by 
+themselves.
+
+Experimental results with word-aligned \repair are provided
+at the final section of this thesis.  However, problems with 
+word-aligned \repair exist, and are addressed in the next section
+by word-based \repair.
+
+\newsection{Word-based \repair}{sec:prepair-wordbased}
+
+Word-aligned \repair creates phrases that are more useful than
+those of character-based \repair,
+by aligning phrases to word boundaries.  However, several problems
+remain in the phrase hierarchy which require a different solution.
+First, two words used in the complete ``Woodchuck'' message cannot be 
+found in the phrase hierarchy of \figref{fig:woodchuck-complete-wa-phrases}:
+``how'' and ``would''.  Each word exists in the
+message only once and while ``how'' can be located by performing a
+direct search on the reduced sequence using primitives, ``would'' cannot 
+be found since it has been broken into two phrases:  \tc{2} and 
+\tc{12}.  Second, punctuation was removed in the complete ``Woodchuck''
+message, but if it was included, then the phrase ``wood{\tvs}''
+is treated differently from ``wood?''.  To a user, both phrases have
+the same meaning, except the second one marks the end of a 
+sentence.  Furthermore, case information of letters was removed from 
+the message, but word-aligned \repair would have treated ``Wood{\tvs}''
+as being a different phrase from ``wood{\tvs}''.
+
+That is, while word-aligned \repair is an improvement over character-based
+\repair, some problems remain.  
+The essence of the problems is that word-aligned \repair does 
+not force a message 
+into words, but merely applies a set of rules only when a 
+decision is required.  With respect to the first problem 
+above, since ``how'' and ``would'' each appears once in the 
+message, no decision was required by \repair, resulting in 
+neither word appearing in the phrase hierarchy.
+Instead, a word-based scheme is required, similar to the ones used by 
+other compression systems described earlier.  Word-based 
+compression requires an additional processing stage 
+where a message is divided into word tokens and 
+non-word tokens.  The processing can occur as the
+message is compressed, or it may complete before compression
+begins.  
+
+The pre-processing used by word-based \repair needs to satisfy
+two criteria in order to strike a balance between the requirements
+of retrieval and compression.  First, the phrases
+produced by \repair after the pre-processing should improve
+compared to ones created by the character-based and word-aligned
+\repair variants.  For example, phrases should be aligned
+on word boundaries.
+Second, like other compression algorithms, compression
+must be lossless.  \figref{fig:prepair-wordbased} shows a structure
+that satisfies these two conditions.
+
+\fig{\includegraphics*{./wordbased.eps}}
+{The pre-processing stage used by word-based \repair to separate
+a message into non-words (top path) and case folded, stemmed 
+words (bottom path).  Punctuation-aligned \repair, described
+in \secref{sec:prepair-puncbased}, also follows a similar
+scheme, except for the addition of punctuation flags for
+\repair, shown as dashed lines.}{The pre-precessing stage 
+used by word-based \repair}{fig:prepair-wordbased}
+
+In \figref{fig:prepair-wordbased}, processes are shown as
+rectangles, while the flow of data are indicated as lines.
+Each process is further elaborated later in this section.
+Initially, the message is separated into two streams of tokens:
+one for words and the other for non-words.  The word tokens are then
+case folded and stemmed. Lexicons for words and non-words
+are maintained separately and updated as the message is processed.  The word
+references are then compressed by \repair.  The punctuation flags,
+shown as dashed lines, are explained in \secref{sec:prepair-puncbased}.
+All of these steps are performed by the 
+pre-processor, dubbed \prepair, to emphasise its use before
+\repair.
+
+\newsubsection{Separating the Message}{subsec:prepair-separate}
+
+The message is parsed as an alternating sequence of word
+and non-word tokens.  A token is at most 16 characters in
+length.  For longer words (and non-words), a special
+zero-length token exists in both types of tokens.  For
+example, if a word of length 21 characters is encountered,
+then it is split so that two words of lengths 16 and 5
+are encoded, with a zero-length non-word in between.  
+This parsing scheme is similar to the one described by 
+\citet{moffat89:spe}.
+
+Furthermore, to accommodate the \sgml test files used by this
+thesis, the definition of words is extended.  The ``\tl''
+character specifies the start of a new word token while 
+the ``\tg'' character specifies the end of one, regardless of the
+context in which they occur.  This definition 
+ensures that \sgml tags are tokens, regardless of whether or not
+there is whitespace surrounding them.
+
+\newsubsection{Case folding}{subsec:prepair-casefold}
+
+After a word token has been identified, it is case folded to 
+lower case.   
+Case folding is a technique commonly used by retrieval systems for 
+constructing and accessing an index.
+It permits a user to enter query terms 
+without considering whether the case of the words 
+being given to the system matches the case of the indexed terms.
+However, in retrieval systems, the index is separate
+from the message that it indexes.  So, the case folding can be a 
+lossy transformation because it need not be reversed.  
+In contrast, the case folding done by
+\prepair needs to be reversible since \repair is used for
+constructing phrases for both browsing and compression.  Therefore,
+a modifier is
+produced for each word token when case folded.  When the 
+modifier is applied to the case folded token, the original 
+word is produced.
+
+Since any character in a word might be in upper case and so require folding,
+a modifier of at least 16 bits is required, with each bit corresponding 
+to a character position.
+A bit value of ``1'' means that the corresponding source character 
+is in upper case.  The bit flags are in reversed order with respect
+to the characters in the word token.  That is, a word token with
+only the first character in upper case results in a case folding
+modifier with the least significant bit turned on.  This ensures
+that all word tokens with only the initial character in upper case
+have the same case folding modifier, regardless of word length.
+Furthermore, an extra bit is used to indicate the special case 
+when every character is in upper case, so that the case folding
+modifier is 17 bits in length.
+While encoding a token, every character is checked.
+When decoding, as soon as no other bits in
+the modifier are set to ``1'', the rest of the word is not
+processed.
+
+Reversible case folding is also used by the Length
+Index Preserving Transform (\lipt) of \citet{am01:itcc}.  
+\lipt is a compression pre-processor that uses a static
+dictionary of lower case words.  As most words that 
+contain upper case characters either have only the first 
+character in upper case or all of the characters in upper case, 
+special 
+symbols are inserted into the message to indicate this.  
+For other combination, individual characters are flagged if they 
+are in upper case.  \prepair operates similar to \lipt except that
+the case folding modifiers of \prepair exist as a stream
+separate from the words.
+Also, \prepair assigns a bit flag to every character that is
+processed while \lipt adds a character modifier only if an upper case
+character is found.  
+
+\newsubsection{Stemming}{subsec:prepair-stem}
+
+After the word token is case folded, it is stemmed.  
+Stemming, or conflation \citep{frakes92:book}
+is a technique used 
+in information retrieval to remove word suffixes to
+produce its root form.  For example, ``searches'',
+``searching'', and ``search'' all stem to the word ``search''.
+This allows users to query a retrieval system
+without worrying about entering the correct ending for a
+word.  Moreover, stemming also reduces the number of 
+entries in the lexicon.
+
+Several authors have proposed stemming algorithms 
+\citep{lovins68:mtcl, dawson74:ballc, porter80:program}.  Of
+these, the Porter stemming algorithm is used 
+in this chapter, based upon the recommendation of  
+\citet{kowalski97:book}. 
+ 
+All stemming algorithms conflate a word by applying steps which
+successively remove endings.  A step is applied if the word
+matches a set of conditions.  Some
+conditions include the length of the word, the characters
+in the suffix, or the characters before the suffix.
+The algorithms do not consider the semantic meaning of the
+word, and each word in a document is stemmed independently of
+adjacent words.  This is acceptable for most information 
+retrieval systems since the stemmed word is used internally
+to search through an index.  However, these results would
+appear unexpected to a user.  \tabref{tab:prepair-stemwrong}
+shows a few examples from applying the Porter stemming
+algorithm.  In most cases, the root word obtained is not an
+English word.  Of particular interest, the word ``skies'' is transformed 
+to the unrelated word ``ski'', instead of ``sky'', through 
+the removal of the ending ``es''.  Nevertheless, the benefits
+of stemming outweigh the costs, and provided all related words
+and no unrelated words stem to the same string most of the 
+time, no problems are
+caused.  As words are combined to form longer words 
+during browsing, it is expected that neighbouring words 
+make up for any important contexts lost during stemming.  
+
+\tab{lll}
+{\multicolumn{1}{c}{Original word} & \multicolumn{1}{c}{Root word obtained} & \multicolumn{1}{c}{Expected root word} \\}
+{
+character{\D}     & charact{\D}{\D}     & character \\
+frequency{\D}     & frequenc{\D}     & frequent{\D} \\
+retrieval{\D}     & retriev{\D}{\D}     & retrieve{\D} \\
+searchable      & searchabl       & search{\D}{\D} \\
+skies{\D}{\D}{\D}{\D}{\D} & ski{\D}{\D}{\D}{\D}{\D}{\D} & sky{\D}{\D}{\D}{\D}{\D} \\
+pies{\D}{\D}{\D}{\D}{\D}{\D} & pi{\D}{\D}{\D}{\D}{\D}{\D}{\D} & pie{\D}{\D}{\D}{\D}{\D}\\
+}{Some unexpected results from the Porter stemming algorithm.  
+Words are listed in the first column.  The root form obtained by
+the algorithm is shown in the second column, while the third column 
+displays the root form a person most likely would provide.}
+{Unexpected results from the Porter stemming algorithm}
+{tab:prepair-stemwrong}
+
+The stemming algorithm used by \repair contains minor changes to
+the original stemming algorithm by Porter.  Details 
+of the changes are provided in 
+\appref{chap:porter}.  The American spelling assumed by the implementation
+is retained in order to accommodate the spelling used by the test
+data.
+
+As with case folding, compression implies a  
+requirement to be able to losslessly reverse any stemming performed.
+A stream of stemming modifiers is generated, with each
+word token having a corresponding modifier.
+\appref{chap:porter} lists the steps to the algorithm and 
+shows that a modifier
+of length 23 bits is sufficient to indicate how to unstem a
+word.  Each step (and sub-step) is 
+assigned bit positions in the modifier, independent of other
+steps.  While it might have been possible to reduce the number
+of bits used by the modifier by combining steps, separating the
+steps keeps the variant used by \repair as close to
+the original as possible.
+
+Since stemming reduces the length of a word, an alternative design
+for \prepair would apply the 16 character
+limit on word tokens after stemming.  However, this approach
+was not taken for two reasons.  First, \prepair would be less
+efficient because a buffer of characters which varies in length
+would have to be maintained.  
+Second, the one-to-one correspondence between
+word tokens and stemming modifiers could no longer be guaranteed.
+Reversing stemming not only increases the length of
+a stem, but changes characters within it as well.  So, if
+a long word is split across two word tokens, it may be incorrect
+to assign the stemming modifier to only the second word token.
+The consequence of this decision is that words longer than 16
+characters would not be stemmed, even if their stemmed form
+is less than the limit.
+
+There are two reasons for incorporating case folding and stemming
+into word-based \repair.  During phrase browsing, these transformations
+group words that are derived from the same root word 
+to improve usability, as shown later in \chapref{chap:rephine}
+when the phrase browser is presented.  Also,
+both case folding and stemming help reduce the number of entries in
+the word lexicon.  
+The effect these two transformations have on the number of distinct
+word tokens is shown in \tabref{tab:prepair-lexicon-size} for the
+test file \wsja.  A detailed discussion of the experiments with 
+\wsja, including compression times and
+compression ratios, is provided later, in \secref{sec:prepair-expt}.
+Some of those results are presented here to complete
+the discussion on case folding and stemming.
+Case folding and stemming do not have to be used together.
+However, because the implementation of 
+the Porter stemming algorithm used by word-based \repair
+only stems lower case words; words with endings in upper case 
+are untouched.  This occurred often in \wsja
+since certain sections of every news article was 
+entirely in upper case.
+
+\tab{lcc}
+{                       & Unique & Average length \\
+                        & tokens & in lexicon     \\
+                        &        & (chars)        \\}
+{
+word lexicon & & \\
+{\D\D\D}no transformations      & 74,686  & 7.31 \\
+{\D\D\D}case folding only       & 60,748  & 7.38 \\
+{\D\D\D}stemming only           & 50,412  & 6.26 \\
+{\D\D\D}case folding and stemming & 39,638  & 6.27 \\
+non-word lexicon                & \D1,399 & 7.68 \\}
+{Statistics from \prepair which indicate the effects
+of case folding and stemming on the word lexicon.  
+Transformations to word tokens do not affect the non-word
+lexicon, which is also shown.  The test data used was
+\wsja.}{Relationship between lexicon size and 
+word token transformations (\wsja)}
+{tab:prepair-lexicon-size}
+
+Lexicon statistics when the application 
+of case folding and stemming is varied are shown in 
+\tabref{tab:prepair-lexicon-size}.  In all cases, 
+\prepair identified 3,356,915 word tokens.  Both case folding
+and stemming decrease the number of unique word tokens, as
+shown in the first column.  The average length of a word token 
+in the message is 4.92 characters.
+Note that this value is smaller than the average token lengths
+in the lexicons, as shown in the second column of
+\tabref{tab:prepair-lexicon-size}.  As one would expect, in an
+English document, short words occur more frequently than long
+ones.  The small averages imply that extending the limit
+of 16 characters per token would achieve little benefit for
+document collections such as \wsja.
+
+Case folding and stemming transformations have no
+effect on the non-word lexicon, whose size is shown in the last
+row of \tabref{tab:prepair-lexicon-size}. 
+The number of entries in the non-word lexicon is much less 
+than the word lexicon.  The average length of a 
+non-word token in the message is 1.34 characters, much less than
+the 7.68 characters in the non-word lexicon.
+
+While modifiers for case folding and stemming can be stored
+together, they have been separated and placed into their own
+individual streams.  This separation ensures a one-to-one
+correspondence between a word token and its associated 
+modifiers.  This approach highlights an important point regarding
+how modifiers are used.  While users usually search for words,
+it would be difficult to envision a user searching for a 
+particular case folding modifier.  Instead, when a user has
+found a word token of interest, the position $k$ of the word token
+in the message needs to be determined.  Then, to reverse
+case folding and stemming, the system must retrieve the modifiers
+at position $k$ in the respective streams.  Experiments with
+several compression systems were applied later in this chapter
+in order to process the two streams in the context of 
+this requirement.
+But first, the next section provides more details about the 
+two lexicons.
+
+\newsubsection{Encoding the Lexicons}{subsec:prepair-lexicon}
+
+After a word token is case folded and stemmed, it is located 
+in the word lexicon and replaced with an ordinal number
+indicating its position in the lexicon.  If the word token is
+novel, then it
+is replaced with the number representing the next 
+available position, and the lexicon is updated.  
+The pointer back to the lexicon is appended to the output word sequence.
+After \prepair completes, its lexicon is written as a separate file 
+while the stream of word sequence numbers
+is then passed to \repair, to produce 
+the {\emph {reduced word sequence}}.  Finally, the reduced word
+sequence is compressed, to yield the 
+{\emph {compressed word sequence}}.  
+
+In contrast to the word sequence, the stream of 
+non-word tokens are processed without any stemming, case folding, 
+or application of \repair.  Also, the non-word sequence is
+called the {\emph {non-word modifier}} stream.  That is, the
+symbols in this stream are considered modifiers which
+transform word tokens by appending non-word symbols to them.
+
+The \prepair system keeps each lexicon in memory with a
+splay tree \citep{st85:jacm}.  A splay tree
+is a binary search tree that is rotated after every node access or 
+modification to ensure that the most recently used node is at 
+the root of the tree.  The number of entries in the lexicon is 
+equal to the number of unique case folded, stemmed words in the
+document.  \citet{hzw02:tis} describes an alternative data
+structure for maintaining lexicons called a {\emph {burst trie}}.
+
+Three methods of compressing the lexicons exist.
+The first method involves the application of a transformation 
+called {\emph {front coding}} \citep{ghlr75:ncc}.  
+Front coding is a technique often used to encode a sorted list
+of strings.  Many adjacent strings in a sorted list have 
+similar prefixes.  Front coding exploits this fact by encoding
+every word in the lexicon as a triple made up of two numbers and
+a substring.  The first number indicates the number of characters
+the prefix of the current word matches to the prefix of the 
+previous word (0 if nothing matches).  The second number is the 
+remaining length of the current word, without the length of the 
+matching prefix.  The substring of the remainder of
+the word is the last part of the triple.
+Recall that in word-based \repair, word and non-word tokens are 
+limited to 16 characters in length.  Therefore, 8 bits are 
+sufficient for indicating the two numeric triples of each word.
+
+The second method of lexicon encoding uses one of the 
+compression systems described in \chapref{chap:tc}. 
+The lexicon is written in sorted order, with each token
+preceded by one byte, indicating its length.  In the experiments
+described shortly, this is called literal encoding.  Then
+one of the following three
+compression systems are applied:  \gzip, \bzip, and \ppmd.  
+Similar to the experiments in the
+previous chapter, \gzip and \bzip were executed using 
+the {\texttt {-9}} option in order to favour compression
+effectiveness.  Likewise, \ppmd used \mib{255} of
+memory and a seventh order context.  The third scheme 
+combines the first two by
+applying one of these compression systems to the output of
+the front coder.
+\citet{nw97:cj} also used \ppm after front coding for
+compressing \sequitur's word lexicon.
+
+\tabref{tab:prepair-wordlexicon-itself} and 
+\tabref{tab:prepair-wordlexicon-wsja} show the
+compression effectiveness of the word lexicons with respect to itself
+and with respect to the size of \wsja, respectively.  Case folding
+and stemming have been varied along with the three compression
+strategies.  The two views of the results are necessary because
+these transformations affect the size of the lexicons.  As a benchmark,
+the tables also provide compression ratios when literal coding is
+used without any additional compression system.
+Compression ratios are reported in bits per
+character (bpc) with the best result in each table highlighted.
+
+\tabnoline{c}{}
+{
+  \begin{tabular}{lccccc}
+  \\ \cline{2-3} \cline{5-6}
+  & Literal coding & Front coding & & Literal coding & Front coding \\ \cline{2-3} \cline{5-6}
+
+none & 8.000 & 3.518 & & 8.000 & 3.370\\
+\gzip & 3.411 & 2.054 & & 3.289 & 1.928 \\
+\bzip & 3.770 & \greybox{1.771} & & 3.714 & \greybox{1.677} \\
+\ppmd & 3.442 & 1.864 & & 3.416 & 1.751 \\ \cline{2-3} \cline{5-6}
+  & \multicolumn{2}{c}{(a) No case folding or stemming} & & 
+    \multicolumn{2}{c}{(b) Case folding only}  \\
+
+  \\
+  \\ \cline{2-3} \cline{5-6}
+  & Literal coding & Front coding & & Literal coding & Front coding \\ \cline{2-3} \cline{5-6}
+
+none & 8.000 & 3.958 & & 8.000 & 3.801 \\
+\gzip & 3.857 & 2.512 & & 3.701 & 2.341 \\
+\bzip & 4.233 & \greybox{2.202} & & 4.130 & \greybox{2.085} \\
+\ppmd & 3.926 & 2.363 & & 3.905 & 2.226 \\ \cline{2-3} \cline{5-6}
+  & \multicolumn{2}{c}{(c) Stemming only} & &
+    \multicolumn{2}{c}{(d) Case folding and stemming}  \\
+  \end{tabular}
+}
+{Comparing the use of front coding 
+with several compression systems on  
+the word lexicon of \wsja while varying the use of
+case folding and stemming.  Results are in bits per character with
+respect to the size of the lexicon.}
+{Compression results for word lexicons with respect to themselves (\wsja)}
+{tab:prepair-wordlexicon-itself}
+
+\tabnoline{c}{}
+{
+  \begin{tabular}{lccccc}
+  \\ \cline{2-3} \cline{5-6}
+  & Literal coding & Front coding & & Literal coding & Front coding \\ \cline{2-3} \cline{5-6}
+  none & 0.237 & 0.104 & & 0.194 & 0.082 \\
+  \gzip & 0.101 & 0.061 & & 0.080 & 0.047 \\
+  \bzip & 0.112 & \greybox{0.052} & & 0.090 & \greybox{0.041} \\
+  \ppmd & 0.102 & 0.055 & & 0.083 & 0.042 \\ \cline{2-3} \cline{5-6}
+  & \multicolumn{2}{c}{(a) No case folding or stemming} & & 
+    \multicolumn{2}{c}{(b) Case folding only}  \\
+
+  \\
+  \\ \cline{2-3} \cline{5-6}
+  & Literal coding & Front coding & & Literal coding & Front coding \\ \cline{2-3} \cline{5-6}
+none & 0.140 & 0.069 & & 0.110 & 0.052 \\
+\gzip & 0.067 & 0.044 & & 0.051 & 0.032 \\
+\bzip & 0.074 & \greybox{0.038} & & 0.057 & \greybox{0.029} \\
+\ppmd & 0.068 & 0.041 & & 0.054 & 0.031 \\ \cline{2-3} \cline{5-6}
+  & \multicolumn{2}{c}{(c) Stemming only} & &
+    \multicolumn{2}{c}{(d) Case folding and stemming}  \\
+  \end{tabular}
+}
+{Comparing the use of front coding 
+with several compression systems on  
+the word lexicon of \wsja while varying the use of
+case folding and stemming.  Results are in bits per character
+with respect to the size of \wsja.}
+{Compression results for word lexicons with respect to file size (\wsja)}
+{tab:prepair-wordlexicon-wsja}
+
+When literal coding is not coupled with any compression 
+mechanism, the size of the word lexicons are shown in the 
+tables in the rows marked ``none'', under the first columns.  
+Case folding and stemming both decrease the amount of
+space occupied.  In all four combinations, 
+\gzip achieves the best compression when no front coding is
+applied.
+Of course, a smaller word lexicon means that
+some compression effectiveness must be paid for by additional
+modifier streams, as described later in this chapter.
+Once front coding is used, compression with any of the three
+systems surveyed is better than applying the same program by itself.
+In particular, in all cases, front coding
+with \bzip offers the best compression effectiveness.
+
+\tabref{tab:prepair-nonwordlexicon} shows the effect of applying
+these compression mechanisms on the non-word lexicon.  On the
+left, the compression results are reported with respect to the
+size of the lexicon; on the right, they are presented with respect
+to the size of \wsja.  According to the table on the right, the non-word
+lexicon is only 0.005 bpc when output as literal text, while the
+word lexicon is at least 0.110 bpc when case folding and stemming are
+both applied.  Again, front coding with \bzip provided good compression
+effectiveness at 0.001 bpc.  Other regimes are also able to attain similar
+compression ratios for the non-word lexicon.  These tables do not 
+mention the time required for compressing the lexicons.  Later
+in this chapter, detailed experiments with \wsja show that both 
+lexicons are small in size compared to the other streams.  Processing 
+the lexicons contributes little to the overall compression and 
+decompression times.
+
+\tabnoline{lccccc}{}
+{
+\\ \cline{2-3} \cline{5-6}
+  & Literal coding & Front coding & & Literal coding & Front coding \\ \cline{2-3} \cline{5-6}
+none & 8.000 & 2.925 & & 0.005 & 0.002 \\
+\gzip & 2.632 & 1.464 & & 0.002 & 0.001 \\
+\bzip & 2.588 & 1.446 & & 0.001 & 0.001 \\
+\ppmd & 2.385 & \greybox{1.373} & & 0.001 & \greybox{0.001} \\ \cline{2-3} \cline{5-6}
+  & \multicolumn{2}{c}{(a) Relative to the lexicon} & &
+    \multicolumn{2}{c}{(b) Relative to \wsja}  \\
+}
+{Comparing the difference between the use of front coding 
+with several compression systems on 
+the non-word lexicon of \wsja.  Results are in bits per character.}
+{Compression results for the non-word lexicon (\wsja)}
+{tab:prepair-nonwordlexicon}
+
+\newsection{Punctuation-aligned \repair}{sec:prepair-puncbased}
+
+The pre-processing step of \prepair solves many of the problems
+that existed with character-based \repair and word-aligned 
+\repair.  A word in the message is no longer broken into more
+than one phrase.  Moreover, all words, even infrequent ones,
+are in the word lexicon and are therefore primitives in the
+phrase hierarchy.
+
+One minor problem remains, which is related to the treatment of
+punctuation marks.
+In English, punctuation marks such as commas and full stops
+separate phrases or sentences from each other.  Word-based \repair
+ignores these punctuation marks and allows phrases to
+span over them.  A minor change
+to word-based \repair, called punctuation-aligned \repair, 
+encourages phrases to end with punctuation marks.
+
+Punctuation-aligned \repair identifies a set of punctuation marks
+as special processing symbols.  The set of six punctuation marks
+are:  the
+exclamation mark (!), the full stop (.), the question mark
+(?), the comma (,), the colon (:), and the semicolon (;).
+The first three punctuation marks set off a sentence from the
+surrounding text, while the remaining three separate an
+independent clause, a phrase, or a subordinate clause from the rest
+of the sentence.  During parsing with \prepair, these punctuation 
+marks are identified without understanding the context in which they
+occur.  Because of this, \prepair treats a full stop in an abbreviation
+as if a sentence had just ended.
+All of these punctuation
+marks are categorised as {\emph {separating punctuation marks}},
+in contrast to {\emph {enclosing punctuation marks}} 
+\citep{greenbaum96:book}.  Enclosing
+punctuation marks, such as parentheses, highlight a section of text
+usually through a pair of delimiters.
+
+%%  all 6 punctuation marks:
+%%  bible.txt:  119721/122115 = 98.0%
+%%  wsj20:  481423/1072725 = 44.9%
+%%  wsj20:  481423/788325 = 61.1% (without <, >, and slashes (1/2 of the > brackets))
+While other punctuation marks could have been identified, adding too
+many would have degraded the performance of \prepair.  Moreover, 
+\citet{greenbaum96:book} presented results from a study 
+of American texts which consisted of writing totalling 72,000 words.
+The documents were all samples of ``journalism, learned  writing, 
+and fiction''.  The results showed that the six punctuation
+marks used by punctuation-aligned \repair accounted for 95.9\% of
+all punctuation marks.  Full stops and commas alone contributed to
+91.8\% of the punctuation marks found.  In comparison, these six
+punctuation marks make up 98.0\% and 61.9\% of the punctuation marks
+in {\texttt {bible.txt}} (Large Canterbury Corpus, described in 
+\chapref{chap:tc}) and \wsja.  The percentage of punctuation marks 
+for \wsja is lower, even though this value has already excluded \sgml
+tags.  A few lines from \wsja were provided in 
+\subfigref{fig:tc-sgmlsample}{a} on \pgref{fig:tc-sgmlsample}.  As the
+figure shows, other punctuation marks such as hyphens and slashes
+appear, which do not segment sequences of words into phrases.
+
+In the same way that word-aligned \repair modifies 
+character-based \repair, punctuation-aligned \repair augments
+a set of rules to word-based \repair which dictate what
+active pairs can be chosen.  These rules are shown in
+\tabref{tab:prepair-pb-rules}.  Every symbol in the
+word sequence is assigned a category.  Either it is a 
+word that is not followed by any of the 6 punctuation
+marks (W), or it is (P).  The table gives the four ways
+these two symbol types, shown under the first two columns
+of the table, can combine.  If the combination is
+permitted, and subsequently replaced, the new symbol
+obtains a category as shown in the third column.  
+The fourth
+column of the table gives some examples in which the
+symbol combinations may occur using variations on
+``Melbourne University'', an unofficial name for The
+University of Melbourne.
+
+\tab{cccl}{Left & Right & Result & \multicolumn{1}{c}{Example} \\}
+{ \\[-2.5ex]
+W & W & W & \greyboxline{Melbourne }\greyboxline{University }\\ [0.5ex]
+P & P & P & \greyboxline{M.}\greyboxline{U.}\\ [0.5ex]
+W & P & P & \greyboxline{Melbourne }\greyboxline{University.  }\\ [0.5ex]
+P & W & Not allowed & In \greyboxline{Melbourne, }\greyboxline{universities }\\ [0.5ex]
+}
+{The rules used by punctuation-aligned \repair for 
+deciding when a pair of symbols can become active 
+pairs.  An active pair is allowed if any of the first 
+three rules apply; an active pair is disallowed if the
+last rule applies.}
+{Punctuation-aligned \repair rules}{tab:prepair-pb-rules}
+
+Whether or not a word is followed by a punctuation mark,
+it can become an active pair with symbols of the same 
+category.  If it is replaced, the new symbol inherits
+the same category as its components.  The rule in the
+second row permits abbreviations and words in a series,
+separated by commas, to form.  
+However, symbols of two different types can only combine if
+the right component is a symbol followed by a punctuation
+mark.  The reversed combination (fourth row in the table)
+is disallowed.  Note that these rules do
+not pair symbols based on the categories of the surrounding
+symbols.  While word-aligned
+\repair forced complete words and non-words to be formed by
+examining the contexts in which symbols occur, 
+punctuation-aligned \repair is less restrictive.  
+For example, in the second rule of \tabref{tab:prepair-pb-rules}, 
+two symbols 
+with P categories can combine regardless of the classification of the
+symbol to the left of the left component.
+Punctuation-aligned \repair merely encourages word tokens 
+to combine to the left if they are followed by punctuation marks.
+This design choice recognises the fact that phrases can form
+without punctuation marks, so confining phrases to exist only 
+between punctuation marks would be inappropriate.
+
+There are three other differences between word-aligned
+and punctuation-aligned \repair.  First, a mixture (M)
+category is unnecessary since anything that combines with
+a word token terminated by a punctuation mark is a
+(P) token.  Second, the symbol
+categories are stored with the sequence and not with the
+phrase hierarchy.  Unlike word-aligned \repair, the
+category of a word token depends entirely on the
+presence of a punctuation mark after it.  Therefore,
+maintaining the categories in the phrase hierarchy
+is not possible.  As a result, for a message of 
+$n$ symbols, $n$ extra words of memory are required
+to implement punctuation-aligned \repair.  Since only one
+bit is ever used, this approach is wasteful, and a more
+careful implementation is possible which operates on 
+the bit level.  Then, only $n$ extra bits of memory would
+be needed.
+Finally, the information about punctuation marks
+has been separated from the word tokens by \prepair.
+In order to implement punctuation-aligned \repair, 
+punctuation flags (shown as dashed lines in
+\figref{fig:prepair-wordbased} on 
+\pgref{fig:prepair-wordbased}) need to be passed
+to \repair along with the word sequence.  For each
+word token, the presence or absence of a punctuation 
+mark following it is indicated by a flag.  These flags are
+only used by \repair, and the output structure of 
+punctuation-aligned \repair
+remains identical to that of word-based \repair.
+
+\figref{fig:prepair-biblephrases} shows the
+difference between the four versions of \repair with respect to
+the type of phrases created.  The document used is 
+{\texttt {bible.txt}}, chosen because the \sgml markup in the 
+\news file, and the files that are derived from it, would clutter
+the example.  After being compressed, the first 20 symbols
+have been expanded into primitives for each version
+of \repair.  Since character-based and word-aligned \repair 
+do not remove non-word characters, the space and linefeed characters
+are represented as ``\tvs'' and ``\tb'', respectively, in the figure.
+Case folding and stemming were used for word-based 
+and punctuation-aligned \repair, with a space added between 
+each word to facilitate display.
+
+\fig{
+\begin{tabular}{l}
+\input{./biblehead-char.tex} \\ [0.5ex]
+\multicolumn{1}{c}{(a) Character-based \repair} \\ [1.0ex]
+\input{./biblehead-word-align.tex} \\ [0.5ex]
+\multicolumn{1}{c}{(b) Word-aligned \repair} \\ [1.0ex]
+\input{./biblehead-word-fcode-cs.tex} \\ [0.5ex]
+\multicolumn{1}{c}{(c) Word-based \repair with case folding and stemming} \\ [1.0ex]
+\input{./biblehead-punc-fcode-cs.tex} \\ [0.5ex]
+\multicolumn{1}{c}{(d) Punctuation-aligned \repair with case folding and stemming} \\ [1.0ex]
+\end{tabular}
+}{Expanding the first 20 symbols of {\texttt {bible.txt}} into primitives,
+after being compressed with character-based \repair,
+word-aligned \repair, word-based \repair, and
+punctuation-aligned \repair.  For the purposes of display, 
+{\tb} and {\tvs} are used to indicate linefeeds and spaces, respectively,
+in (a) and (b).  Non-words are not shown in (c) and (d).}
+{Comparing phrases from the four versions of \repair 
+({\texttt {bible.txt}})}{fig:prepair-biblephrases}
+
+Since character-based \repair forms phrases using only frequency,
+word boundaries are not adhered to, as shown in 
+\subfigref{fig:prepair-biblephrases}{a}.  For example, in the fourth
+line, the word ``waters'' spans the first and the second phrases of
+that line.  Also, some phrases commence with non-words.  Word-aligned
+\repair handles both of these problems by using its rules
+to guide the recursive pairing.  While a phrase may contain part of a
+word, no word spans across phrases, as shown in 
+\subfigref{fig:prepair-biblephrases}{b}.  Also, all phrases start 
+with a complete word and end with a complete non-word.
+Alternatively, they can also contain all word characters, or all 
+non-word characters.  A phrase categorised as a mixture cannot begin 
+with a non-word character.
+
+The phrases from word-based \repair in 
+\subfigref{fig:prepair-biblephrases}{c} have been case folded and 
+stemmed.  Since the smallest atomic units are word tokens, word-based
+\repair ensures that no word spans across one or more phrases.
+Moreover, non-word characters do not appear in 
+the expanded phrases anymore.  While case folding and stemming have 
+transformed some of the words, they still resemble the original words,
+when compared with \subfigref{fig:prepair-biblephrases}{a}.  Word-based
+\repair ignores the location of punctuation marks.  Punctuation-aligned
+\repair rectifies this problem by encouraging word tokens followed by a
+punctuation mark to only pair with a symbol to its left.
+For example, comparing word-based \repair with punctuation-aligned 
+\repair, in the second line of \subfigref{fig:prepair-biblephrases}{d},
+``without form, and void'' is no longer accepted as a phrase.  Also,
+while word-based \repair created the phrases ``and god said let there be''
+and ``light'' in the fourth line, punctuation-aligned \repair separated
+these seven words according to the locations of the comma and the colon.
+
+\newsection{Experiments}{sec:prepair-expt}
+
+The compression efficiency and effectiveness of 
+the three methods of 
+word-aware document parsing were compared with 
+each other and with character-based 
+\repair through experiments.
+Partial results from these experiments have already been
+shown in \secref{sec:prepair-wordbased}.  In all of
+these experiments, \wsja was used as test data
+and the test machine was a \vipe.
+
+Before the four versions of \repair are compared, a detailed look
+at the various streams of word-based \repair are examined.  
+\secref{sec:prepair-wordbased} showed compression results for
+the word and non-word lexicons of \wsja.  For both of these 
+streams, front coding followed by \bzip offered the best 
+compression effectiveness.  Statistics about the remaining
+four streams produced by \prepair are listed in 
+\tabref{tab:prepair-fileinfo}.  
+
+\tab{lc@{}c@{}cccc}
+{ & \multicolumn{3}{c}{\multirow{2}*{Symbol range}} & Distinct & Number of  & Self- \\
+  & & &                              & values   & symbols    & information \\}
+{
+case folding modifier  & 0 & {\D}to{\D}& \C\D65,536   & \D\D\C72  & 3,356,915 & {\D}1.227 \\
+stemming modifier      & 0 & {\D}to{\D}& 7,356,416    & \D\D\C346 & 3,356,915 & {\D}2.292 \\
+non-word modifier      & 0 & {\D}to{\D}& \C\D\D1,398  & \D\D1,399 & 3,356,915 & {\D}1.750 \\
+word sequence          & 0 & {\D}to{\D}& \C\D39,637   & \D39,638  & 3,356,915 & 10.272    \\
+reduced word sequence  & 0 & {\D}to{\D}& \C235,929    & 218,822   & 1,582,065 & 15.829 \\
+}{Statistics about some of the streams from \prepair,
+and the reduced word
+sequence from \repair on the \wsja file.  
+The column headed self-information
+is the zero-order self-information for the frequency distribution of
+the symbols in that file, measured for each file in bits per
+symbol relative to the size of that file.}{Statistics for
+the modifiers and the reduced word sequence (\wsja)}
+{tab:prepair-fileinfo}
+
+The word sequence is compressed with \repair, by treating the
+word sequence symbols as primitives.  A hierarchy of phrases
+is constructed for browsing, as well as a reduced word sequence.
+In \chapref{chap:repair}, experiments showed that the phrase
+hierarchy can be effectively stored by transforming it
+with chiastic slide, and then encoding it with interpolative coding.
+Statistics about the reduced word sequence of \wsja are also given
+in \tabref{tab:prepair-fileinfo}.
+
+The three streams of modifiers are stored as 32-bit integers.
+The number of distinct symbols in any of these streams is less than
+the word sequence.  Also the self-information of these streams is
+lower than the word sequence.
+
+The modifiers are also compressed, but
+since a phrase hierarchy is not required for browsing, compression
+systems other than \repair can also be applied.  Results obtained
+by applying five compression systems to \wsja are presented in 
+\tabref{tab:prepair-modbpc}.  The compression mechanisms employed
+include the zero-order Huffman coder \shuff, \gzip, \bzip, 
+\ppmd, and
+\repair.  The \shuff program processed the modifiers as a single block,
+while \gzip and \bzip were executed with the {\texttt {-9}}
+option in order to favour compression effectiveness.  The \ppmd system
+operated with a seventh order model and a limit of \mib{255} of memory.
+The three modifiers were also processed with \repair as a single block,
+with \shuff used to encode the sequence, also as a single block.
+While \gzip, \bzip, and \ppmd compress the modifiers as individual 
+bytes, both \repair and \shuff treat each 32-bit integer as a symbol.
+
+\tab{lccccc}
+{
+   & \multirow{2}*{\shuff} & \multirow{2}*{\gzip} & \multirow{2}*{\bzip} & \multirow{2}*{\ppmd} & \repair \\
+   &        &       &       &       & with \shuff \\
+}
+{
+case folding modifiers & 0.232 & 0.200 & 0.142 & 0.229 & {\greybox {0.125}} \\
+stemming modifiers     & {\greybox {0.388}} & 0.583 & 0.457 & 0.520 & 0.394 \\
+non-word modifiers     & 0.320 & 0.367 & 0.261 & 0.362 & {\greybox {0.224}} \\
+}{Compression effectiveness of the modifiers from 
+word-based \repair for \wsja.}
+{Compression ratios for word-based \repair modifiers (\wsja)}
+{tab:prepair-modbpc}
+
+The compression results from \tabref{tab:prepair-modbpc} show the compression
+results in bits per character, relative to the size of \wsja.  The best
+compression ratio for each modifier is highlighted.  While the case folding
+and non-word modifiers are most effectively processed by \repair (with \shuff),
+\shuff alone provided the best compression ratio for the stemming modifiers.
+Moreover, \bzip also gave better compression effectiveness than \shuff 
+for the same modifiers as \repair.  Both \repair and \bzip are better
+at capturing the repetition in the modifier streams.
+
+The time required to process these streams with the five systems are
+reported in \tabref{tab:prepair-modtime}, with the fastest encoding and
+decoding time for each stream highlighted.  The \shuff system operated
+the fastest for both encoding and decoding, partly due to the simplistic
+zero-order model that it is based on.  The \bzip program was particularly
+slow for encoding the non-word modifier, but otherwise yielded consistent
+encoding and decoding times.  Decoding with the dictionary-based systems
+(\gzip and \repair) are fast, and in one case, gave the same decoding time
+as \shuff.
+
+\tab{lccccc}
+{
+   & \multirow{2}*{\shuff} & \multirow{2}*{\gzip} & \multirow{2}*{\bzip} & \multirow{2}*{\ppmd} & \repair \\
+   &        &       &       &       & with \shuff \\
+}
+{
+Encoding time & & & & & \\
+{\D}{\D}case folding modifiers       & {\greybox {0.4}}  & 20.4 & \D4.8  & 4.0  & \D9.5  \\
+{\D}{\D}stemming modifiers           & {\greybox {0.4}}  & 51.0 & \D4.6  & 5.0  & 13.3 \\
+{\D}{\D}non-word modifiers           & {\greybox {0.4}}  & 17.1 & 70.6   & 5.3  & 10.4 \\
+Decoding time & & & & & \\
+{\D}{\D}case folding modifiers       & {\greybox {0.1}}  &\D0.2 & \D1.3  & 4.6  & {\greybox {0.1}}  \\
+{\D}{\D}stemming modifiers           & {\greybox {0.2}}  &\D0.3 & \D1.9  & 5.5  & 0.3  \\
+{\D}{\D}non-word modifiers           & {\greybox {0.1}}  &\D0.3 & \D3.4  & 5.9  & 0.2  \\
+}{Compression times for the modifiers produced by word-based \repair on
+\wsja, reported in CPU seconds and averaged over three runs each.}
+{Compression times for word-based \repair modifiers (\wsja)}
+{tab:prepair-modtime}
+
+These results show that a combination of \shuff alone and \repair coupled 
+with \shuff seem to offer the best compression effectiveness for the
+modifiers.  In addition, both systems offer fast decoding times, an 
+important factor to consider when designing a retrieval system.  
+While these two
+systems satisfy the needs of compression, they are inappropriate
+for retrieval for other reasons.  These reasons are related to how
+these streams are used in the browsing system, a problem which is
+covered later beginning in \chapref{chap:review}.
+The method used for encoding the reduced sequence and the modifiers
+is revisited at that time.
+
+\tabref{tab:prepair-stats} presents some statistics when
+\repair is applied to either the original \wsja file of 20,971,520
+characters (character-based and word-aligned \repair) 
+or to the word sequence of 3,356,915 symbols (word-based 
+and punctuation-aligned \repair) produced from \prepair.  The
+results for character-based \repair are taken from
+\tabref{tab:repair-stats} on \pgref{tab:repair-stats}.  
+Word-aligned \repair produces
+a larger phrase hierarchy than character-based \repair,
+but with less generations and a longer reduced sequence.  Many
+phrases in the word-aligned phrase hierarchy include a 
+phrase ``$\alpha$'' in one generation, and then
+the phrase ``$\alpha${\tvs}'' in the next generation. 
+This effect is also evident in the phrase hierarchy 
+of \figref{fig:woodchuck-complete-wa-phrases} on
+\pgref{fig:woodchuck-complete-wa-phrases}.
+
+%%  Note:  \Seq length includes the terminating 0 symbol.
+\tab{lccccc}
+{\multicolumn{1}{c}{\multirow{2}*{Method}} & \multirow{2}*{$|\Sigma|$} & \multirow{2}*{$|\rho|$}  & \multirow{2}*{$|\Seq|$}     & \multirow{2}*{Generations} & Longest phrase \\
+                         &            &          & &             & (in primitives) \\}
+{ 
+character-based        & \D\D\C90 & 310,486 & 1,904,118 & 21 & 1,257 \\
+word-aligned           & \D\D\C90 & 343,520 & 1,912,566 & 19 & 1,269 \\
+word-based             & 39,638   & 196,291 & 1,582,065 & 15 & \C215 \\
+punctuation-aligned      & 39,638   & 191,924 & 1,634,652 & 13 & \C215 \\
+}{Statistics from experiments with the four variants
+of \repair with \wsja.  The first two methods are applied
+to \wsja directly, where the characters are primitives.
+The other two methods are used on the word sequence 
+produced by \prepair.}
+{Statistics for the four variants
+of \repair (\wsja)}{tab:prepair-stats}
+
+As \tabref{tab:prepair-stats} shows, word-based and punctuation-aligned
+\repair are similar, but both produce a shorter reduced sequence
+and a smaller phrase hierarchy than character-based 
+and word-aligned \repair.  Also, the maximum phrase generation
+between the two is 15.  The identification of word tokens with \prepair
+allow contexts of characters to be found during pre-processing,
+before \repair is used.  
+
+The last column of the table indicates the longest phrase of
+each method, measured in primitives.  The
+longest phrase for word-based \repair
+is 215 symbols, which expands to 1,325 characters in length.
+This is a measure of stemmed, case folded
+words with no non-words.  Without these two transformations, 
+the same phrase also has more primitives than the longest
+phrase for character-based \repair:  1,421 characters.
+
+The compression effectiveness of the four versions of \repair is listed
+in \tabref{tab:prepair-bpc}.  The test file is \wsja and compression 
+ratios are given in bits per character relative to the original file.
+The results for character-based \repair are from 
+\tabref{tab:repair-bpc} on \pgref{tab:repair-bpc}.  
+Compression levels for four variants of 
+word-based \repair are presented, which each differ by whether or not
+case folding and stemming are applied.  Punctuation-aligned \repair
+imposes rules on \repair which prevents certain phrases from forming.
+However, the three modifier streams are unchanged.  In the table,
+only results for punctuation-aligned \repair with both case folding
+and stemming are shown.  All lexicons are encoded with front coding
+followed by \bzip.  The reduced word sequence and the three streams of
+modifiers are encoded using \shuff.  
+
+\sidetab{lcccccccc}
+{
+& Word & Phrase & Reduced & Case folding & Stemming & Non-word & Non-word & \\
+& lexicon & hierarchy & (word) & modifiers & modifiers & lexicon & modifiers & Total \\
+&         &           & sequence &         &           &         &           & \\
+}
+{
+character-based             &  -    & 0.223 & 1.551 &   -   &   -   &  -    &   -   & 1.774  \\
+word-aligned                &  -    & 0.201 & 1.533 &   -   &   -   &  -    &   -   & 1.734  \\
+word-based                  &       &       &       &       &       &       &       &        \\
+{\D}{\D}no transformations  & 0.052 & 0.154 & 1.320 &   -   &   -   & 0.001 & 0.320 & {\greybox {1.708}}  \\
+{\D}{\D}case folding only   & 0.041 & 0.152 & 1.285 & 0.232 &   -   & 0.001 & 0.320 & 2.031  \\
+{\D}{\D}stemming only       & 0.038 & 0.145 & 1.264 &   -   & 0.380 & 0.001 & 0.320 & 2.148  \\
+{\D}{\D}both                & 0.029 & 0.143 & 1.230 & 0.232 & 0.388 & 0.001 & 0.320 & 2.343  \\
+punctuation-aligned         &       &       &       &       &       &       &       &        \\
+{\D}{\D}both                & 0.029 & 0.138 & 1.254 & 0.232 & 0.388 & 0.001 & 0.320 & 2.362  \\
+}{Comparison of the compression ratios achieved by the four 
+versions of \repair for \wsja, in bits per character.}{Compression
+ratios of the four versions of \repair (\wsja)}{tab:prepair-bpc}
+
+The best compression achieved is by word-based \repair,
+when no word transformations are applied.  Compression levels
+degrade as case folding and stemming are included.  Note that 
+the rules for stemming assume that the word tokens have been
+case folded.  Hence, the stemming modifiers occupy 0.380 bpc or
+0.388 bpc, depending on whether or not the word tokens have been
+case folded.
+When both transformations are used, a compression effectiveness
+of 2.343 bpc is attained.  Even if the best selection of compression
+mechanisms is chosen for the modifiers (see the highlighted
+numbers in \tabref{tab:prepair-modbpc}), the compression ratios
+drops by 0.203 bpc to 2.140 bpc.  So, despite the fact that
+word-based \repair and punctuation-aligned \repair produce
+a smaller phrase hierarchy, character-based \repair and
+word-aligned \repair achieve better compression effectiveness.
+
+One reason for the poorer compression levels of word-based and
+punctuation-aligned \repair
+is that separating the message into several independent streams
+disturbs the contexts in the message.  One possible direction
+for future work is to encode the modifier streams more carefully.
+Symbols in these streams do not appear
+independently of neighbouring symbols, and are even conditioned based on
+symbols from another stream.  For example, if the first letter of a word
+is in upper case, the word is probably the beginning of a sentence.
+One would expect the few words that follow to be in lower case.  Moreover, 
+one of the non-word characters that immediately precede it is probably
+a sentence ending punctuation mark.  And, since the stems of words
+correspond to their parts-of-speech (for example, ``-ing'' is 
+associated with verbs), and these categories restrict the order of
+words in a sentence, it is expected that some correlation exists 
+between stemming modifiers.  This observation means that the
+encoding of the symbol in position $k$ of the case folding modifiers
+can be conditioned by preceding symbols as well as symbols in the
+other modifier streams, or the word sequence.
+
+\tabref{tab:prepair-bpc} also shows that word-aligned \repair 
+achieves slightly better compression than character-based 
+\repair, even though the former adds more phrases to the 
+phrase hierarchy.  This result shows that character-based \repair's 
+use of frequency alone as a heuristic does not always choose
+the best phrases.  A heuristic which forms complete words before 
+combining with complete non-words to the right improves compression
+effectiveness over character-based \repair.
+
+The compression effectiveness of the four versions of \repair
+are presented in \figref{fig:prepair-bargraph-all} as a graph,
+with the compression results for \wsja with \gzip, \bzip, and
+\ppmd (see \tabref{tab:tc-bpc} on \pgref{tab:tc-bpc}) indicated
+as horizontal lines.  As a further guide, but not shown in the
+figure, \citet{im01:dcc} used a word-based block sorting
+mechanism and a Huffman coder on \wsja and reported 
+compression effectiveness of 1.69 bits per character.
+Word-based and punctuation-aligned \repair both performed
+case folding and stemming.  All four versions of \repair have
+been broken down by stream.  Word-based and punctuation-aligned
+\repair both achieve slightly worse compression than \bzip, but better than
+\gzip.  However, both of these versions of \repair require more
+memory than either \bzip or \gzip.  Even when neither case folding nor
+stemming are used with word-based \repair, the compression 
+effectiveness of 1.708 is still slightly worse than the 1.656 bpc
+offered by \ppmd.
+
+\fig{\includegraphics*{./bargraph-all.eps}}
+{Comparing the compression ratios of the four variants
+of \repair for \wsja, broken down by stream.  Also shown are
+compression results from \chapref{chap:tc} using
+\gzip, \bzip, and \ppmd.}{Compression ratios for the four
+variants of \repair (\wsja)}{fig:prepair-bargraph-all}
+
+Other than compression effectiveness, the second factor to 
+consider when evaluating compression systems is
+execution time.  All times reported below
+have been averaged over 3 trials.  \tabref{tab:prepair-chartime}
+displays the encoding and decoding times of character-based
+\repair (from \tabref{tab:repair-time} on \pgref{tab:repair-time})
+and word-aligned \repair.  The rules embedded within
+word-aligned \repair reduces the number of active phrases 
+and active pairs that character-based \repair keeps.
+As a result, word-aligned \repair creates a longer
+reduced sequence, but encodes the message in less time.  However,
+no difference exists for the other program execution times shown
+in \tabref{tab:prepair-chartime}.
+
+\tab{lcc}
+{ 
+  & Character-based & Word-aligned \\
+  & \repair         & \repair \\
+}
+{
+Encoding time    & & \\
+{\D}{\D}\repair  & 88.5  & 61.2 \\
+{\D}{\D}\shuff   & \D1.6 & \D1.6 \\
+{\D}{\D}Total    & 90.1  & 62.8 \\
+Decoding time    & & \\
+{\D}{\D}\shuff   & \D2.5 & \D2.5 \\
+{\D}{\D}\despair & \D0.4 & \D0.4 \\
+{\D}{\D}Total    & \D2.9 & \D2.9 \\
+}{Compression times for character-based \repair and word-aligned \repair
+for \wsja.  Times have been averaged over three trials and are given in
+CPU seconds.}{Compression times for character-based and 
+word-aligned \repair (\wsja)}{tab:prepair-chartime}
+
+The time required to compress \wsja by word-based \repair,
+with case folding and stemming, is
+shown in \tabref{tab:prepair-wordtime}.  If both case folding
+and stemming are not used, the parsing performed by \prepair
+reduces to 7.8 seconds.  Since the only difference between
+word-based \repair and punctuation-aligned \repair is the 
+way phrases are selected, the only times affected are those
+related to \repair.  Punctuation-aligned \repair takes
+16.3 and 1.1 seconds to encode with \repair and \shuff and
+0.9 and 0.3 seconds to decode with \despair and \shuff.
+Similar to word-aligned \repair, the augmented rules to 
+punctuation-aligned reduces the amount of time to encode
+the word sequence.
+
+\tab{llcc}{
+\multicolumn{1}{c}{\multirow{2}*{Stream}} & \multicolumn{1}{c}{Compression} & Encoding & Decoding \\
+                      & \multicolumn{1}{c}{system}      & time     & time     \\}
+{
+\prepair               &                   & 14.2   & \D2.8  \\
+word lexicon & front coding and \bzip      &  \D0.1   & \D0.1    \\
+word sequence          &                   & &       \\
+                       & \repair or \despair & 19.6   & \D0.9  \\
+                       & \shuff            & \D1.1  & \D0.2  \\
+case folding modifiers & \shuff            & \D0.3  & \D0.1  \\
+stemming modifiers     & \shuff            & \D0.3  & \D0.1  \\
+non-word lexicon & front coding and \bzip  & \D0.1  & \D0.1 \\ %%  Actually, both are < 0.1
+non-word modifiers     & \shuff            & \D0.3  & \D0.1  \\
+\hline
+Total                  &                   & 36.0   & \D4.4  \\
+}{Compression and decompression times for word-based
+\repair in CPU seconds.  Case folding and stemming have been performed
+and front coding followed by \bzip is used for encoding
+the lexicons.  Times have been averaged over three trials.}
+{Compression and decompression times for \prepair (\wsja)}
+{tab:prepair-wordtime}
+
+Finally, \figref{fig:prepair-wsjphrases} shows the difference in
+phrases between word-aligned \repair and word-based \repair by
+expanding the first 20 symbols of \wsja into primitives.  As a 
+reference point, the same section of \wsja was presented in
+\figref{fig:repair-wsjhead} on \pgref{fig:repair-wsjhead}.
+Punctuation-aligned \repair is not shown because, for this section
+of text, only a small difference with word-based \repair exists.
+An extensive comparison of phrases between the four versions of 
+\repair was discussed earlier with {\texttt {bible.txt}} 
+(\figref{fig:prepair-biblephrases}).  \figref{fig:prepair-wsjphrases}
+presents the phrases for \wsja for completeness, since most of this
+thesis uses \wsja, or files similar to \wsja, as test data.
+
+\fig{
+\begin{tabular}{l}
+\input{./wsjhead-word-align.tex} \\ [0.5ex]
+\multicolumn{1}{c}{(a) Word-aligned \repair} \\ [1.0ex]
+\input{./wsjhead-word-fcode-cs.tex} \\ [0.5ex]
+\multicolumn{1}{c}{(b) Word-based \repair with case folding and stemming} \\ [1.0ex]
+\end{tabular}
+}{Expanding the first 20 symbols of \wsja into primitives,
+parsed with word-aligned \repair and word-based \repair.
+For the purposes of display, 
+{\tb} is used to indicate a linefeed and long phrases 
+have been broken at the points indicated by {\crarrow}.}
+{Expanding the beginning of the sequence with
+word-aligned and word-based \repair (\wsja)}{fig:prepair-wsjphrases}
+
+The same comparisons that were made for 
+\figref{fig:prepair-biblephrases} also apply to 
+\figref{fig:prepair-wsjphrases}.  However, a couple of 
+points of interest exists in 
+\figref{fig:prepair-wsjphrases}.  Note that \sgml
+tags are treated as word tokens, and all of them have been
+case folded.  Also, the word
+``telecommunications'' on line 5 of 
+\subfigref{fig:prepair-wsjphrases}{b} is too
+long and has been broken in two.  However, after breaking
+it, no stemming rules could be applied, so this word
+appears unchanged.  If no maximum word length was imposed,
+the word ``telecommunications'' would have stemmed to
+``telecommun''.  
+
+\newsection{Phrases for Browsing}{sec:prepair-summary}
+
+Three additional heuristics for selecting phrases
+have been proposed in this chapter which extend the
+capabilities of character-based \repair.
+Experiments have been performed
+which measured the difference in compression
+effectiveness achieved and compression times.
+However, the initial motivation
+for embarking on this investigation has been to create
+phrases that are suitable for phrase browsing.
+
+From \figref{fig:prepair-biblephrases} and 
+\figref{fig:prepair-wsjphrases}, the most visually
+appealing phrases are those of word-based \repair
+and punctuation-aligned \repair.  Case folding and
+stemming reduce the size of the lexicon and allow
+users to browse phrases without considering the
+case and stems used in the document.  The separation
+of non-words from the message permits browsing without
+the clutter caused by them.  While not appearing 
+in the phrase hierarchy, non-word tokens which contain
+punctuation marks are used by 
+punctuation-aligned \repair to guide the choice of 
+phrases made.
+
+There are six streams created by the message 
+pre-processor, \prepair.  After \repair compresses the
+word sequence, a phrase hierarchy and a reduced word
+sequence are created.  In \tabref{tab:prepair-streams},
+these seven streams (in boldface), their purpose,
+and the method employed in this chapter for compressing
+them are shown.  Further
+details about how these seven streams are used by a phrase
+browsing system are given
+in \chapref{chap:review} and \chapref{chap:rephine}.  In
+\chapref{chap:review}, the four instances of ``\shuff''
+are replaced by compression systems that are more suited
+to the intended purposes of the reduced word sequence and the 
+three modifier streams.  The encoding methods for the lexicons
+and the phrase hierarchy remains unchanged for the remainder
+of this thesis.
+
+\newlength{\mytablength}
+\setlength{\mytablength}{\textwidth}
+\addtolength{\mytablength}{-0.1cm}
+
+\tabnoline{@{}l}{}
+{
+\begin{tabularx}{\mytablength}{|l|X|X|X|}
+\hline
+Output from  & \mc{1}{\mr{{\textbf {word lexicon}}}} & \mc{2}{\mr{word sequence}} \\
+\prepair     &                             & \mc{2}{} \\ \cline{1-4}
+
+\mr{Purpose} & \mc{2}{\mr{phrase browsing}} & \mc{1}{\mr{searching for symbols}}  \\
+             & \mc{2}{} & \\ \cline{1-4}
+\mr{Model}   &                 & \mc{2}{\mr{\repair}}      \\
+             & \mc{1}{front coding}    & \mc{2}{}             \\ \cline{1-1}\cline{3-4}
+\multirow{3}*{Coder}   & \mc{1}{and \bzip} & \mc{1}{{\textbf {phrase hierarchy}}} & \mc{1}{{\textbf {reduced word sequence}}} \\
+             & & \mc{1}{chiastic slide and} & \mc{1}{\mr{\shuff}} \\ 
+             & & \mc{1}{interpolative coding} &        \\ \cline{1-4}
+\end{tabularx} \\
+\multicolumn{1}{c}{(a) Words} \\ [1.5ex]
+
+\begin{tabularx}{\mytablength}{|l|X|X|X|X|}
+\hline
+Output from  & \mc{1}{{\textbf {non-word}}} & \mc{1}{{\textbf {non-word}}} & \mc{1}{{\textbf {case folding}}} & \mc{1}{{\textbf {stemming}}} \\
+\prepair     & \mc{1}{{\textbf {lexicon}}}  & \mc{1}{{\textbf {modifiers}}} & \mc{1}{{\textbf {modifiers}}} & \mc{1}{{\textbf {modifiers}}}  \\ \cline{1-5}
+\mr{Purpose} & \multicolumn{4}{c|}{\mr{skipping to symbols}} \\
+             & \multicolumn{4}{c|}{} \\ \cline{1-5}
+\mr{Model}   &                 & \mc{1}{\multirow{4}*{\shuff}}& \mc{1}{\multirow{4}*{\shuff}}& \mc{1}{\multirow{4}*{\shuff}}\\
+             & \mc{1}{front coding}    &  & & \\ \cline{1-1}
+\mr{Coder}   & \mc{1}{and \bzip}       & &  & \\
+             &                 &          &          &        \\ \cline{1-5}
+\end{tabularx} \\
+\multicolumn{1}{c}{(b) Non-words and modifiers} \\ [1.0ex]
+}{The seven streams produced by \prepair and \repair.  The purpose
+of each stream, and the compression methods employed in this chapter
+for these streams are also shown.  Entries marked ``\shuff'' 
+are replaced in \chapref{chap:review} with systems better
+suited to those specific tasks.}{The seven streams by \prepair and 
+\repair}{tab:prepair-streams}
+
+Phrase browsing can be
+performed with only the word lexicon and the 
+phrase hierarchy to determine the words used in
+the message and the relationships between them.
+Together, these two represent just 
+0.167 bits per character (punctuation-aligned 
+\repair, from \tabref{tab:prepair-bpc}), or just
+over 2\% of the original document size, yet provide a very
+good guide to the context of the document. 
+The lexicons are relatively small, and can be compressed
+using methods other than front coding with \bzip.
+
+The word lexicon and word phrase hierarchy are used
+for browsing.  But when the context in which the phrases
+occur are
+required, then the compressed word sequence (1.254 bpc) 
+can be used.  The 3 streams so far are only an 
+approximation of the document;
+words in the phrases need to have the case folding and
+stemming reversed.  Also, the non-words within 
+phrases have to be re-inserted.  If punctuation-aligned
+\repair is used for compression, then the original
+document can be obtained by decoding all of the streams
+and applying a post-processor to combine them.  For
+retrieval, though, only a portion of the modifiers 
+and the non-word sequence may be required.  If a 
+one-to-one correspondence
+between a word and its case folding, stemming, 
+and non-word modifiers is ensured, then
+a phrase can be reproduced during retrieval
+by skipping to precise locations in each of these streams.
+In this chapter, the Huffman coding used to encode the modifiers
+prevent this operation from occurring 
+without decoding the entire document.  However,
+this issue and the problem of efficiently searching for
+phrase contexts in the compressed word sequence are considered
+later, in \chapref{chap:review}.  Also, more details about
+how a user browses phrases and searches for the contexts
+in which the phrases occur is examined in 
+\chapref{chap:rephine}.
+
+But first, in the next chapter, a different problem 
+is considered.
+So far, \repair has been used to compress a \mib{20}
+document.  Ideally, larger documents should be compressed
+and browsed and some ways of achieving this is discussed
+next.
+

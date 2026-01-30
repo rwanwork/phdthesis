@@ -1,0 +1,1369 @@
+\newchapter{Coding Considerations}{chap:review}
+
+\chapref{chap:tc} explained how compression systems 
+can be thought of as three separate components:
+modelling, probability estimation, and coding
+(see \figref{fig:tc-modelcoder}, 
+\pgref{fig:tc-modelcoder}).  In the chapter that followed,
+the \repair algorithm was demonstrated as a method of
+reducing the length of a message through the recursive replacement of 
+character digrams.  Later, pre-processing and post-processing 
+stages were introduced which, when working with \repair, 
+provided a combination of tools for parsing a document into words, 
+reducing the length of the sequence of word tokens, and finally merging
+blocks so that larger messages can be handled.  The compression
+aspects from \chapref{chap:repair} to \chapref{chap:remerge}
+have placed emphasis on the modelling and probability estimation 
+components of a compression system.
+
+A relatively small amount of attention was given
+to the third component:  coding.  The
+goal of this chapter is to rectify that omission by 
+considering several methods of coding, and concluding with a
+selection of coders which follows the theme of this thesis.  At the end
+of this chapter, a coding scheme which provides a suitable 
+balance between compression and browsing for punctuation-aligned
+\repair is described.
+
+The chapter is structured as follows.  
+\secref{sec:review-pastchaps} summarises the thesis so far with
+respect to coding.  \secref{sec:review-huffblocks} and 
+\ref{sec:review-review} propose two
+coding mechanisms.  The first builds on the Huffman coder
+that has already been used throughout this thesis, while the 
+second relaxes the 
+requirements of entropy coding altogether in order to achieve
+more efficient phrase browsing.    
+The effectiveness and efficiency of these two
+coding mechanisms are described
+in \secref{sec:review-expt}.  \secref{sec:review-summary}
+concludes this chapter with an overview of the advantages
+and disadvantages of the coding methods that have been considered.
+
+\newsection{Coding for Compression and Phrase Browsing}{sec:review-pastchaps}
+
+The coding techniques employed in previous chapters
+have been biased towards compression in that they favour compression
+effectiveness over other more pragmatic factors. This chapter introduces
+alternatives which attempt to compromise between 
+compression and the special needs of phrase browsing.  Before examining these
+alternatives, a brief review of the 
+previous chapters with respect to coding is appropriate.
+
+The coding component of a compression system encodes the output
+of the probability estimator into a bit stream for transmission.  
+Improved compression effectiveness
+is achieved when the number of bits required is reduced.
+The least number of bits possible for losslessly encoding
+the message is defined by the self-information (or self-entropy)
+of the message, as
+covered in \chapref{chap:tc}.  An approach which
+attempts to achieve a compression ratio close to the 
+self-information is an entropy coder.
+
+While there are several factors to consider when deciding on
+a coder for a compression system, the use of an entropy coder
+implies that some importance has been given to compression 
+effectiveness.  The need to permit phrase browsing in the
+compressed message shifts the importance to decoding time 
+and searchability. In any interactive system, a timely response
+to the user is essential.  Sacrificing a controlled amount of compression 
+effectiveness might be justified, if a shorter response time can 
+be assured.
+
+In the case of punctuation-aligned (or word-based) \repair,
+seven streams are produced by \prepair, \repair, and \remerge.
+These streams serve different purposes, but they can
+be divided into two broad categories based on their coding 
+requirements for phrase browsing.  
+There are the data
+streams that need to be decoded completely in order to be
+useful, and there are those that need to be only partially
+decoded if only a fraction of the original message is to be presented.
+
+\newsubsection{The Phrase Hierarchy and Lexicons}{subsec:review-phlex}
+
+The first category of streams includes the word lexicon, the
+phrase hierarchy, and the non-word lexicon.  The two 
+most important streams for phrase browsing are the word 
+lexicon and the phrase hierarchy.  The word lexicon lists 
+every unique word token found in the document, while the 
+phrase hierarchy contains information about the relationships 
+formed between the word tokens as they form longer phrases.  Separate from
+these two streams is the non-word lexicon, which is not
+required for phrase browsing.  However, the commonality that 
+exists between all three of these streams is that they are encoded
+so that compression effectiveness is favoured.  
+As a result, the compression mechanisms applied
+require that they must be completely decoded in order
+to be useful.  
+
+The two lexicons are encoded with front-coding, and can then be processed by
+a standard compression tool such as \bzip.  The two-dimensional phrase 
+hierarchy is mapped to a single dimension via the chiastic
+slide before being encoded with interpolative coding.
+These two methods of encoding are biased towards compression
+effectiveness. But the strings involved have to be fully decoded to support
+phrase browsing, so this approach is acceptable. 
+When these compression methods are applied, these 
+three streams were small in comparison to the remaining four.  
+For example, the \mib{1,000} of \news was processed with punctuation-aligned
+\repair and method E of \remerge in \secref{sec:remerge-expt}, 
+these three streams represent 6.4\% of the total
+compressed message, or 0.144 bits per character
+with respect to the original message 
+(see \tabref{tab:remerge-pa-otherstats}
+on \pgref{tab:remerge-pa-otherstats} and 
+\tabref{tab:remerge-pa-bpc}
+on \pgref{tab:remerge-pa-bpc}).
+
+\newsubsection{The Modifiers and Reduced Sequence}{subsec:review-modseq}
+
+The other four streams possess a much simpler structure than
+the phrase hierarchy or the lexicons.  Each stream is composed 
+of symbols which can be arbitrarily decoded without examining
+neighbouring symbols.  A symbol is represented as a number,
+which refers
+to an entry in the non-word lexicon, a set of instructions 
+to reverse stemming or case folding, or a symbol in the phrase 
+hierarchy.
+
+Strictly speaking, in each stream, a number (or reference) 
+does not
+appear independently of its neighbours.  References in the
+reduced word sequence do not appear at random with equal probability
+because after \repair (and \remerge), no pair of adjacent symbols 
+appear twice or more in the entire sequence.  
+One could also argue that the appearance
+of certain combinations of case folding modifiers precludes the same or
+some other type
+immediately after. For example, if the first letter of a word token is in 
+upper case, it is probably signalling the beginning of a new
+sentence, and one would expect the previous non-word to include a period, 
+and the next few words to be entirely in lower
+case.  When the modifier streams were first discussed
+in \chapref{chap:prepair}, results from experiments with 
+higher-order models were shown
+(\tabref{tab:prepair-modbpc} on \pgref{tab:prepair-modbpc}).  
+However, in the interest of obtaining
+a modifier from any position in the stream without decoding
+everything before it, a zero-order model was
+advocated in \chapref{chap:prepair}.  Because of this, coding was handled
+by the Huffman coder, \shuff.
+
+Two entropy coding schemes for a sequence of references were
+discussed in \chapref{chap:tc}.  They were
+arithmetic coding and Huffman coding, with available 
+implementations being \uint and \shuff, respectively.
+\chapref{chap:tc} and \chapref{chap:repair} demonstrated 
+that \uint achieved better overall compression 
+effectiveness, but required more time for both encoding
+and decoding.  \citet{mz92:dcc} argued that arithmetic coding is 
+unsuitable for an information retrieval system due to the 
+decoding time involved, which translates to waiting time for
+the user.  Instead, Huffman coding was employed and was shown
+to yield a small loss in compression effectiveness, while 
+providing an estimated improvement of 40 times over an
+implementation of arithmetic coding by \citet{wbn91:dcc}.
+Following the work by \citeauthor{mz92:dcc}, 
+\uint was abandoned as a potential coding candidate in a 
+phrase browsing system with \repair.  The systems detailed
+since
+\chapref{chap:repair} have only considered \shuff as the
+coder for \repair's modifier streams and reduced 
+sequence.
+
+Unfortunately, applying the Huffman coder
+\shuff to these four streams does not meet
+the needs of phrase browsing.  To illustrate this, a 
+description of how the streams need to be accessed by a phrase
+browser is necessary.  The phrase hierarchy and the word
+lexicon allow the user to manoeuvre around the primitives and phrases,
+with the exact steps performed being the 
+topic of \chapref{chap:rephine}.
+Phrase browsing ceases when the user has decided on a symbol
+of interest, $\alpha$.  The user will then examine the
+contexts in which $\alpha$ occurs.  Within the reduced
+word sequence, $\alpha$ may appear directly or indirectly,
+as part of a symbol in a higher generation.  That is, the browsing 
+system must translate the symbol $\alpha$ into a set of 
+symbols $\Criteria = (\alpha_1, \alpha_2, ..., \alpha_k)$
+where $\alpha = \alpha_1$, but $\alpha_2$ to $\alpha_k$
+are higher-generation symbols which contain $\alpha$.
+Precise details about the search through the phrase hierarchy
+is provided in the next chapter, but can be
+summarised as a recursive search for all symbols which
+contain $\alpha$.  The important point for this chapter
+is that a search for every symbol in $\Criteria$ is
+done next on the reduced word sequence.
+
+The locations of the symbols of $\Criteria$ are 
+determined and recorded in the set $\Result$, along with
+some suitable context for each.  One plausible context may be the
+10 symbols before and after each location.  
+Results in $\Result$ are interactively shown to the user by 
+using the phrase hierarchy and the word lexicon to translate
+the reduced word sequence references to words.
+
+If the displayed result does not satisfy the user's information need,
+further clarification may be required. The initial crude result displays
+stemmed, case folded word tokens with non-word tokens removed.
+To improve visual appeal, the initial display might
+add a space character between each word token.
+Ultimately, further refinement of the displayed result 
+through the decoding of the three modifier streams is 
+required, and if the $i$th symbol in $\Result$ ($\Result_i$) 
+is being displayed to the user,
+the corresponding modifiers for the symbol and
+its context need to be located and applied.
+
+There is an important distinction between the purposes of
+the reduced word sequence and the three modifier streams.
+A set of symbols are {\emph {searched}} for in the reduced 
+word sequence, based on specified symbol values.
+The modifier streams are then synchronised to
+the same locations.  The symbols in the modifier streams are
+located by their positions, and not their values.
+Also, locating modifiers for 
+$|\Result|$ contexts is unnecessary, since not
+every result in $\Result$ may require clarification.  So,
+one approach to the problem of modifier look-up is to obtain one 
+position and its context at a time, as required.
+
+With these points in mind, the next two sections look
+at ways of coding the four streams to enable the necessary
+searching and synchronisation operations.
+
+\newsection{Huffman Coding in Blocks}{sec:review-huffblocks}
+
+Motivated by the discussion of compression effectiveness in
+\chapref{chap:prepair}, the application of several compression
+systems on
+the three modifier streams was considered and the costs in
+time and benefits in space were assessed.  
+While compression
+effectiveness was good, there are two drawbacks to the
+approaches with respect to retrieval.  First, because
+the user is waiting for the results, decoding should be
+fast.  While previous results with dictionary-based systems
+such as \gzip and \repair have shown that decoding can be
+done efficiently, the time required cannot be ignored.  
+Second, each time the modifier stream is accessed,
+only one position is sought.
+Once that symbol has been found, only it and its 
+neighbouring symbols are required.  Decoding the entire
+stream from the beginning until the symbol of interest 
+seems wasteful.
+
+If time is crucial, then a flat binary code can be employed,
+as shown in \tabref{tab:tc-staticcodes} on 
+\pgref{tab:tc-staticcodes}.  That is,
+each symbol in each of the modifier streams is encoded
+as an $L$-bit integer.  The parameter $L$ is chosen so
+that no symbol in the stream is larger than $2^L$.  Two
+passes over the stream are required for encoding, with
+the first pass used to determine $L$, and the second pass
+for encoding each symbol.  Since every symbol is fixed at
+$L$ bits in width, any symbol can be retrieved provided $L$
+is specified to the decoder.
+Retrieval is fast and is only limited by the
+physical characteristics of the storage medium.
+
+In this section, a third alternative is presented which
+compromises between these extremes.
+Compression is achieved by encoding each
+stream directly with a zero-order Huffman coder (\shuff).  
+Unlike in earlier chapters,
+each stream is partitioned into blocks 
+before being processed.  In \chapref{chap:remerge}, 
+a message was divided into blocks by \repair because of
+limitations in memory.  Now, separating the streams of 
+phrase numbers into blocks of $B$ symbols 
+serves a second purpose -- to allow 
+any arbitrary
+block to be decoded by creating a partial index $I$, as shown in
+\figref{fig:review-skipblock}.  Each entry in the index
+points to the beginning of the corresponding 
+block of Huffman coded symbol numbers.  
+
+\fig{
+\input{./skipblock-block.pstex_t}}
+{The Huffman coding approach with an index which leads
+to the beginning of each block. Each block is self-contained, and
+includes the same number of coded symbols.}{Indexed Huffman coding}
+{fig:review-skipblock}
+
+The algorithm for this approach, called {\emph {indexed \textsc{shuff}}},
+is shown in \algref{alg:review-huffblocks}.  Each block of $B$
+symbols is encoded with \shuff in isolation and appended to the
+output stream, $\Seq'$.  The size of each compressed block is 
+appended to the index $I$.  
+
+\algo{\input{./alg-huffblocks.tex}}{Algorithm for Indexed \shuff.}
+{Indexed \shuff}{alg:review-huffblocks}
+
+The number of
+blocks created for a stream of $n$ symbols is $\lceil n/B \rceil$.
+When a symbol is being sought, the fixed block size
+ensures that a position $p$ in the stream must be in 
+block $\lceil p/B \rceil$.  If line 
+\ref{algline:review:huffblocks:4} of the algorithm 
+is changed so that $I$ contains
+cumulative compressed block sizes, then only two index
+entries need to be obtained in order to find the beginning and ending
+of the corresponding block.  Otherwise, every index entry up
+until the two being sought need to be decoded.
+Within the compressed stream
+($\Seq'$), position $p$ plus some context to the left and right
+is retrieved.  If the size of the window of symbols
+is smaller than $B$, at most two adjacent blocks
+need to be accessed from disk, in addition to the entries
+in the index.
+
+It is important to note that the \shuff coder has the ability to
+divide an input stream into
+blocks, according to options provided by the user.  However,
+the starting locations of each block are invisible to 
+the decoding program, preventing any block from being
+processed without decoding all previous blocks.
+
+Since each block of $B$ symbols are compressed individually,
+indexed \shuff allows the input stream to be read in blocks
+of $B$ symbols at a time.  Indexed \shuff is expected to take
+longer than compressing the entire stream with \shuff as a single
+block because of
+the number of disk accesses necessary.
+Experiments later in this chapter survey the effect various
+choices for $B$ have on time and space.
+
+\newsection{Byte-Aligned Coding in Blocks}{sec:review-review}
+
+The reduced word sequence needs to support a search operation and not
+just the seek mechanisms described in the previous section. 
+For efficiency reasons, it is preferred that the sequence be searched
+while in compressed form.  Decoding the sequence before
+searching requires extra time.  Moreover, it may be more
+efficient to search through a compressed message because it
+is smaller than its corresponding uncompressed form.
+
+Motivated by these observations, 
+\citet{ab92:dcc} described the problem of searching a message
+in compressed form and labelled it as the {\emph {compressed 
+matching problem}}.  Since then, 
+searching in a compressed message has received a significant
+amount of attention, with the searching mechanism generally being
+directly linked to the compression algorithm employed.  Some recent
+work in this area include searching in
+data encoded with Huffman 
+coding \citep{ks01:dcc, tmksfsa02:spire} and searching
+in messages which have been compressed with \lzb 
+\citep{nktsa01:dcc} and \sequitur \citep{mhmsta01:dcc}.
+
+The problem considered by \citeauthor{ks01:dcc} is that of 
+searching
+in a Huffman coded text.  As Huffman codewords are variable length,
+a match may be a false one if it is not aligned on a 
+codeword boundary.  The solution proposed by \citeauthor{ks01:dcc}
+extends earlier work which showed how Huffman
+codes tend to resynchronise after errors \citep{kw00:dcc}.  If a
+possible match is found at position $i$, then their algorithm
+jumps back a constant number of bits and decodes all of 
+the bits up until position $i - 1$ with a Huffman tree.  
+Probability analysis combined with experiments demonstrate
+that the quality of the search results improves as the
+size of the section of bits decoded increase.  However, their
+method is unsuitable for the reduced sequence 
+because several patterns may need to be searched 
+simultaneously.  The number of symbols in $\Criteria$ can be
+large, depending on the symbol selected by the user, and
+the number of other symbols that rely on it.  Ideally,
+a search method should make a single pass through the reduced
+sequence, regardless of the size of $\Criteria$.
+
+\citet{tmksfsa02:spire} described a method of searching 
+compressed documents without prior modification.  They also 
+demonstrated their technique on multi-byte character texts 
+as well as semi-structured texts, and showed that any 
+prefix-free code, including Huffman codes, could be searched.
+The basis of their idea was to combine synchronisation with
+string searching by constructing a pattern matching machine,
+which is then run on the entire file.
+
+\citet{manber97:tis}
+and \citet{mnzb00:tis} looked at byte-aligned codewords to
+improve efficiency and to avoid the problem of aligning with
+codeword boundaries.
+Decoding byte-aligned codewords is fast, since
+repeated bit operations like bit shifting and bit masking are
+eliminated.  \citeauthor{manber97:tis} devised a mechanism for 
+compressing and searching \ascii text which resembles the
+pairing of \repair.  Since \ascii is limited to only 128 symbols, frequent
+pairs of symbols were replaced non-recursively until the 
+compressed message had 256
+unique symbols.  By converting the search pattern in a similar
+fashion, the pattern is searched for directly in the compressed
+message using a string-matching technique such as \citet{bm77:cacm}.
+Alternatively, \citeauthor{mnzb00:tis}\ implemented Huffman coding
+with a radix-256 code.  That is, the
+nodes in the generated Huffman code tree had an out-degree of
+256, instead of 2 for a binary code.  Building upon this idea,
+a Tagged Huffman code was used for compression and searching.  
+Tagged Huffman coding represented words as groups of 7 bit 
+codewords (radix-128), with an eighth bit reserved for
+indicating the first byte of a codeword, to ensure alignment 
+while searching.  In their experiments,
+Tagged Huffman coding offered compression effectiveness which was
+around 5 bits per symbol worse than binary Huffman coding.  
+However, overall search times required about half of the 
+time of a direct search on the uncompressed message.  More 
+recently, \citet{bfge03:spire} extended this work by generalising
+Tagged Huffman codes to $({S},{C})$-Dense Codes.  $({S},{C})$-Dense 
+Codes consist of continuers and stoppers.
+Stoppers are bytes which indicate the last byte of a codeword.
+Other bytes are continuers.  Tagged Huffman coding is a special
+case when there are 128 stoppers and 128 continuers.  
+\citeauthor{bfge03:spire}\ varied the size of these two sets of
+codes to determine the combination which yielded the best 
+compression ratio for various document collections.
+
+The entropy coding requirements for the reduced word sequence
+are further eased compared to this previous work, in favour
+of retrieval.  A coder called \review has
+been developed which operates with a corresponding codeword length
+limit $L$.  Blocks are created so that each block has at most
+$2^L$ distinct values.  Byte-alignment is achieved by restricting
+$L$ to be either 8 or 16.  These two variants are denoted as
+\reviewa and \reviewb, respectively.
+
+A sketch of a \review block and part of the
+following block is shown in \figref{fig:review-review}.  Each
+block consists of a prelude and codewords, similar to a \shuff
+block.  The prelude specifies the $2^L$ different symbol 
+values that exist in the block.  At the beginning of each
+block, four values are also required, shown shaded in the 
+figure.
+
+\fig{
+\input{./review-block.pstex_t}
+}
+{One \review block and part of the next one.  A \review block
+is composed of four integers in the header (shown shaded), a 
+prelude, and a section of codewords.  The arrow at the top of 
+the figure indicates the potential to skip the codewords
+of a block if no match is known to
+exist in that block.}{Sketch of \review blocks}
+{fig:review-review}
+
+The four values in the header provide information about the
+entire block to improve the search time of \review.  In
+addition to the byte-alignment of codewords, the informational
+headers allow a block to be bypassed when none of the symbols
+being sought ($\Criteria$) are known to exist inside.  After
+phrase browsing, a user may have honed in on a phrase which
+is highly descriptive, and exists in only certain parts of the
+document collection.  Areas in the collection which do not
+contain the phrase should be skipped.  This function is provided
+by the last three of the shaded values of \figref{fig:review-review}.
+In order to determine whether or not a symbol in $\Criteria$
+exists in a block, the prelude must be decoded.  If no symbols
+in $\Criteria$ are found, then the block of codewords may be
+skipped, as shown by the solid, curved arrow in the figure.  There are
+$B_k$ symbols in block $k$, which translates to $B_k(L/8)$ bytes.
+The number of distinct values in the block ($D_k$) is required
+to aid in decoding the prelude, and is $2^L$ for every block 
+except for the last one.  The number of original word tokens covered by
+a block is specified in the header as $W_k$, and is necessary for
+synchronisation with the modifier streams.  
+After \repair, the number of word tokens represented by a block 
+is equal to or greater than the number of symbols it contains.
+When a block is skipped, not only does the number of phrase symbols 
+that have been passed need to be known ($B_k$), but the number 
+of original word tokens as well. Then, within a block, as 
+symbols are read, a count of the number
+of word tokens skipped and read since the beginning of the stream
+is maintained, so that each word token's corresponding modifier
+can be determined accurately.  In order to support this requirement,
+both encoding and decoding of 
+a reduced word sequence requires the lengths (in number of word tokens) 
+of each symbol in the phrase hierarchy.
+
+In later experiments, \review is applied to the modifier streams
+as well, to assist in its understanding.  As with indexed \shuff,
+every block, except for the one which contains the position being
+sought, needs to be skipped.  The first value in the header
+indicates the size of the prelude in bytes to allow both 
+the prelude and the codewords
+of a block to be skipped, as shown by the dashed line of
+\figref{fig:review-review}.  The block of interest can be located
+by summing $B_k$ for every block.  In order to bypass
+the prelude and codewords of the current block $k$, the number of 
+bytes is calculated as $P_k + B_k(L/8)$.
+
+The algorithm for \review is presented in \algref{alg:review-review}.
+\review processes a stream ($\Seq$) by scanning it sequentially
+while keeping track of the number of distinct symbol values 
+seen so far ($D_k$).  The distinct symbol values are maintained
+in an array \var{symbol\_map}, whose size is proportional to
+the number of distinct symbols in the entire sequence (the
+size of the alphabet, $|\Sigma|$).
+Once $2^L$ different values have been 
+seen (line \ref{algline:review:review:9}), a block is created.  
+The distinct symbols that appear in the block
+are mapped to $L$-bit integers on
+line \ref{algline:review:review:14}, and recorded in the
+prelude.  The prelude is buffered so that $P_k$
+can be placed first within a block.  The codewords
+are produced by mapping the symbol values to
+$L$-bit integers, by consulting the \var{symbol\_map} array
+on line \ref{algline:review:review:22}.
+The symbols in the block are represented as fixed $L$-bit
+codewords, and retain $L$-bit alignment throughout the block.
+
+\algo{\input{./alg-review.tex}}{Algorithm for \review.}
+{\review}{alg:review-review}
+
+While \var{symbol\_map} is scanned, each symbol is recorded
+in the prelude on line
+\ref{algline:review:review:13}.  Symbols are encoding
+as differences from the preceding symbol 
+using nibble-aligned codes (4-bit codes).  The mapping
+of differences to nibble-aligned codes is specified in
+\tabref{tab:review-prelude}.  In the second column of
+the table, the codes employed are specified using
+hexadecimal.
+
+\tab{ll}
+{
+Difference & Nibble-aligned \\
+& \multicolumn{1}{c}{codes} \\
+}
+{
+{\D\D}1 -- 8      & {\D\D\D}0 -- 7 \\
+{\D\D}9 -- 135    & {\D\D\D}80 -- FE \\
+{\D\D}{$\ge$}136 & {\D\D\D}FF \\
+}{Mapping differences to nibble-aligned codes.  The
+codes are specified in hexadecimal.}
+{Mapping differences to nibble-aligned codes for \review}
+{tab:review-prelude}
+
+The main data structures employed by \review are the
+sequence and the \var{symbol\_map} array, requiring
+a total of $|\Seq| + |\Sigma|$ words of memory.
+Three main operations are performed by \review on these
+two structures.  When a block is being built, two 
+passes are performed over the reduced sequence.  The
+first pass inspects the sequence in order to identify
+$2^L$ distinct values.  The second pass maps each
+symbol to an $L$-bit codeword.  Also, in order to assign
+symbols to codewords, a single pass over the \var{symbol\_map}
+structure is necessary for each of the $K$ blocks created.  
+Since \var{symbol\_map}
+has $|\Sigma|$ entries, $K$ linear passes may be costly.
+If an index of size $2^L$ is created so that only the symbols
+in \var{symbol\_map} need to be looked at, then the linear
+search can be eliminated.  For each block, this index needs
+to be sorted at a constant cost of $2^L \log_2 2^L$.  
+So, the \review algorithm runs in $O(2|\Seq| + K(2^L \log_2 2^L) + K2^L)$.
+
+When a set $\Criteria$ is searched for in the compressed
+sequence, the prelude of every block must be decoded.
+If at least one symbol in $\Criteria$ exists in the current
+block $k$, then the corresponding codewords are also 
+decoded.  Otherwise, the set of codewords is skipped
+using the value $B_k$ in the header.
+As is demonstrated shortly, since the prelude is about 
+36.1\% of the compressed file, a scan for a rare phrase
+involves processing at least one-third of the sequence.
+If the limited amount of decoding involved in processing 
+every prelude cannot be accepted, then one
+solution is to create a higher-level index, similar to the 
+\glimpse system \citep{mw94:usenix}.  The \glimpse retrieval 
+system partitions a file system into
+blocks.  The index indicates, for every term in the
+file system, the blocks in which it occurs.
+Once the blocks of interest have been determined, 
+each block is sequentially searched.  
+
+Several potential enhancements to \review are possible.  Disk
+access can be reduced by physically separating the preludes
+and the codewords into different files.  Then, disk access
+is concentrated on the prelude file.  Another modification
+would build a top-level index
+on blocks so that the preludes of blocks which do not contain 
+the symbol of interest are avoided entirely.  Such an index
+would be kept in memory.  Extending this last idea to
+an inverted index on symbols is also possible.
+None of these options were explored in the experiments 
+reported in the next section since the search times 
+obtained were acceptable.
+
+\newsection{Experiments}{sec:review-expt}
+
+To investigate the compression
+effectiveness of the modifier streams and the reduced word
+sequence, experiments were conducted using Huffman coding,
+built on the \shuff
+implementation, \review, and an even simpler binary code.
+The efficiency for both skipping to a precise location and
+searching are also examined.  Test files were
+taken from the punctuation-aligned \repair 
+experiments with method E of \remerge on the \news test data,
+as described in \chapref{chap:remerge}.  The compression results 
+from that chapter
+were presented in \tabref{tab:remerge-pa-otherstats} 
+(\pgref{tab:remerge-pa-otherstats}) for 
+the modifiers and \tabref{tab:remerge-pa-bpc} 
+(\pgref{tab:remerge-pa-bpc}) for the 
+reduced word sequence.  In those tables,
+the modifiers and the reduced word
+sequence were coded with \shuff as a single block.  
+The two tables in \chapref{chap:remerge} also indicate that the combined
+compression ratio of the word lexicon, non-word lexicon, and the
+phrase hierarchy was 0.143 bits per character.  The remaining 4
+streams occupied 2.090 bits per character.
+
+Additional information pertaining to the four streams 
+is listed in \tabref{tab:review-fileinfo}.  The
+last column in the table lists the self-entropy of each file.
+Note that because these values are relative to the streams
+themselves and not to the size of \news, they are not
+comparable to the compression ratios achieved in 
+\tabref{tab:remerge-pa-otherstats} and
+\tabref{tab:remerge-pa-bpc}.  
+
+\tab{lc@{}c@{}cccc}
+{ & \multicolumn{3}{c}{Symbol range} & Distinct & Number of  & Self- \\
+  & & &                              & values   & symbols    & entropy     \\}
+{
+case folding modifier  & 0 & {\D}to{\D}& \C\D65,536  & \C\D\D\C634 & 168,721,097 & {\D}1.303 \\
+stemming modifier      & 0 & {\D}to{\D}& 7,864,320   & \C\D\D\C541 & 168,721,097 & {\D}2.204 \\
+non-word modifier      & 0 & {\D}to{\D}& \C\D11,332  & \C\D11,333  & 168,721,097 & {\D}2.054 \\
+reduced word sequence  & 0 & {\D}to{\D}& 8,277,359   & 6,232,453   & {\D}58,685,281 & 18.659 \\
+}{Additional information about the modifier streams and
+the reduced word sequence from method E of \remerge with
+punctuation-aligned \repair on \news.  The column headed self-information
+is the zero-order self-information for the frequency distribution of
+the symbols in that file, measured for each file in bits per 
+symbol relative to the size of that file.}{Statistics
+about the modifier streams and reduced word sequence 
+(\news)}{tab:review-fileinfo}
+
+The other three columns of the table provide the
+range of symbols, the number of distinct values, and the total
+number of symbols of each 
+stream.  Note that the case folding and stemming mechanism 
+employed by \prepair permit $2^{16}$ possible case folding 
+values and $2^{23}$ possible stemming values.  In practice it appears
+that even a large collection only has a small number of distinct
+values used.  In contrast, \prepair assigns non-word
+modifier values in sequential order, starting from 1, with 0
+reserved for the zero-length non-word symbol.  For the non-word
+modifier stream, every symbol within the range appears.  
+Since there is a one-to-one correspondence between
+a word token and its modifiers, the three modifier 
+streams have the same number of values in them.
+
+Compared to the other three streams, the reduced word sequence
+is shorter, because \repair and \remerge have been applied.
+No pair of adjacent symbols occurs twice 
+in this sequence, unless
+one of the restrictions imposed by punctuation-aligned \repair has
+been violated.  As a result, the self-entropy of the stream is
+significantly higher than the others.  Accordingly, the number
+of distinct values and the symbol range are also high.  The
+symbol range is simply the number of symbols in the phrase
+hierarchy (see \tabref{tab:remerge-pa-stats} on 
+\pgref{tab:remerge-pa-stats}), with a special end
+of block marker.  After recursive pairing, some symbols
+in the phrase hierarchy do not appear directly in the reduced word
+sequence, but instead have been absorbed by higher generation
+symbols.  That is why the number of distinct symbols is less than
+the number of entries in the phrase hierarchy.
+
+There are two sets of experiments that are performed in this section.
+The first set considers the three modifier streams,
+while the second set examines the reduced word sequence in
+isolation.  In
+both scenarios, the compression ratios are reported, as are the
+times for compression and full decompression.  The times
+for seek or search operations are also reported, whichever is applicable.
+When necessary, the compression ratios are reported in bits
+per character (bpc) relative to the size of \news, and in bits
+per symbol (bps) relative to the number of symbols in the file 
+itself.  The number of bits
+per character is comparable with all compression ratios reported
+in previous chapters, while the number of bits per symbol is
+important when examining the column labelled ``self-entropy''
+in \tabref{tab:review-fileinfo}.
+
+Program execution times in this chapter are
+reported as both CPU time and elapsed time.  CPU time is a measure of
+the amount of computation performed by the program.  All
+execution times reported in previous chapters have been CPU costs.  
+But because this chapter also considers 
+the amount of time a user must wait for a response, 
+efficiency is also 
+reported as elapsed time (also called ``real time'').
+Elapsed time includes 
+both user time and the time taken by the system for
+the program.  Since all programs are
+executed with no data in memory beforehand, the time needed
+to access the disk is included in the elapsed time.
+All times, both CPU and elapsed, are averaged over three trials
+unless otherwise indicated.
+
+\tabref{tab:review-modbpc} and \tabref{tab:review-modtime} 
+summarise the experiments with the modifiers.  Each of the
+three modifier streams was compressed with indexed \shuff
+with block sizes increasing by a factor of 8 from 
+from \kib{4} up to \kib{16,384}.  While not
+the intended purpose of \review, \reviewl was tested with
+$L = 8$ and $L = 16$ as a preview for the second set of 
+experiments later.  A flat binary coder (\flatbin) 
+was also applied so that each symbol was encoded as a fixed-width
+binary code whose length was based on the maximum symbol value
+in the stream.  The \flatbin system treated each stream as a
+single block.
+
+\tab{rccc}{
+\multicolumn{1}{c}{Block size} & \multicolumn{2}{c}{Compression ratio} & Number \\ \cline{2-3}
+\multicolumn{1}{c}{($\times$ 1024 symbols)} & bpc & bps & of blocks \\}
+{
+\multicolumn{4}{l}{case folding modifiers} \\
+4       & 0.259    & \D1.608    & 41,192\\
+32      & 0.243    & \D1.508    & \D5,149\\
+256     & 0.240    & \D1.494    & \D\C644\\
+2,048   & 0.240    & \greybox{\D1.492}    & \D\C\D81\\
+16,384  & 0.240    & \D1.493    & \D\C\D11\\
+{\D\D}\flatbin       & 2.736    & 17.000     & \D\D\D\D1 \\
+{\D\D}\reviewa          & 1.288    & \D8.004    & \D\C161 \\
+{\D\D}\reviewb          & 2.575    & 16.004     & \D\C161 \\
+\hline
+\multicolumn{4}{l}{stemming modifiers} \\
+4       & 0.429    & \D2.667    & 41,192\\
+32      & 0.388    & \D2.414    & \D5,149\\
+256     & 0.379    & \D2.358    & \D\C644\\
+2,048   & 0.378    & \D2.347    & \D\C\D81\\
+16,384  & 0.377    & \greybox{\D2.346}    & \D\C\D11 \\
+{\D\D}\flatbin       & 3.701    & 23.000     & \D\C\D\D1 \\
+{\D\D}\reviewa          & 1.487    & \D9.240    & \D\C479 \\
+{\D\D}\reviewb          & 2.642    & 16.417     & \D\C161 \\
+\hline
+\multicolumn{4}{l}{non-word modifiers} \\
+4       & 0.370    & \D2.298    & 41,192\\
+32      & 0.346    & \D2.148    & \D5,149\\
+256     & 0.342    & \D2.123    & \D\C644\\
+2,048   & 0.341    & \greybox{\D2.119}    & \D\C\D81\\
+16,384  & 0.342    & \D2.126    & \D\C\D11\\
+{\D\D}\flatbin       & 2.253    & 14.000     & \D\C\D\D1 \\
+{\D\D}\reviewa          & 1.291    & \D8.020    & \D1,690\\
+{\D\D}\reviewb          & 2.575    & 16.004     & \D\C161\\
+}{Compression effectiveness of indexed \shuff, \review, and
+\flatbin for the modifier streams.
+The second column lists the compression ratios of
+each method relative to the size of \news in bits per character
+relative to the original file.  In the third column, compression
+levels in bits per symbol relative to the number of symbols in that 
+stream are reported, with the best values for each stream 
+highlighted.  The number of blocks
+produced are shown in the last column.}{Compression effectiveness
+for the modifier streams (\news)}
+{tab:review-modbpc}
+
+Generally, as the block size for indexed
+\shuff increased, compression effectiveness improved, as shown
+in \tabref{tab:review-modbpc}.  However, the
+decrease is small, especially between the larger block sizes.  
+Also, the difference in compression ratio
+between the smallest block size and the largest block
+size shown is no more than 0.052 bits per character.  
+Similar conclusions can be drawn from the column titled ``bps''
+when compared with the self-entropy of each file 
+(\tabref{tab:review-fileinfo}).
+
+The implementation of \review first creates an
+initial buffer of 1,048,576 symbols, preventing any block from being
+larger than the buffer.  
+The low variability in case folding modifier values 
+means that after \review has seen just over one million 
+symbols, less than $2^{8}$ distinct symbols have 
+been found.  As the number of distinct values increases in first
+the stemming modifiers, and then the non-word modifiers, more blocks
+are made by \reviewa.  However, as \reviewb still only creates
+161 blocks in both cases, no buffer has $2^{16}$ or
+more distinct 
+values.  Compression effectiveness of both types of \review are
+unacceptable, though quite expected.  \reviewl
+can never achieve compression effectiveness that is better than
+$L$ bits per symbol.  
+
+The ideal method for encoding the modifier streams depends
+on efficiency as well as effectiveness, as shown in 
+\tabref{tab:review-modtime}.
+The second and third columns of the table list the encoding and decoding 
+times of each of the methods, averaged over three trials, and
+represented as CPU time. 
+In order to demonstrate the random access abilities, 
+100 random positions were selected
+from the possible 168,721,097.  During the design of the
+experiments, it was noted that access times varied
+depending on the position in the stream that is being accessed.
+However, if the same 100 positions were used by all of the experiments,
+then the access times between systems can be compared.  Moreover,
+since the access times were short, \tabref{tab:review-modtime}
+presents the total time for accessing all 100 positions in the
+same order.  These times are reported as elapsed time and CPU time
+in the fourth and fifth columns of the table.  All times have 
+been averaged over three trials.  In the entries labelled ``---'', less
+than 0.1 seconds was noted, a time which cannot be reliably measured.
+
+\tab{rccccc}
+{
+ & \multicolumn{2}{c}{Compression} & & \multicolumn{2}{c}{Random access} \\ \cline{2-3} \cline{5-6}
+\multicolumn{1}{c}{Block size} & Encoding & Decoding                         & & Elapsed & CPU      \\
+\multicolumn{1}{c}{($\times$ 1024 symbols)}            & time     & time     & & time    & time     \\
+            & (CPU sec)&(CPU sec) & & (s)& (s) \\
+}
+{
+\multicolumn{6}{l}{case folding modifiers} \\
+4                     & 270.6    & 444.5    & & \D\D2.3    &  \D\D1.6    \\
+32                    & \D47.1     & \D64.8   & & \D\D2.0    &  \D\D1.3    \\
+256                   & \D24.4     & \D18.7   & & \D\D5.2    & \D\D3.0     \\
+2,048                 & \D20.7     & \D12.7   & & \D26.3   & \D14.7    \\
+16,384                & \D19.7     & \D11.2   & & 194.8  & 110.1   \\
+{\D\D}\flatbin        & \D15.3    & \D28.9   & & \greybox{\C\D---}      & \greybox{\D\D0.1}     \\
+{\D\D}\reviewa        & \greybox{\D\D8.3}      & \greybox{\D\D3.3}    & & \D\D1.5    & \greybox{\D\D0.1}     \\
+{\D\D}\reviewb        & \D\D8.7   & \D\D3.5    & & \D\D2.3    & \greybox{\D\D0.1}     \\
+\hline
+\multicolumn{6}{l}{stemming modifiers} \\
+4                    & 916.5    & 445.1  & & \D\D2.1    & \D\D1.6     \\
+32                   & 141.1    & \D66.0   & & \D\D2.2    & \D\D1.5     \\
+256                  & \D36.8     & \D19.1   & & \D\D5.1    & \D\D3.0     \\
+2,048                & \D23.1    & \D12.4   & & \D26.7   & \D15.3    \\
+16,384               & \D21.0     & \D11.3   & & 200.2  & 113.6   \\
+{\D\D}\flatbin       & \D17.0     & \D37.6   & & \greybox{\C\D---}      & \greybox{\D\D0.1}     \\
+{\D\D}\reviewa       & \D\D9.0    & \D\D4.1    & & \D\D2.0    & \D\D0.4     \\
+{\D\D}\reviewb       & \greybox{\D\D8.7}  & \greybox{\D\D4.0}    & & \D\D3.1    & \D\D0.3     \\
+\hline
+\multicolumn{6}{l}{non-word modifiers} \\
+4                    & 261.5    & 443.5  & & \D\D2.1    & \D\D1.5     \\
+32                   & \D45.1     & \D65.0   & & \D\D2.2    & \D\D1.3     \\
+256                  & \D24.8     & \D18.8   & & \D\D5.1    & \D\D2.9     \\
+2,048                & \D20.9     & \D13.1   & & \D26.5   & \D15.2    \\
+16,384               & \D19.7     & \D11.3   & & 198.3  & 113.2   \\
+{\D\D}\flatbin       & \D14.7     & \D25.2   & & \greybox{\C\D---}      & \greybox{\D\D0.1}     \\
+{\D\D}\reviewa       & \greybox{\D\D8.4}      & \greybox{\D\D2.7}    & & \D\D1.9    & \D\D0.3     \\
+{\D\D}\reviewb       & \D\D8.7      & \D\D3.7    & & \D\D2.6    & \greybox{\D\D0.1}     \\
+}{Compression efficiency of indexed \shuff, \review, and \flatbin for 
+the modifier streams of \news.  All times are measured in seconds, with the
+best values shaded.  Compression
+and decompression times are CPU times averaged over three trials.
+Results from randomly accessing 100 positions in each stream have
+also been repeated three times each.  These times are shown as
+elapsed time and user time in the fourth and fifth columns, 
+respectively.  Times indicated by ``---'' are less than 0.1 seconds.}
+{Compression efficiency for the modifier streams (\news)}
+{tab:review-modtime}
+
+As less blocks are created,
+compression and decompression efficiency improves.  
+\review is faster than both indexed
+\shuff and \flatbin.  
+The encoding times of \flatbin are equivalent
+to the largest block size tested for indexed \shuff, 
+while decoding is slightly worse than indexed \shuff with a 
+\kib{256} block size.
+The time required for random access is fastest for the
+\flatbin coder, followed by the two \review systems, and then
+indexed \shuff in increasing block size.  
+
+%% vipe:~/vipe-c/expt/6/search > wc -c grep.out
+%% 901252607 grep.out
+%% vipe:~/vipe-c/expt/6/search > bc
+%% bc 1.06
+%% 901252607/1048576
+%% 859.5014
+The second set of experiments looked at encoding the 
+reduced word sequence.  Three methods of searching within
+the word sequence were compared.  
+
+The first method applied
+version 2.4.2 of GNU \grep \citep{fsf-grep:program}
+on a simplified version of \news.  The \grep program searches
+for a set of one or more strings and returns the lines which
+match.  Including \grep in the experiments allows comparisons
+between searching for
+a string and searching for a reference to a string in the
+phrase hierarchy.  The \news document must be simplified
+in order to minimise the number of differences between these
+two tasks.  The modified \news document contains every 
+symbol in the reduced word sequence expanded into word 
+tokens.  No modifiers are applied, and
+a single space is inserted between each word token.  In order
+to allow \grep to return lines which match, linefeeds were
+inserted after each \sgml closing tag.  As long as
+no line that is searched contains a \sgml closing tag, this
+change ensures that no search string is missed because it
+straddles multiple lines.  One minor problem with this arrangement
+occurs when a search string appears twice or more in the same line.  
+In this
+case, \grep simply returns one copy of the line, and does not
+continue searching the remainder.  Hence, these 
+modifications to the \news document are not perfect, but 
+do provide a reasonable estimate for direct searching. 
+The modified version of \news is \mib{860} in size.
+
+While \grep is used to search for a particular
+string, the string may exist in several symbols in the phrase
+hierarchy.  The second and third methods are applied to the
+reduced word sequence so that a set of symbols can be searched
+for simultaneously.  The second method assumes the sequence
+is compressed with \flatbin or \shuff (without an index) using
+various block sizes, with the word sequence fully decompressed 
+for each search.  The third method compresses the
+sequence using \reviewb with searching performed using the 
+partial-decoder approach described earlier in 
+\secref{sec:review-review}.  Note that \reviewa cannot be sensibly 
+applied to the word sequence because of the large number of
+distinct symbols.
+
+\tabref{tab:review-ws-bpctime} presents compression and 
+decompression results with \shuff, \reviewb, and \flatbin.  Larger
+block sizes were selected for \shuff than for indexed \shuff
+in order to favour compression effectiveness and decompression
+time.  As \tabref{tab:review-modtime} showed, the overhead of
+processing many small blocks with indexed \shuff had an unfavourable effect
+on the decompression time.  Block sizes for \shuff ranged from
+1,048,576 symbols per block up to the entire
+stream as a single block ($\infty$).
+
+\tab{lccccc}
+{
+\multirow{2}*{Method} & \multicolumn{2}{c}{Compression ratio} & Number & \multicolumn{2}{c}{Compression time} \\ \cline{2-3} \cline{5-6}
+                  & bpc      & bps     &of blocks& Encoding (s) & Decoding (s)\\
+}
+{
+\shuff block size &          &          &        &         &          \\
+{\D\D\D}1,048,576   & 1.183    & 21.144   & \D56   & 104.5   & 25.1     \\
+{\D\D\D}2,097,152   & 1.166    & 20.827   & \D28   & \D87.3  & 22.9     \\
+{\D\D\D}4,194,304   & 1.151    & 20.570   & \D14   & \D75.9  & 21.1     \\
+{\D\D\D}8,388,608   & 1.139    & 20.355   & \D\D7  & \D64.9  & 18.7     \\
+{\D\D}16,777,216  & 1.132    & 20.219   & \D\D4  & \D56.3  & 17.0     \\
+{\D\D}20,971,520  & 1.131    & 20.199   & \D\D3  & \D53.6  & 16.2     \\
+{\D\D}33,554,432  & \greybox{1.127}    & \greybox{20.138}   & \D\D2  & \greybox{\D48.3}  & 15.1     \\
+{\D\D}$\infty$    & 1.131    & 20.213   & \D\D1  & \D52.6  & 13.9     \\
+\hline
+\flatbin          & 1.287    & 23.000   & \D\D1  & \D\D5.8 & 13.1 \\
+\reviewb          & 1.402    & 25.044   & 672    & \D64.9   & \greybox{\D7.9}      \\
+}{Compression statistics for the reduced word sequence of 
+\news, using \shuff, \flatbin, and \reviewb.  All times are reported in
+CPU seconds and averaged over three trials, with the best values shaded.}
+{Compression statistics for 
+the reduced word sequence (\news)}{tab:review-ws-bpctime}
+
+The compression ratios are listed in the second and third columns
+of the table in bits per character relative to the source text 
+and bits per symbol relative to the file of phrase numbers, respectively.
+As the \shuff block size increases, compression effectiveness improves.
+The exception occurs with
+the last block size.  Enlarging the block size to $\infty$ reduces the total
+prelude size, but the coded message increases in size.  The
+reason for this unexpected result is that the reduced word sequence,
+and the \news file from which it was derived, is not
+uniform.  Recall that \news is composed of several
+years' worth of news articles from two different sources, with the
+Wall Street Journal articles at the beginning and the Associated Press
+articles at the end.  The change in document style and the change in
+article years was the price paid in order to create a sufficiently
+large document for experiments in this thesis.  The \flatbin coder 
+attains a compression level which is about 3 bits per symbol worse than \shuff.
+\reviewb achieves compression which is 5 bits per
+symbol worse than \shuff; not a surprising result given that \reviewb is not an
+entropy coder and a prelude must be transmitted for each of the
+672 blocks.  The size of the encoded reduced word sequence with
+\reviewb was \mib{175.2}, of which the values in the
+headers ($W_k$, $D_k$, $B_k$, and $P_k$) and the preludes made 
+up \mib{63.3}.  The large preludes ensure that \reviewb yields
+compression effectiveness which is also worse than \flatbin.
+
+Following the column of block count are the encoding and decoding
+times, in seconds of CPU time, averaged over three trials.  Generally, 
+encoding time with \shuff decreases as the block size increases,
+except for the ``$\infty$'' block size.
+Decoding time also decreases for large block 
+sizes as fewer preludes need to be decoded.
+The \flatbin coder is the fastest system for encoding
+and is faster than \shuff for decoding, irrespective of block size.
+\reviewb requires as much time to encode as \shuff with 
+a block size of 8 million symbols.  But \review has the lowest
+decoding time out of all the systems tested.
+
+More important than
+decoding time is searching time, which was the topic for this
+set of experiments.  To quantify the searching speeds, each of
+\grep, decompressed 
+searching, and \reviewb were used to search for 
+symbols selected at
+random from the phrase hierarchy.  Decompressed searching
+includes full decoding with \shuff, 
+followed by a direct search on the reduced word sequence.  
+Since an infinite block size was employed by \shuff, all the times
+for decompressed search include 16.0 seconds of elapsed time and
+13.9 seconds of CPU time.  
+
+The symbols searched for were selected based on certain
+criteria.  Only symbols which directly appeared
+in the reduced word sequence and were not components of any
+higher generation symbol in the phrase hierarchy were 
+chosen.  These restrictions ensure that the comparison 
+was as fair as possible.  Of the 8,277,359 symbols in the phrase
+hierarchy, 4,376,175 symbols were deemed valid.
+
+Experiments were conducted from two different perspectives,
+based on the fact that not all of the valid symbols are 
+equal.  The first experiment highlights the fact that symbols
+occur with different frequencies.  The four million valid
+symbols were divided into 3 equal groups based on frequency
+in the reduced word sequence:  high, medium, and low.
+The second set of experiments was based on symbol length,
+in word tokens (or primitives).  The valid symbols
+were divided into three groups based on their lengths when
+expanded, as shown in 
+\tabref{tab:review-ws-dist}.  Also shown in this table is
+the number of invalid symbols (second column).  Valid 
+symbols were divided based on their lengths and then merged
+to create three roughly equal symbol length groupings,
+as shown in the third and then the fourth columns of the
+table.  In the first group, valid symbols of length 1 or 2
+primitives are included.  The second group contains valid
+symbols of lengths 3 or 4 primitives.  All remaining valid
+symbols are in the third group.
+
+\tab{cccc}
+{
+Symbol  & \multicolumn{2}{c}{Distribution} & Size of \\ \cline{2-3}
+lengths & Invalid    & Valid        & group \\
+(words) & candidates & candidates   & \\
+}
+{
+{\D\D}1 & \C133,389 & \C203,349 & \multirow{2}*{\C915,908}\\
+{\D\D}2 & \C615,548 & \C712,559 & \\
+\hline
+{\D\D}3 & \C804,927 & 1,149,698 & \multirow{2}*{2,040,548}\\
+{\D\D}4 & \C623,040 & \C890,850 & \\
+\hline
+{\D\D}5 & \C415,727 & \C507,765 & \multirow{6}*{1,419,719}\\
+{\D\D}6 & \C275,483 & \C281,307 & \\
+{\D\D}7 & \C192,309 & \C156,154 & \\
+{\D\D}8 & \C141,607 & \C101,003 & \\
+{\D\D}9 & \C106,609 & \C\D62,752 & \\
+10+     & \C592,544 & \C310,738 & \\
+\hline
+Total   & 3,901,184 & 4,376,175   & \\
+}{Distribution of invalid and valid symbol for the
+experiments with the reduced word sequence.  Phrase hierarchy
+symbols are separated based on length (in primitives), with
+the valid ones merged to form three symbol length
+groupings.}{Distribution of symbols for reduced word
+sequence experiments (\news)}{tab:review-ws-dist}
+
+\figref{fig:review-ws-freq} and \tabref{tab:review-ws-freq-reviewb}
+present the results from the first set of experiments, based on symbol frequency
+in the reduced word sequence.  For each grouping, 1, 10, or 100
+symbols were searched for, selected at random.  The same symbols were
+searched three times and the time required was averaged, 
+producing the elapsed and CPU times shown in the figure.  
+
+\fig{
+\begin{tabular}{cc}
+\includegraphics*{./time-freq-high.eps} & 
+\includegraphics*{./time-freq-medium.eps} \\
+(a) High frequency group & (b) Medium frequency group \\
+\multicolumn{2}{l}{\includegraphics*{./time-freq-low.eps}} \\ [1ex]
+(c) Low frequency group & \\
+\end{tabular}
+}{Search times with \grep, decompressed search, and \reviewb for the
+reduced word sequence based on frequency groupings.  The elapsed
+times and CPU times are reported in seconds
+and averaged over three trials with the same test symbols.}{Search
+times for the reduced word sequence for frequency groupings (\news)}
+{fig:review-ws-freq}
+
+As more symbols are searched simultaneously, \grep requires 
+more time.  However, the frequency of the symbols has a relatively
+small effect on the elapsed and CPU times.  There is a noticeable
+difference between elapsed and CPU times for \grep, due to the
+number of disk accesses.  Meanwhile, 
+decompressed searching requires the same amount of elapsed
+and CPU times, regardless of the number of symbols sought
+or the frequency of the symbols.  Of the three systems shown in
+the figure, \reviewb achieves the best search times.  
+As \reviewb searched for
+more symbols at the same time, more time is required.
+The effect of symbol frequency on search time begins to be noticeable
+when as many as 100 symbols are searched for.  This result reflects
+the data displayed in the last two columns of 
+\tabref{tab:review-ws-freq-reviewb}.  The
+third column indicates the number of blocks that were fully
+decoded.  When searching with \reviewb, every prelude must
+be decoded, but when the symbols being sought are not in the 
+block, the rest of the block can be skipped.  As a consequence
+of this property, the number of bytes read can never be less
+than the combined size of all of the preludes, which is \mib{63.3}.  And,
+as the fourth column shows, as more blocks need to be fully
+decoded, more bytes need to be read.  So, when either more
+symbols or more frequent symbols are searched for,
+the number of blocks that are fully decoded and the number
+of bytes read increases accordingly.
+
+%% \tab{lcccccc}
+%% {
+%% \multicolumn{1}{c}{Frequency} & Symbols  & \multicolumn{2}{c}{\grep} & & \multicolumn{2}{c}{Decompressed search} \\ \cline{3-4} \cline{6-7}
+%% \multicolumn{1}{c}{group}     & searched & elapsed & CPU & & elapsed & CPU \\
+%% }
+%% {
+%% High   & \D\D1             &  35.1 & \D2.7 & & 21.7 &  18.2 \\
+%% High   & \D10              &  34.9 &  11.1 & & 21.7 &  18.2 \\
+%% High   & 100               &  58.3 &  38.3 & & 21.7 &  18.2 \\ [1.0ex]
+%% Medium & \D\D1             &  34.9 & \D2.9 & & 21.7 &  18.2 \\
+%% Medium & \D10              &  34.9 & \D9.9 & & 21.7 &  18.2 \\
+%% Medium & 100               &  56.2 &  42.1 & & 21.7 &  18.2 \\ [1.0ex]
+%% Low    & \D\D1             &  34.9 & \D3.0 & & 21.0 &  17.5 \\
+%% Low    & \D10              &  34.9 &  12.1 & & 21.7 &  18.2 \\
+%% Low    & 100               &  57.1 &  43.0 & & 21.7 &  18.2 \\
+%% }{Search times with \grep and uncompressed searching 
+%% for the reduced word sequence based on frequency groupings.
+%% Times are in seconds and have been averaged over 3 trials with
+%% the same test symbols.}{Search times with \grep and uncompressed
+%% searching for the reduced word sequence based on frequency groupings.}
+%% {tab:review-ws-freq-grep}
+
+\tab{lccc}
+{
+\multicolumn{1}{c}{Frequency} & Symbols  & Number  & Number \\
+\multicolumn{1}{c}{group}     & searched & of blocks  & of bytes   \\
+          &          & decoded & read    \\
+}
+{
+High   & \D\D1  & \D\D4  & \D\mib{63.9} \\
+High   & \D10   & \D58   & \D\mib{73.0} \\
+High   & 100    & 423    & \mib{134.0} \\ [1ex]
+Medium & \D\D1  & \D\D2  & \D\mib{63.6} \\
+Medium & \D10   & \D18   & \D\mib{66.3} \\
+Medium & 100    & 161    & \D\mib{90.0} \\ [1ex]
+Low    & \D\D1  & \D\D1  & \D\mib{63.4} \\
+Low    & \D10   & \D14   & \D\mib{65.6} \\
+Low    & 100    & 144    & \D\mib{87.4} \\
+}{Search efficiency with \reviewb for the reduced word sequence 
+based on frequency groupings.  
+The number of blocks fully
+decoded and the number of bytes read in order to complete 
+the searching are shown in the third and fourth columns.}
+{Search efficiency of \reviewb for frequency groupings (\news)}
+{tab:review-ws-freq-reviewb}
+
+The results from the second set of experiments with 
+the reduced word sequence are contained in 
+\figref{fig:review-ws-len} and
+\tabref{tab:review-ws-len-reviewb}.  If 
+\subfigref{fig:review-ws-freq}{c} is compared with 
+\subfigref{fig:review-ws-len}{c}, it would appear that \grep
+requires less time as symbols which expand to more words are
+sought.  However, symbol length does not have a noticeable
+effect on decompressed searching or \reviewb, according to
+these graphs.
+
+\fig{
+\begin{tabular}{cc}
+\includegraphics*{./time-len-short.eps} & 
+\includegraphics*{./time-len-medium.eps} \\
+(a) Symbols 1 -- 2 words in length & (b) Symbols 3 -- 4 words in length \\
+\multicolumn{2}{l}{\includegraphics*{./time-len-long.eps}} \\ [1ex]
+(c) Symbols 5+ words in length & \\
+\end{tabular}
+}{Search times with \grep, decompressed search, and \reviewb for the
+reduced word sequence based on symbol length groupings.  The elapsed
+times and CPU times are reported in seconds
+and averaged over three trials with the same test symbols.}{Search
+times for the reduced word sequence for symbol length groupings (\news)}
+{fig:review-ws-len}
+
+\tabref{tab:review-ws-len-reviewb} shows how less blocks are
+requested as symbol length increases.  But this trend may be caused
+by the fact that symbols with more words are expected to occur less
+frequently.
+
+%% \tab{lcccccc}
+%% {
+%% \multicolumn{1}{c}{Symbol} & Symbols  & \multicolumn{2}{c}{\grep} & & \multicolumn{2}{c}{Decompressed search} \\ \cline{3-4} \cline{6-7}
+%% \multicolumn{1}{c}{length} & searched & Elapsed & CPU & & Elapsed & CPU \\
+%% \multicolumn{1}{c}{group}  &          & time& time    & & time& time    \\
+%% }
+%% {
+%% 1 - 2 & \D\D1  &  34.9 & \D3.3 & & 20.1 &  16.7 \\
+%% 1 - 2 & \D10   &  34.9 &  10.7 & & 21.0 &  17.5 \\
+%% 1 - 2 & 100    &  51.6 &  37.4 & & 21.0 &  17.5 \\ [1ex]
+%% 3 - 4 & \D\D1  &  34.9 & \D3.1 & & 21.0 &  17.5 \\
+%% 3 - 4 & \D10   &  34.9 & \D9.1 & & 21.7 &  18.2 \\
+%% 3 - 4 & 100    &  51.4 &  37.2 & & 21.7 &  18.2 \\ [1ex]
+%% 5+    & \D\D1  &  34.9 & \D2.9 & & 21.7 &  18.2 \\
+%% 5+    & \D10   &  34.9 & \D7.5 & & 21.7 &  18.2 \\
+%% 5+    & 100    &  42.0 &  26.4 & & 21.7 &  18.2 \\
+%% }{Search times with \grep and uncompressed searching 
+%% for the reduced word sequence based on symbol length groupings.
+%% Times are in seconds and have been averaged over 3 trials with
+%% the same test symbols.}{Search times with \grep and uncompressed
+%% searching for the reduced word sequence based on symbol length groupings.}
+%% {tab:review-ws-len-grep}
+
+\tab{lccc}
+{
+\multicolumn{1}{c}{Symbol} & Symbols  & Number     & Number \\
+\multicolumn{1}{c}{length} & searched & of blocks  & of bytes   \\
+\multicolumn{1}{c}{group}  &          & decoded    & read    \\
+}
+{
+1 -- 2  & \D\D1  & \D\D2  & \D\mib{63.6} \\
+1 -- 2  & \D10   & \D41   & \D\mib{70.2} \\
+1 -- 2  & 100    & 298    & \mib{113.0} \\ [1ex]
+3 -- 4  & \D\D1  & \D\D2  & \D\mib{63.6} \\
+3 -- 4  & \D10   & \D30   & \D\mib{68.3} \\
+3 -- 4  & 100    & 261    & \mib{107.0} \\ [1ex]
+5+     & \D\D1  & \D\D2  & \D\mib{63.6} \\
+5+     & \D10   & \D32   & \D\mib{68.6} \\
+5+     & 100    & 181    & \D\mib{93.7} \\
+}{Search efficiency with \reviewb for the reduced word sequence 
+based on symbol length groupings.  
+The number of blocks fully
+decoded and the number of bytes read in order to complete 
+the searching are shown in the third and fourth columns.}
+{Search efficiency of \reviewb for symbol
+length groupings (\news)}{tab:review-ws-len-reviewb}
+
+In conclusion, this section has looked at the coding requirements
+of the three modifier streams and the reduced word sequence.  Indexed
+\shuff produced the best compression effectiveness when sufficiently
+large block sizes were chosen.  While the compression and random access
+times offered
+by \review and \flatbin for the modifiers were good, indexed \shuff
+with small block sizes gave comparable results for skipping to arbitrary
+locations within the streams.
+
+Three compression methods were examined for the reduced word sequence.
+As with the modifier streams, \shuff provided the best compression
+effectiveness.  While the \flatbin coder also gave better compression levels
+than \reviewb, \reviewb was found to be more efficient than \shuff and
+\flatbin for decompression and searching.
+In these experiments, a modified version of \news was
+used by \grep, while decompressed searching assumed \shuff with an
+infinite block size.  The times for decompressed searching and \reviewb 
+were not affected by symbol frequency or symbol length, but both conditions
+had a noticeable effect on the number of blocks fully decoded and the
+number of bytes read from disk by \reviewb.  Furthermore, as more
+symbols are searched for simultaneously, both \reviewb and \grep required 
+more time.  
+
+\newsection{Selecting Coders}{sec:review-summary}
+
+This chapter has examined coders for the three modifier streams
+and the reduced word sequence stream.  The decoding 
+requirements of these four streams for phrase browsing are 
+quite different from those that apply to the phrase hierarchy
+and the two lexicons. Within these four streams, different decoding
+specifications also emerge.  The modifier
+streams require random access, whereas the reduced word
+sequence is searched.
+
+%% (168721097*3+58685281)/1048491001*8
+%% 4.3096
+The naive approach to coding these four streams is to simply
+encode each reference as a 32-bit
+integer.  Retrieval time is fast for both random access and searching,
+and the difficulty is allocating enough storage.  Referring to
+\tabref{tab:review-fileinfo}, such an approach would require
+4.310 bits per character for only these streams.  If this level
+of compression is acceptable, then such a coding scheme can
+be considered.
+
+At the other extreme, a compression system such as \bzip can be
+applied to the modifier streams, as explored in
+\chapref{chap:prepair}.  If such an approach was employed, then
+the streams must be fully decoded before being used, 
+yielding unfavourable response times.
+
+As a balance between these extremes, indexed Huffman coding is a
+reasonable choice for the modifier
+streams.  As the streams
+are required less frequently, if blocks are created with an index
+for each block, then at most two blocks are decoded at any 
+one time for seeking.  The ideal random access times occur
+when a block size of 32,768 symbols is selected.  
+If this block size is applied, the combined compression ratio of
+the three modifier streams is 0.977 bits per character.
+
+The reduced word sequence must be searchable and
+\reviewb combines byte-alignment for the codewords
+with the ability to skip blocks when it has been determined that
+no symbol of interest occurs within the block.  The disadvantages
+of this
+approach are that all of the preludes must be decoded as part of every search,
+and that compression effectiveness is not as good as if an entropy coder
+like \shuff had been used.  One 
+improvement to \reviewb, which was not explored, would be to create a
+second-level index so that each token in the file is associated directly
+with a list of the blocks in which it occurs.  
+
+\reviewb achieves better search times than \grep and decompressed searching.
+But the \grep system still performs remarkably well given 
+that the search criteria were strings instead of sets of symbols.
+Compression of the reduced
+sequence with \reviewb requires
+1.402 bits per character.
+
+So, through the techniques described in this chapter and the encoding
+methods decided earlier for the phrase hierarchy and lexicons, the
+compression effectiveness for all seven streams is 2.523 bits per 
+character.  \tabref{tab:review-streams} updates \tabref{tab:prepair-streams}
+on \pgref{tab:prepair-streams} with the coding mechanisms examined in
+this chapter.  The next chapter takes these files and shows how they 
+can be used to construct a phrase browsing tool.
+
+\setlength{\mytablength}{\textwidth}
+\addtolength{\mytablength}{-0.1cm}
+
+\tabnoline{@{}l}{}
+{
+\begin{tabularx}{\mytablength}{|l|X|X|X|}
+\hline
+Output from  & \mc{1}{\mr{{\textbf {word lexicon}}}} & \mc{2}{\mr{word sequence}} \\
+\prepair     &                             & \mc{2}{} \\ \cline{1-4}
+
+\mr{Purpose} & \mc{2}{\mr{phrase browsing}} & \mc{1}{\mr{searching for symbols}}  \\
+             & \mc{2}{} & \\ \cline{1-4}
+\mr{Model}   &                 & \mc{2}{\mr{\repair}}      \\
+             & \mc{1}{front coding}    & \mc{2}{}             \\ \cline{1-1}\cline{3-4}
+\multirow{3}*{Coder}   & \mc{1}{and \bzip} & \mc{1}{{\textbf {phrase hierarchy}}} & \mc{1}{{\textbf {reduced word sequence}}} \\
+             & & \mc{1}{chiastic slide and} & \mc{1}{\mr{\reviewb}} \\ 
+             & & \mc{1}{interpolative coding} &        \\ \cline{1-4}
+\end{tabularx} \\
+\multicolumn{1}{c}{(a) Words} \\ [1.5ex]
+
+\begin{tabularx}{\mytablength}{|l|X|X|X|X|}
+\hline
+Output from  & \mc{1}{{\textbf {non-word}}} & \mc{1}{{\textbf {non-word}}} & \mc{1}{{\textbf {case folding}}} & \mc{1}{{\textbf {stemming}}} \\
+\prepair     & \mc{1}{{\textbf {lexicon}}}  & \mc{1}{{\textbf {modifiers}}} & \mc{1}{{\textbf {modifiers}}} & \mc{1}{{\textbf {modifiers}}}  \\ \cline{1-5}
+\mr{Purpose} & \multicolumn{4}{c|}{\mr{skipping to symbols}} \\
+             & \multicolumn{4}{c|}{} \\ \cline{1-5}
+\mr{Model}   &                 & \mc{1}{\multirow{4}*{indexed \shuff}}& \mc{1}{\multirow{4}*{indexed \shuff}}& \mc{1}{\multirow{4}*{indexed \shuff}}\\
+             & \mc{1}{front coding}    &  & & \\ \cline{1-1}
+\mr{Coder}   & \mc{1}{and \bzip}       & &  & \\
+             &                 &          &          &        \\ \cline{1-5}
+\end{tabularx} \\
+\multicolumn{1}{c}{(b) Non-words and modifiers} \\ [1.0ex]
+}{The seven streams produced by \prepair and \repair.  The purpose
+of each stream, and the compression methods employed are taken from
+\tabref{tab:prepair-streams} on \pgref{tab:prepair-streams}, updated
+with the coding mechanisms in this chapter.}{The seven streams
+by \prepair and \repair, updated}{tab:review-streams}
+
+

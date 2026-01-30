@@ -1,0 +1,96 @@
+\begin{minipage}{\textwidth}
+\dontprintsemicolon
+
+\SetFuncSty{textnormal}
+\SetArgSty{textnormal}
+\SetDataSty{textnormal}
+
+\SetKwInOut{Input}{input}
+\SetKwInOut{Output}{output}
+
+\SetKwFunction{writeSymbolToPreludeBuffer}{writeSymbolToPreludeBuffer}
+\SetKwFunction{writeHeader}{writeHeader}
+\SetKwFunction{writePreludeBuffer}{writePreludeBuffer}
+
+\SetKwData{symmap}{\var{symbol\_map}}
+\SetKwData{code}{\var{code}}
+\SetKwData{blockstart}{\var{block\_start}}
+
+\SetKwData{false}{{\textsc {FALSE}}}
+\SetKwData{true}{{\textsc {TRUE}}}
+
+\Input{$\Seq$, length of symbols in $\Ph$, alignment $L$ in bits}
+\Output{$\Seq'$}
+
+\BlankLine
+
+\lnl{algline:review:review:1}
+$\Seq' \leftarrow \{\}$;
+$P_k \leftarrow 0$;
+$B_k \leftarrow 0$;
+$D_k \leftarrow 0$;
+$W_k \leftarrow 0$;
+$\blockstart \leftarrow 0$ \;
+
+\lnl{algline:review:review:2}
+initialise \symmap \;
+\lnl{algline:review:review:3}
+\For{$i < |\Seq|$}{
+\lnl{algline:review:review:4}
+  $W_k \leftarrow W_k + |\alpha_i|$ \;
+\lnl{algline:review:review:5}
+  $B_k \leftarrow B_k + 1$ \;
+\lnl{algline:review:review:6}
+  \If{$\symmap[\alpha_i] = 0$}{
+\lnl{algline:review:review:7}
+    $\symmap[\alpha_i] \leftarrow 1$ \;
+\lnl{algline:review:review:8}
+    $D_k \leftarrow D_k + 1$ \;
+  }
+\lnl{algline:review:review:9}
+  \If{$D_k = 2^L$}{
+\lnl{algline:review:review:10}
+    $\code \leftarrow 0 $; $j \leftarrow 0$ \;
+\lnl{algline:review:review:11}
+    \While{$\code < D_k$}{
+\lnl{algline:review:review:12}
+      \If{$\symmap[j] = 1$}{
+\lnl{algline:review:review:13}
+        write $\alpha_j$ to prelude buffer \;
+\lnl{algline:review:review:14}
+        $\symmap[j] \leftarrow \code$ \;
+\lnl{algline:review:review:15}
+        $\code \leftarrow \code + 1$ \;
+      }
+\lnl{algline:review:review:16}
+      $j \leftarrow j + 1$ \;
+    }
+\lnl{algline:review:review:17}
+    $P_k \leftarrow$ size of prelude buffer \;
+\lnl{algline:review:review:18}
+    write $P_k$, $B_k$, $D_k$, $W_k$ to $\Seq'$ \;
+\lnl{algline:review:review:19}
+    write prelude buffer to $\Seq'$ \;
+\lnl{algline:review:review:20}
+    $j \leftarrow \blockstart$ \;
+\lnl{algline:review:review:21}
+    \For{$j < i$}{
+\lnl{algline:review:review:22}
+      write $\symmap[\alpha_j]$ to $\Seq'$\;
+    }
+\lnl{algline:review:review:23}
+    $P_k \leftarrow 0$;
+    $B_k \leftarrow 0$;
+    $D_k \leftarrow 0$;
+    $W_k \leftarrow 0$;
+    $\blockstart \leftarrow i$ \;
+\lnl{algline:review:review:24}
+    re-initialise $\symmap$ \;
+\lnl{algline:review:review:25}
+    $k \leftarrow k + 1$ \;
+  }
+}
+
+\lnl{algline:review:review:26}
+\Return ($\Seq'$) \;
+\end{minipage}

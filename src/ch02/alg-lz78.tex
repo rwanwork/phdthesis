@@ -1,0 +1,57 @@
+\begin{minipage}{\textwidth}
+\dontprintsemicolon
+
+\SetFuncSty{textnormal}
+\SetArgSty{textnormal}
+\SetDataSty{textnormal}
+
+\SetKwInOut{Input}{input}
+\SetKwInOut{Output}{output}
+
+\SetKwFunction{appendString}{appendString}
+\SetKwFunction{searchDictionary}{searchDictionary}
+
+\SetKwData{ppos}{\var{prev\_position}}
+\SetKwData{pos}{\var{position}}
+
+\Input{input message $\mathcal{M}$}
+\Output{encoded message $\mathcal{M}'$}
+
+\BlankLine
+
+\lnl{algline:tc:lzb:1}
+\ppos $\leftarrow$ 0; \pos $\leftarrow$ 0 \;
+\lnl{algline:tc:lzb:2}
+$i \leftarrow 0$; $\omega \leftarrow \lambda$ \;
+
+\lnl{algline:tc:lzb:3}
+\For{$i < |\mathcal{M}|$}{
+\lnl{algline:tc:lzb:4}
+  \appendString{$\omega$, $\mathcal{M}[i]$} \;
+\lnl{algline:tc:lzb:5}
+  $\pos \leftarrow$ \searchDictionary{$\omega$, $D$} \;
+\lnl{algline:tc:lzb:6}
+  \If{$\pos = 0$}{
+\lnl{algline:tc:lzb:7}
+    output $\langle{\ppos}, \mathcal{M}[i]\rangle$ to $\mathcal{M}'$ \;
+\lnl{algline:tc:lzb:8}
+    add $\omega$ to $D$ \;
+\lnl{algline:tc:lzb:9}
+    $\ppos \leftarrow 0$ \;
+\lnl{algline:tc:lzb:10}
+    $\omega \leftarrow \lambda$ \;
+  }
+\lnl{algline:tc:lzb:11}
+  \Else{
+\lnl{algline:tc:lzb:12}
+    $\ppos \leftarrow \pos$ \;
+  }
+\lnl{algline:tc:lzb:13}
+  $i \leftarrow i + 1$ \;
+}
+
+\BlankLine
+
+\lnl{algline:tc:lzb:14}
+\Return ($\mathcal{M}'$) \;
+\end{minipage}

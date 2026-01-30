@@ -1,0 +1,65 @@
+%%%\documentclass[a4paper,12pt]{book}
+\documentclass[a4paper,twoside,openright,11pt,oldfontcommands]{memoir}
+
+\input{packages}
+
+\input{abbrev}
+
+\usepackage{visual}
+
+%%  Uncomment out to make an index
+%%  2002/06/07
+%%  \makeindex
+
+%%  Uncomment out to make a glossary
+%%  2002/06/07
+%%  \makeglossary
+
+\begin{document}
+\frontmatter
+\subimport*{}{front}
+
+\tableofcontents
+\cleartorecto
+
+\listoffigures
+\cleartorecto
+
+\listoftables
+\cleartorecto
+
+\listofalgs
+\cleartorecto
+
+%%  Set the page style for the rest of the thesis
+\pagestyle{rwanpage}
+\mainmatter
+
+\subimport*{ch01/}{intro}
+\subimport*{ch02/}{tc}
+\subimport*{ch03/}{repair}
+\subimport*{ch04/}{prepair}
+\subimport*{ch05/}{remerge}
+\subimport*{ch06/}{review}
+\subimport*{ch07/}{rephine}
+\subimport*{ch08/}{web}
+\subimport*{ch09/}{conclude}
+
+\appendix
+\subimport*{app/}{notation}
+\subimport*{app/}{porter}
+%% \subimport*{app/}{expt}
+
+\backmatter
+\bibliographystyle{plainnat}
+%%\bibintro{The pages which cite a bibliography entry are listed at the end
+%%of each entry in square parentheses.}
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliography{t}
+
+%%  Uncomment to print an index out
+%%  2002/06/07
+%%  \printindex
+
+\end{document}
+

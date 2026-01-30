@@ -1,0 +1,55 @@
+\begin{minipage}{\textwidth}
+\dontprintsemicolon
+
+\SetFuncSty{textnormal}
+\SetArgSty{textnormal}
+\SetDataSty{textnormal}
+
+\SetKwInOut{Input}{input}
+\SetKwInOut{Output}{output}
+
+\SetKwFunction{appendString}{appendString}
+\SetKwFunction{findLongestMatch}{findLongestMatch}
+
+\SetKwData{poffset}{\var{prev\_offset}}
+\SetKwData{offset}{\var{offset}}
+
+\Input{input message $\mathcal{M}$, window size $N$}
+\Output{encoded message $\mathcal{M}'$}
+
+\BlankLine
+
+\lnl{algline:tc:lza:1}
+\poffset $\leftarrow$ 0; \offset $\leftarrow$ 0 \;
+\lnl{algline:tc:lza:2}
+$i \leftarrow 0$; $\omega \leftarrow \lambda$ \;
+
+\lnl{algline:tc:lza:3}
+\For{$i < |\mathcal{M}|$}{
+\lnl{algline:tc:lza:4}
+  \appendString{$\omega$, $\mathcal{M}[i]$} \;
+\lnl{algline:tc:lza:5}
+  $\offset \leftarrow$ \findLongestMatch{$\omega$, $\mathcal{M}[i-N]$ ... $\mathcal{M}[i-1]$} \;
+\lnl{algline:tc:lza:6}
+  \If{$\offset = 0$}{
+\lnl{algline:tc:lza:7}
+    output $\langle{\poffset}, |\omega|-1, \mathcal{M}[i]\rangle$ to $\mathcal{M}'$ \;
+\lnl{algline:tc:lza:8}
+    $\poffset \leftarrow 0$ \;
+\lnl{algline:tc:lza:9}
+    $\omega \leftarrow \lambda$ \;
+  }
+\lnl{algline:tc:lza:10}
+  \Else{
+\lnl{algline:tc:lza:11}
+    $\poffset \leftarrow \offset$ \;
+  }
+\lnl{algline:tc:lza:12}
+  $i \leftarrow i + 1$ \;
+}
+
+\BlankLine
+
+\lnl{algline:tc:lza:13}
+\Return ($\mathcal{M}'$) \;
+\end{minipage}

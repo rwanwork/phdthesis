@@ -1,0 +1,1155 @@
+This is TeX, Version 3.14159 (Web2C 7.3.7)
+(./t.tex
+LaTeX2e <2001/06/01>
+Babel <v3.7h> and hyphenation patterns for american, french, german, ngerman, n
+ohyphenation, loaded.
+(/home/vice/pmt/rwan/latex/memoir/memoir.cls
+Document Class: memoir 2002/11/22 v1.3a configurable document class
+(/home/vice/pmt/rwan/latex/memoir/mem11.clo)
+(/home/vice/pmt/rwan/latex/memoir/mempatch.sty
+mempatch.sty 2003/04/26 v1.5 Patches for memoir class v1.3a
+)) (./packages.tex (/usr/share/texmf/tex/latex/amsmath/amsmath.sty
+For additional information on amsmath, use the `?' option.
+(/usr/share/texmf/tex/latex/amsmath/amstext.sty
+(/usr/share/texmf/tex/latex/amsmath/amsgen.sty))
+(/usr/share/texmf/tex/latex/amsmath/amsbsy.sty)
+(/usr/share/texmf/tex/latex/amsmath/amsopn.sty))
+(/home/vice/pmt/rwan/latex/algorithm2e.sty
+(/usr/share/texmf/tex/latex/base/ifthen.sty)
+(/home/vice/pmt/rwan/latex/float.sty)
+(/usr/share/texmf/tex/latex/tools/xspace.sty)
+
+Package `algorithm2e' Release 2.40 -- December 23 2003 --
+send comments, questions to fiorio@lirmm.fr
+
+) (/home/vice/pmt/rwan/latex/bibcheck.sty
+
+Package bibcheck Warning: ****************************************
+(bibcheck)                Package bibcheck v,1.1 loaded
+(bibcheck)                [check uncited bibitems (CVR)]
+(bibcheck)                ****************************************.
+
+) (/home/vice/pmt/rwan/latex/colortab.sty
+(/home/vice/pmt/rwan/latex/colortab/colortab.tex   v0.9  93/01/11  <tvz>))
+(/usr/share/texmf/tex/latex/misc/doublespace.sty)
+(/home/vice/pmt/rwan/latex/dpfloat.sty) (/home/vice/pmt/rwan/latex/url.sty)
+(/usr/share/texmf/tex/latex/graphics/graphicx.sty
+(/usr/share/texmf/tex/latex/graphics/keyval.sty)
+(/usr/share/texmf/tex/latex/graphics/graphics.sty
+(/usr/share/texmf/tex/latex/graphics/trig.sty)
+(/usr/share/texmf/tex/latex/config/graphics.cfg)
+(/usr/share/texmf/tex/latex/graphics/dvips.def)))
+(/home/vice/pmt/rwan/latex/hvfloat.sty
+`hvfloat' v1.1, 2003/05/31 (Herbert Voss))
+(/home/vice/pmt/rwan/latex/import.sty)
+(/usr/share/texmf/tex/latex/tools/longtable.sty)
+(/usr/share/texmf/tex/latex/multirow/multirow.sty)
+(/home/vice/pmt/rwan/latex/natbib_citeref.sty
+
+LaTeX Warning: You have requested package `natbib_citeref',
+               but the package provides `natbib'.
+
+) (/home/vice/pmt/rwan/latex/citeref.sty
+Package citeref v1.1 <1999/27/05> (Bjoern Briel)
+) (/usr/share/texmf/tex/generic/pstricks/pstricks.sty
+(/usr/share/texmf/tex/generic/pstricks/pstricks.tex
+`PSTricks' v97 patch 14  <1999/12/23> (tvz)
+(/usr/share/texmf/tex/generic/pstricks/pstricks.con)))
+(/usr/share/texmf/tex/latex/misc/psboxit.sty)
+(/usr/share/texmf/tex/latex/misc/rotating.sty)
+(/usr/share/texmf/tex/latex/tools/tabularx.sty
+(/usr/share/texmf/tex/latex/tools/array.sty))
+(/usr/share/texmf/tex/latex/tools/theorem.sty
+(/usr/share/texmf/tex/latex/tools/thp.sty))
+(/usr/share/texmf/tex/latex/misc/ulem.sty)) (./abbrev.tex) (./visual.sty
+
+******************************************************
+Stock height and width: 845.04684pt by 597.50787pt
+Top and edge trims: 0.0pt and 0.0pt
+Page height and width: 845.04684pt by 597.50787pt
+Text height and width: 595.80026pt by 426.0pt
+Spine and edge margins: 85.35826pt and 85.35826pt
+Upper and lower margins: 126.74379pt and 122.50279pt
+Headheight and headsep: 20.4pt and 19.8738pt
+Footskip: 27.46295pt
+Columnsep and columnseprule: 10.0pt and 0.0pt
+Marginparsep and marginparwidth: 7.0pt and 101.0pt
+******************************************************
+
+) (./t.aux) (./front.tex [1] [2] [3]
+Underfull \hbox (badness 10000) in paragraph at lines 134--141
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 142--145
+
+[4] [5] [6]) (./t.toc [7] [8]
+
+LaTeX Font Warning: Font shape `OT1/cmr/bx/sc' undefined
+(Font)              using `OT1/cmr/bx/n' instead on input line 83.
+
+) [9] [10] (./t.lof [11] [12]) [13] [14] (./t.lot [15] [16]) [17] [18] (./t.loa
+) [19] [20] (./ch01/intro.tex [1] <ch01/./browse-search.eps> [2] [3] [4]
+<ch01/./ir.eps> [5] [6] <ch01/./amper1.ps> <ch01/./amper3.ps>
+<ch01/./amper5.ps> [7] [8] [9] [10]) (./ch02/tc.tex [11] [12] [13] [14]
+[15] <ch02/./modelcoder.eps> [16] [17] [18] (./ch02/./alg-lz77.tex)
+Overfull \hbox (34.0pt too wide) in paragraph at lines 1--291
+ []$[]$ 
+[19] [20] [21] (./ch02/./alg-lz78.tex)
+Overfull \hbox (34.0pt too wide) in paragraph at lines 1--442
+ []$[]$ 
+[22] [23] [24] [25] [26] [27] [28] [29] [30] [31] [32] [33]
+<ch02/./huffman.eps> [34] <ch02/./arith.eps> [35] [36] [37] [38]
+(./ch02/./wsja_sample.sgml
+
+LaTeX Font Warning: Font shape `OML/cmtt/m/n' undefined
+(Font)              using `OML/cmm/m/it' instead
+(Font)              for symbol `textless' on input line 2.
+
+) (./ch02/./ap_sample.sgml) [39] [40] [41] [42]) (./ch03/repair.tex [43]
+[44] [45]
+
+LaTeX Font Warning: Font shape `OMS/cmr/m/n' undefined
+(Font)              using `OMS/cmsy/m/n' instead on input line 89.
+
+[46] (./ch03/woodchuck-short.tex) [47] [48] [49]
+(./ch03/./repair-datastruct.pstex_t
+
+LaTeX Warning: File `ch03/repair-datastruct.pstex' not found on input line 2.
+
+<ch03/repair-datastruct.pstex>
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 29.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 31.
+
+
+) [50] (./ch03/./repair-seqnode-a.pstex_t
+
+LaTeX Warning: File `ch03/repair-seqnode-a.pstex' not found on input line 2.
+
+<ch03/repair-seqnode-a.pstex>
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 29.
+
+
+) (./ch03/./repair-seqnode-b.pstex_t
+
+LaTeX Warning: File `ch03/repair-seqnode-b.pstex' not found on input line 2.
+
+<ch03/repair-seqnode-b.pstex>
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 29.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 31.
+
+
+
+LaTeX Font Warning: Font shape `OMS/cmss/m/n' undefined
+(Font)              using `OMS/cmsy/m/n' instead on input line 31.
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 33.
+
+
+) (./ch03/./repair-seqnode-c.pstex_t
+
+LaTeX Warning: File `ch03/repair-seqnode-c.pstex' not found on input line 2.
+
+<ch03/repair-seqnode-c.pstex>
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 29.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 31.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 33.
+
+
+) (./ch03/./repair-seqnode-d.pstex_t
+
+LaTeX Warning: File `ch03/repair-seqnode-d.pstex' not found on input line 2.
+
+<ch03/repair-seqnode-d.pstex>
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 29.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 31.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 33.
+
+
+) [51] [52] <ch03/./wsja-activeph.eps> [53] [54] [55] [56] [57] [58]
+(./ch03/./tab_repair-chi.tex
+Overfull \hbox (8.10472pt too wide) in paragraph at lines 33--33
+[]|[]|  
+
+Overfull \vbox (77.6087pt too high) detected at line 33
+
+Overfull \hbox (8.10472pt too wide) in paragraph at lines 33--33
+[]|[]|  
+
+Overfull \vbox (77.6087pt too high) detected at line 33
+Adding sideways figure on  left hand page) [59] [60] [61] [62]
+(./ch03/./repair-wsjhead.tex
+
+LaTeX Font Warning: Font shape `OMS/cmtt/m/n' undefined
+(Font)              using `OMS/cmsy/m/n' instead
+(Font)              for symbol `textbullet' on input line 2.
+
+) [63]
+
+LaTeX Font Warning: Font shape `OML/cmr/m/n' undefined
+(Font)              using `OML/cmm/m/it' instead
+(Font)              for symbol `textless' on input line 894.
+
+[64] [65] [66] [67] [68] [69] [70]) (./ch04/prepair.tex [71] [72] [73] [74]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 111.
+
+[75] [76] (./ch04/woodchuck-short-phrases.tex) [77] [78]
+(./ch04/woodchuck-short-wa.tex) (./ch04/woodchuck-complete-wa-phrases.tex)
+[79] [80] <ch04/./wordbased.eps> [81] [82] [83] [84] [85] [86] [87] [88]
+[89] [90] [91] [92] [93] (./ch04/./biblehead-char.tex)
+(./ch04/./biblehead-word-align.tex) (./ch04/./biblehead-word-fcode-cs.tex)
+(./ch04/./biblehead-punc-fcode-cs.tex) [94] [95] [96] [97] [98]
+Adding sideways figure on  left hand page [99] [100] [101]
+<ch04/./bargraph-all.eps> [102] (./ch04/./wsjhead-word-align.tex)
+(./ch04/./wsjhead-word-fcode-cs.tex) [103] [104] [105]
+Overfull \hbox (3.15457pt too wide) in paragraph at lines 1547--1547
+ [][] 
+[106]) (./ch05/remerge.tex [107] [108] [109] [110]
+<ch05/./wsj-char-repair.eps> [111] [112] (./ch05/./remerge-phases.pstex_t
+
+LaTeX Warning: File `ch05/remerge-phases.pstex' not found on input line 2.
+
+<ch05/remerge-phases.pstex>
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 29.
+
+
+
+LaTeX Font Warning: Font shape `OT1/cmss/m/sc' in size <10> not available
+(Font)              Font shape `OT1/cmr/m/sc' tried instead on input line 29.
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 31.
+
+
+) [113] [114] [115] (./ch05/remerge-example1.tex) <ch05/./expandstr.eps>
+[116] [117] [118] [119] (./ch05/./alg-phase2a.tex)
+Overfull \hbox (34.0pt too wide) in paragraph at lines 1--543
+ []$[]$ 
+[120] [121] [122] (./ch05/./example2b-graph.pstex_t
+
+LaTeX Warning: File `ch05/example2b-graph.pstex' not found on input line 2.
+
+<ch05/example2b-graph.pstex>
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 29.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 31.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 33.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 35.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 37.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 39.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 41.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 43.
+
+
+) [123] [124] [125] (./ch05/./example2b-longph.tex) [126]
+(./ch05/./phraselinks.tex) [127] [128] (./ch05/./example2b-seq.pstex_t
+
+LaTeX Warning: File `ch05/example2b-seq.pstex' not found on input line 2.
+
+<ch05/example2b-seq.pstex>
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 29.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 31.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 33.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 35.
+
+
+) [129] [130] (./ch05/./example2b-cutvertex1.pstex_t
+
+LaTeX Warning: File `ch05/example2b-cutvertex1.pstex' not found on input line 2
+.
+
+<ch05/example2b-cutvertex1.pstex>
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 29.
+
+
+) (./ch05/./example2b-cutvertex2.pstex_t
+
+LaTeX Warning: File `ch05/example2b-cutvertex2.pstex' not found on input line 2
+.
+
+<ch05/example2b-cutvertex2.pstex>
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 29.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 31.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 33.
+
+
+) (./ch05/./example2b-cutvertex3.pstex_t
+
+LaTeX Warning: File `ch05/example2b-cutvertex3.pstex' not found on input line 2
+.
+
+<ch05/example2b-cutvertex3.pstex>
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 29.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 31.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 33.
+
+
+) (./ch05/./example2b-cutvertex4.pstex_t
+
+LaTeX Warning: File `ch05/example2b-cutvertex4.pstex' not found on input line 2
+.
+
+<ch05/example2b-cutvertex4.pstex>
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 29.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 31.
+
+
+) [131] (./ch05/./alg-phase2b.tex)
+Overfull \hbox (34.0pt too wide) in paragraph at lines 1--1094
+ []$[]$ 
+[132] [133] [134] [135] [136] [137] [138] (./ch05/./Bhashing-first.tex)
+(./ch05/./Bhashing-second.tex) [139] [140] (./ch05/./pa-2b.pstex_t
+
+LaTeX Warning: File `ch05/pa-2b.pstex' not found on input line 2.
+
+<ch05/pa-2b.pstex>) [141] [142] [143] [144] <ch05/./wsj-char-remerge-e.eps>
+[145] [146] [147] [148] [149] [150] [151] <ch05/./wsj-char-append.eps> [152]
+[153] [154] [155] <ch05/./throughput.eps>) (./ch06/review.tex [156] [157]
+[158] [159] [160] [161] [162] [163] (./ch06/./skipblock-block.pstex_t
+
+LaTeX Warning: File `ch06/skipblock-block.pstex' not found on input line 2.
+
+<ch06/skipblock-block.pstex>
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 29.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 31.
+
+
+) [164] (./ch06/./alg-huffblocks.tex)
+Overfull \hbox (34.0pt too wide) in paragraph at lines 1--303
+ []$[]$ 
+[165] [166] [167] (./ch06/./review-block.pstex_t
+
+LaTeX Warning: File `ch06/review-block.pstex' not found on input line 2.
+
+<ch06/review-block.pstex>
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 29.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 31.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 33.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 35.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 37.
+
+
+) [168] [169] (./ch06/./alg-review.tex)
+Overfull \hbox (34.0pt too wide) in paragraph at lines 1--523
+ []$[]$ 
+[170] [171] [172] [173] [174] [175] [176] [177] [178] [179] [180]
+<ch06/./time-freq-high.eps> <ch06/./time-freq-medium.eps>
+<ch06/./time-freq-low.eps> [181] [182] <ch06/./time-len-short.eps>
+<ch06/./time-len-medium.eps> <ch06/./time-len-long.eps> [183] [184] [185]
+Overfull \hbox (3.15457pt too wide) in paragraph at lines 1367--1367
+ [][] 
+) (./ch07/rephine.tex [186] [187] [188] [189] (./ch07/./rephine.pstex_t
+
+LaTeX Warning: File `ch07/rephine.pstex' not found on input line 2.
+
+<ch07/rephine.pstex>
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 29.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 31.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 33.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 35.
+
+
+)
+
+LaTeX Warning: Float too large for page by 17.8517pt on input line 77.
+
+[190] [191] [192] <ch07/./graph.eps> [193] (./ch07/./expandgraph.pstex_t
+
+LaTeX Warning: File `ch07/expandgraph.pstex' not found on input line 2.
+
+<ch07/expandgraph.pstex>
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 29.
+
+
+
+Class memoir Warning: The \sf font command is deprecated. 
+(memoir)              Try to use \sffamily or \textsf instead on input line 31.
+
+
+) [194] [195] [196] <ch07/./scrshots/browse-0.ps>
+<ch07/./scrshots/browse-1.ps> <ch07/./scrshots/browse-2.ps>
+<ch07/./scrshots/browse-3.ps> <ch07/./scrshots/browse-4.ps>
+
+LaTeX Warning: Float too large for page by 0.1844pt on input line 396.
+
+[197] [198] <ch07/./scrshots/decode-0.ps> <ch07/./scrshots/decode-1.ps>
+<ch07/./scrshots/decode-2.ps> <ch07/./scrshots/decode-3.ps>
+<ch07/./scrshots/decode-4.ps>
+
+LaTeX Warning: Float too large for page by 1.29552pt on input line 444.
+
+[199] [200] [201] <ch07/./nounphrase.eps> [202] [203] [204] [205] [206]
+[207] [208] [209] [210] [211] <ch07/./linkage-1.eps> <ch07/./linkage-2.eps>
+(./ch07/./parser-ex.tex) [212] [213] (./ch07/./wsja_sample_parse.sgml) [214]
+[215] [216] [217]
+Overfull \hbox (3.8763pt too wide) in paragraph at lines 1280--1289
+[]\OT1/cmr/m/n/10.95 In this chap-ter, \OT1/cmr/m/sc/10.95 Re-Phine \OT1/cmr/m/
+n/10.95 has been demon-strated with a doc-u-ment col-lec-tion 1,000MiB
+[218] [219]) (./ch08/web.tex [220] [221] [222] [223] [224] [225]
+<ch08/./dist.ps> [226] [227] (./ch08/./context_10240.txt) [228] [229] [230]
+<ch08/./diskspace_requests_bpc.ps> [231]) (./ch09/conclude.tex [232] [233]
+[234] <ch09/./restore.eps> [235] [236] [237]) (./app/notation.tex [238]
+[239]) (./app/porter.tex [240] [241] [242] [243]
+Underfull \hbox (badness 1371) in paragraph at lines 339--339
+\OT1/cmr/m/n/10.95 in $\OML/cmr/m/n/10.95 !$ \OT1/cmr/m/n/10.95 and then ap-ply
+
+
+Underfull \hbox (badness 1371) in paragraph at lines 339--339
+\OT1/cmr/m/n/10.95 in $\OML/cmr/m/n/10.95 !$ \OT1/cmr/m/n/10.95 and then ap-ply
+
+) [244] [245] [246] (./t.bbl
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 11.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 19.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 26.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 33.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 39.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 45.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 50.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 58.
+
+[247]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 66.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 74.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 80.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 85.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 98.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 103.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 109.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 114.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 120.
+
+[248]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 126.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 132.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 138.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 147.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 155.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 173.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 179.
+
+[249]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 184.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 192.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 197.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 203.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 208.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 213.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 219.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 227.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 234.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 240.
+
+[250]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 254.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 260.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 266.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 273.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 280.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 286.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 291.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 301.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 308.
+
+[251]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 344.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 352.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 357.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 370.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 376.
+
+[252]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 384.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 390.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 397.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 403.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 409.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 418.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 424.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 430.
+
+[253]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 440.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 447.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 454.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 461.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 467.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 472.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 478.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 483.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 488.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 500.
+
+[254]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 506.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 512.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 517.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 522.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 529.
+
+
+Underfull \hbox (badness 2012) in paragraph at lines 529--535
+[]\OT1/cmr/m/n/10.95 A. Kre-itz-man.  The his-tory of short-hand.  \OT1/cmr/m/i
+t/10.95 Jour-nal of Court Re-porters (On-
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 535.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 541.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 546.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 553.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 561.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 567.
+
+[255]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 574.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 580.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 593.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 599.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 605.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 613.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 619.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 627.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 632.
+
+[256]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 640.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 647.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 653.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 663.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 663.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 671.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 676.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 687.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 692.
+
+[257]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 699.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 706.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 714.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 724.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 724.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 729.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 736.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 743.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 748.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 756.
+
+[258]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 762.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 768.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 774.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 780.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 786.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 794.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 799.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 804.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 810.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 823.
+
+[259]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 834.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 849.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 860.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 865.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 871.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 880.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 885.
+
+[260]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 891.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 896.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 904.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 911.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 917.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 925.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 930.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 937.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 945.
+
+[261]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 952.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 957.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 963.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 973.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 980.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 987.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 992.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 998.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 1004.
+
+[262]
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 1009.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 1014.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 1020.
+
+
+Class memoir Warning: Font command \em is deprecated.
+(memoir)              Use \emph{...} instead on input line 1026.
+
+) [263] (./t.aux)
+
+LaTeX Font Warning: Some font shapes were not available, defaults substituted.
+
+ )
+(see the transcript file for additional information)
+Output written on t.dvi (283 pages, 882624 bytes).
+Transcript written on t.log.

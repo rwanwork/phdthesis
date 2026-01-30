@@ -1,0 +1,98 @@
+newgraph
+  X 2.5
+  Y 2.75  
+
+  xaxis 
+    min 0 max 7.25
+    size 2
+    hash_labels
+      fontsize 9
+      font Helvetica
+    label 
+      fontsize 9
+      font Helvetica
+    no_auto_hash_labels no_draw_hash_marks 
+    hash_labels
+      rotate 45
+      hjr vjc
+  yaxis 
+    min 0 max 65
+    size 2
+    hash_labels
+      fontsize 9
+      font Helvetica
+    label 
+      fontsize 9
+      font Helvetica
+      : Time (s)
+    hash 10
+    mhash 1
+
+  (*  1 symbols searched  *)
+  xaxis hash_label at 0.500000 : GREP
+    newcurve pts 0.500000 34.9 marktype xbar fill 0.5
+      marksize 0.5 1 pattern solid
+    newcurve pts 0.500000 3.1 marktype xbar fill 0.1
+      marksize 0.5 0.25 pattern stripe -45
+
+  xaxis hash_label at 1.100000 : Decompress
+    newcurve pts 1.100000 21.0 marktype xbar fill 0.5
+      marksize 0.5 1 pattern solid
+    newcurve pts 1.100000 17.5 marktype xbar fill 0.1
+      marksize 0.5 0.25 pattern stripe -45
+
+  xaxis hash_label at 1.700000 : Re-View
+    newcurve pts 1.700000 5.5 marktype xbar fill 0.5
+      marksize 0.5 1 pattern solid
+    newcurve pts 1.700000 4.9 marktype xbar fill 0.1
+      marksize 0.5 0.25 pattern stripe -45
+
+  (*  10 symbols searched  *)
+  xaxis hash_label at 3.000000 : GREP
+    newcurve pts 3.000000 34.9 marktype xbar fill 0.5
+      marksize 0.5 1 pattern solid
+    newcurve pts 3.000000  9.1 marktype xbar fill 0.1
+      marksize 0.5 0.25 pattern stripe -45
+
+  xaxis hash_label at 3.600000 : Decompress
+    newcurve pts 3.600000 21.7 marktype xbar fill 0.5
+      marksize 0.5 1 pattern solid
+    newcurve pts 3.600000 18.2 marktype xbar fill 0.1
+      marksize 0.5 0.25 pattern stripe -45
+
+  xaxis hash_label at 4.200000 : Re-View
+    newcurve pts 4.200000 5.9 marktype xbar fill 0.5
+      marksize 0.5 1 pattern solid
+    newcurve pts 4.200000 5.3 marktype xbar fill 0.1
+      marksize 0.5 0.25 pattern stripe -45
+
+  (*  10 symbols searched  *)
+  xaxis hash_label at 5.500000 : GREP
+    newcurve pts 5.500000 51.4 marktype xbar fill 0.5
+      marksize 0.5 1 pattern solid
+    newcurve pts 5.500000 37.2 marktype xbar fill 0.1
+      marksize 0.5 0.25 pattern stripe -45
+
+  xaxis hash_label at 6.100000 : Decompress
+    newcurve pts 6.100000 21.7 marktype xbar fill 0.5
+      marksize 0.5 1 pattern solid
+    newcurve pts 6.100000 18.2 marktype xbar fill 0.1
+      marksize 0.5 0.25 pattern stripe -45
+
+  xaxis hash_label at 6.700000 : Re-View
+    newcurve pts 6.700000  9.2 marktype xbar fill 0.5
+      marksize 0.5 1 pattern solid
+    newcurve pts 6.700000  8.4 marktype xbar fill 0.1
+      marksize 0.5 0.25 pattern stripe -45
+
+newcurve marktype text : 1 symbol
+  font Helvetica
+  pts 1 62
+
+newcurve marktype text : 10 symbols
+  font Helvetica
+  pts 3.5 62
+
+newcurve marktype text : 100 symbols
+  font Helvetica
+  pts 6 62

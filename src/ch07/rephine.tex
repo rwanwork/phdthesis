@@ -1,0 +1,1388 @@
+\newchapter{Phrase Browsing}{chap:rephine}
+
+The main focus of the previous chapters has been 
+the problem of
+transforming a message into a more economical form which
+is also suitable for phrase browsing.  Decisions had to
+be made with respect to the level of word-based pre-processing
+necessary and the efficiency of coders.  All of these issues
+were considered in the context of the sender of the compressed message.  In
+this chapter, that compressed message is viewed from the point
+of view of its receiver, in the form of a phrase browser.
+
+The phrase browser is a tool which hides the complexity
+and size of the compressed message from the user.  The browser
+described in this chapter not only allows a user to gain an
+understanding of a document through its phrases, but it also
+provides a searching facility.  As alluded to in
+\chapref{chap:review}, after phrase browsing ends and a phrase
+of interest has been found, the contexts in 
+which the phrase appears may be needed.  The phrase browser
+searches for these locations and also allows the user
+to refine the search result by incorporating case, stemming,
+and non-word information.  Continuing
+with the naming scheme adopted by this thesis, the phrase 
+browser is called \rephine, in that both the phrase browsing
+and the subsequent searching are opportunities for the user
+to continually refine the initial query.
+
+The remainder of this chapter is structured as follows.
+The steps embodied by the phrase browser are further elaborated
+in \secref{sec:rephine-steps}.  In order to efficiently browse 
+the phrase hierarchy, a graph data structure is
+required.  This data structure is described in 
+\secref{sec:rephine-datastruct}.  A demonstration of
+\rephine is given in \secref{sec:rephine-example}.
+Then, \rephine is compared and contrasted with related 
+work and traditional IR techniques 
+in \secref{sec:rephine-evaluate}, including an assessment of
+the quality of
+phrases made available to the user.
+
+\newsection{Browsing and Searching Steps}{sec:rephine-steps}
+
+The \rephine system encompasses both phrase browsing
+and context searching.  The precise steps that are available
+to the user in order to achieve these aims depend heavily
+on the seven streams produced during the compression process.
+Recall that the seven streams were the phrase hierarchy, the
+word lexicon, the non-word lexicon, the reduced word sequence, 
+the case folding modifiers, the stemming 
+modifiers, and the non-word modifiers.
+
+Implementation 
+details about \rephine are covered in the next section.
+In this section, only a general overview of \rephine is provided,
+starting with \figref{fig:rephine-alg}.  Each rectangular
+box represents an action performed within \rephine.  Boxes
+with dashed borders are actions performed by
+\rephine, whereas solid boxes represent
+actions performed by the system in direct response to the
+user's request.  A shaded cylinder represents one of
+the seven streams available to \rephine, with dashed lines
+symbolising file access.
+The sequence of steps commences at
+the top left-hand corner of the figure.  An explicit end
+to the sequence of steps is not shown because the user
+can stop phrase browsing at any time.
+
+\fig{\input{./rephine.pstex_t}}
+{The sequence of steps performed by \rephine during phrase
+browsing.  Dashed boxes indicate actions 
+performed by the system, while solid boxes require
+input from the user.  Shaded cylinders represent one of
+the seven streams accessible by \rephine, with dashed lines
+from them representing file access.  The user can exit
+the system at any time.}{Sequence of steps
+performed by \rephine during phrase browsing}{fig:rephine-alg}
+
+In the first step of the figure, \rephine decodes the phrase
+hierarchy, the word lexicon, and the non-word lexicon, and
+maintains all three within memory.  Next, a directed
+graph (DG) is built using the symbols of the phrase
+hierarchy, to permit efficient searching.  Details
+about the structure of the graph is given in the next section.
+The third step is interactive phrase browsing.  
+In browsing the phrase
+hierarchy, the user interactively traverses the DG
+until a symbol of interest, $\alpha$ say, has been isolated.
+
+In the fourth step, the symbol of interest is used to identify all
+other symbols in the DG which contain $\alpha$.
+When that search completes, a set of symbols $\Criteria$ has been 
+established.  Next, $\Criteria$ is input to the fifth
+step, in which the \reviewb decoder is used to locate every
+context in which any symbol in $\Criteria$ occurs.  The \reviewb
+decoder returns a result set, $\Result$.  Suppose a symbol
+$\beta$ contains the symbol $\alpha$ as a component.  In order
+to avoid reporting the same location multiple times, when an
+occurrence of $\beta$ has been found in the reduced word sequence, 
+only $\beta$ is reported.
+The size of $\Result$ is denoted as $|\Result|$, and members
+are enumerated from $i=1$ to $i=|\Result|$.
+
+The first result's context, $\Result_1$, is
+displayed to the user.  At this point, the user may choose
+any combination of five actions.  These actions are:  return to
+phrase browsing; toggle case folding modifiers, stemming modifiers, 
+or non-word insertion for $\Result_1$; or examine
+the next or previous result.  It is assumed that the result
+set is a circular list, so that the previous result to $\Result_1$
+is $\Result_{|\Result|}$.  The three actions related to the modifiers
+initiate seek operations to the corresponding positions in 
+their respective compressed
+streams.  After the modifiers have been retrieved, $\Result_i$
+is re-displayed to the user.  The application of 
+modifiers can be toggled in any order.  The first time
+modifiers are required, access to the streams are performed.
+Assuming requested modifiers are buffered in memory, subsequent 
+requests do not need to access the file again.
+Finally, if the contexts that were obtained were inadequate in
+satisfying the user's need, any part of a context can be used as
+input into the phrase browsing part of \rephine.
+
+Later in this chapter, the entire phrase browsing process is detailed 
+through a brief example which demonstrates the choices available
+to the user.  But first, in the next section, the directed graph
+required for phrase browsing is explained.
+
+\newsection{Phrase Hierarchy as a Directed Graph}{sec:rephine-datastruct}
+
+Once the phrase hierarchy has been decoded, a directed
+graph (DG) is 
+constructed.  Every symbol in the phrase hierarchy is assigned
+to a separate node in the DG.  Each node contains six
+directed edges connecting it to other nodes, as shown in 
+\figref{fig:rephine-graph}.
+In this figure, the symbols are based on character-based
+\repair instead of punctuation-aligned \repair in order to simplify 
+the discussion.  The current node is represented by the
+symbol ``w{\textbar}o'', with the vertical bar (\textbar)
+separating the symbol into its two components.
+Two of the six pointers
+are {\emph {child pointers}}, and refer to a symbol's structure
+These pointers were described in 
+\chapref{chap:remerge} as part of phase 1 of \remerge,
+but were called components at that time.
+The remaining four pointers are collectively called
+{\emph {navigational pointers}}.
+Navigational pointers are added for the purpose of
+browsing and have not been required in the previous discussion.
+
+\fig{
+\includegraphics*{./graph.eps}
+}{The six pointers used by \rephine to link nodes representing
+symbols in the phrase hierarchy into a directed graph.  The symbols in
+the example are based on character-based \repair, for illustrative
+purposes only.  The node of interest is in the centre, with the
+symbol ``w{\textbar}o''.  A vertical bar (\textbar) separates
+the expanded symbols into left and right components.
+Names of each pair of pointers are provided to the right of the
+figure.
+}{The six pointers used by a \rephine graph}
+{fig:rephine-graph}
+
+The purpose of each pointer is illustrated in the figure.
+Pointers appear in pairs and are designated as being 
+``left'' or ``right''.  The four navigational
+pointers are in two pairs -- the {\emph {sibling pointers}}, 
+and the {\emph {parent pointers}}.  
+
+In the example figure, the current symbol is in
+the centre, with its six pointers listed in full.  All of the other
+nodes in the graph
+have six pointers each as well, but the outgoing edges are 
+omitted in the figure for simplicity.  The centre symbol 
+is ``w{\textbar}o'', with left and right
+components (or children) of ``w'' and ``o'', respectively.
+The left sibling symbol of ``w{\textbar}o'' is another symbol which 
+also has ``w'' as a left child.  A chain is formed from the 
+centre node, with all symbols with ``w'' as a 
+left child being linked together with their
+left sibling pointers.  Within a chain, the nodes are unsorted,
+so any node can serve as the front of the list.
+Each chain ends with a final
+{\emph {empty node}}.  The child pointers of all primitives
+also lead to empty nodes.
+Similarly, the right sibling pointer from 
+``w{\textbar}o'', leads to another symbol with ``o'' as a right child.  
+
+One important operation is to
+obtain the entire chain when the current symbol is any symbol
+along that chain.
+The child and parent pointers help solve this problem.
+Parent pointers directly lead to symbols which are a single 
+{\emph {extension}} away from the current symbol.  An extension
+occurs when a symbol is juxtaposed
+to the current symbol on either side, arriving at another
+symbol in the phrase hierarchy.  For example, in 
+\figref{fig:rephine-graph}, the right parent pointer from
+``w{\textbar}o'' allows a right extension to the symbol 
+``wo{\textbar}od''.
+\figref{fig:rephine-expandgraph} shows \figref{fig:rephine-graph}
+at a larger scale to demonstrate how an entire chain of symbols
+can be obtained from anywhere in the list.  The ``w{\textbar}o''
+is at the head of the list of right siblings, 
+and the current symbol is $\alpha$.
+Both of these symbols have the same right component.
+Every symbol along that chain
+has a right child link to the primitive ``o''.  The front of
+the chain can be reached by taking the right child pointer from
+$\alpha$, followed by the left parent link of ``o'',
+as shown by the dashed lines in the figure.
+This is possible provided that
+graph construction ensures that every node's parent pointer
+leads to the beginning of a chain of parents.  If a symbol
+does not have a parent, the parent is represented as
+an empty node.
+
+\fig{
+\input{./expandgraph.pstex_t}
+}{The directed graph structure created by \rephine to link symbols
+together, at a larger scale than \figref{fig:rephine-graph}.  The
+node of interest is ``w{\textbar}o'' in the centre.  The dashed
+arrows shows how an entire chain of symbols can be obtained from
+an arbitrary symbol $\alpha$ within the chain.  Also shown are two
+siblings of the symbol ``wo{\textbar}od''.
+}{The directed graph structure of \rephine, at a larger scale}
+{fig:rephine-expandgraph}
+
+The graph structure created by \rephine
+resembles the data structure employed by \mka \citep{wolff75:bjp}
+for the recursive pairing of symbols for discovering sentence
+structure.  Each
+symbol in the dictionary created by \mka has major and minor links.
+A major forwards link is the same as a left child pointer in
+\rephine's graph, while a major backwards link is identical
+to a right child pointer.  Minor links operate in a similar
+fashion to the sibling pointers of \rephine.
+
+Equipped with this graph, five operations are available to
+the user.  Assuming the user's currently selected symbol
+is ``w{\textbar}o'' of \figref{fig:rephine-graph} and 
+\figref{fig:rephine-expandgraph}, the
+five operations are as follows.  First, the user can decompose
+the symbol into its two components through the child pointers.
+Second, if the right parent pointer from ``w{\textbar}o'' 
+is used, followed by all left sibling pointers until the empty
+node is reached, then all right extensions of ``w{\textbar}o'' can
+be retrieved.  In \figref{fig:rephine-expandgraph}, this operation
+would obtain the set 
+of two symbols, \{``wo{\textbar}od'', ``wo{\textbar}uld''\}.
+Likewise, a third operation is to extend ``w{\textbar}o''
+to the left.  The union of these last two sets results in a
+fourth function, extending ``w{\textbar}o'' in both directions.  
+
+The fifth and final operation is reserved for decoding, instead
+of phrase browsing.  Decoding requires identification of
+all symbols which contain the current symbol $\alpha$,
+either directly or indirectly.  The
+located symbols are denoted in 
+\figref{fig:rephine-alg} as $\Criteria$.  In order to find all
+symbols in the phrase hierarchy graph which contain $\alpha$, 
+a breadth-first search
+with the navigational pointers is sufficient.  Let $\beta$
+represent a symbol which is an ancestor of $\alpha$.  If $\beta$
+has only one occurrence of $\alpha$, 
+then all of its parents does as well.  But $\alpha$
+must appear in either its left or its right component, which
+can be determined based on how $\beta$ was reached.  So, only
+one of the sibling pointers need to be followed.  If $\beta$
+has multiple occurrences of $\alpha$, with at least one in each
+component, then during the breadth-first search, $\beta$ is reached
+twice.  Care must be taken to ensure that when $\beta$ is reached
+the second time, only the other sibling pointer is traversed, and not the
+parent pointers.  If this strategy is followed, then 
+the nature of the navigational pointers
+ensures that all symbols which include ``w{\textbar}o'' are included.
+
+Construction of the DG requires $O(|\Sigma| + |\rho|)$ time,
+for a phrase hierarchy of $|\Sigma|$ primitives and $|\rho|$
+phrases.  Since the chiastic slide and interpolative coding have been
+used to code the phrase hierarchy, the phrase hierarchy is already
+in increasing generation order, and within each generation,
+in increasing chiastic slide value order.  As no symbol is in
+the same generation as either of its two components, constructing
+the graph from the first primitive symbol in sequential order
+results in graph construction resembling a bottom-up 
+approach.
+If the phrase hierarchy is stored in memory as an array, 
+and if each of the six graph
+pointers are represented as array indexes, then locating a
+symbol's components requires $O(1)$ time.  
+For each phrase, an insertion
+is performed into the appropriate parent pointers of 
+each of its two components, so that each node is added
+at the front of its two chains of siblings in $O(1)$ time.
+That is, a single linear pass through the phrase hierarchy
+is sufficient to construct the graph.
+
+The memory space required for the phrase hierarchy is linear in
+the number of symbols in the phrase hierarchy.
+The graph structure adds an additional 6 words of memory 
+per symbol.  Also, the phrase hierarchy may
+have every symbol expanded into primitives, or symbol
+expansion may be deferred until the symbol is required.  
+The choice made depends which is more important:
+memory space or response time.  Experiments demonstrating
+the advantages and disadvantages of phrase
+hierarchy expansion were reported in \tabref{tab:repair-despair}
+on \pgref{tab:repair-despair}.  In
+the implementation of \rephine described in this chapter,
+a buffer of recently decoded symbols is maintained and consulted
+before decoding a symbol.  This approach was also employed in
+\repair's decoder, \despair.
+
+\newsection{Phrase Browsing Example}{sec:rephine-example}
+
+The \rephine system performs two main tasks:  phrase browsing
+and decoding symbol contexts for presentation.  Examples of both tasks
+are presented in Figures \ref{fig:rephine-scr-browse} and 
+\ref{fig:rephine-scr-decode}.  The 
+aspects of \rephine related to the graphical user
+interface were 
+implemented with version 2.0.2 of the \gtk 
+library\footnote{Available from \myurl{http://www.gtk.org/}.}.
+
+The data for the example
+is \news, processed with punctuation-aligned
+\repair exactly as was described in the experiments of
+\chapref{chap:remerge}.  The sequence of word tokens in
+those experiments were partitioned into blocks of 20,971,520
+symbols each, and then merged using method E of \remerge 
+(\secref{sec:remerge-expt}).
+Modifier and sequence coding were done with indexed \shuff
+and \reviewb respectively.
+
+In the previous section, the choices available to the user
+for phrase browsing from the current symbol were discussed.
+The user also needs to be given a starting point to browse
+from.  In \rephine, the user is first presented with the
+document's entire lexicon, as shown in
+\subfigref{fig:rephine-scr-browse}{a}.  The extensive list
+can be daunting, and one solution
+is to filter words, discussed later
+in the chapter.  In \subfigref{fig:rephine-scr-browse}{a}, the user
+has selected the word ``prime''.  
+The first symbol is extended to
+the right in \subfigref{fig:rephine-scr-browse}{b}, and the
+phrase ``prime minist'' has been selected.  While phrases in this 
+window are ordered according to their locations in the DG, 
+\citet{jp99:dl} and \citet{pwcb00:acmdl} describe systems %% Second cite due to witten00:cpm
+where phrases can be ordered according to the number of documents
+in which they appear, or their frequency in the collection.
+While details about the implementation of these two features are
+not available, it is expected that either the additional information
+is stored by the system, or calculated at run-time.  Also note
+the variations on the phrase ``prime minist'' due to the different
+spellings of the second word.  While stemming and case folding
+have reduced the size of the phrase hierarchy, it is still 
+possible that two seemingly equivalent words stem differently.
+The chosen phrase is extended to the left and the phrase 
+``canadian prime minist'' has been highlighted in 
+\subfigref{fig:rephine-scr-browse}{c}.  As this window shows,
+unfortunately, the words ``Canadian'' and ``Canada's'' stem
+to different words.  The identified phrase of 
+\subfigref{fig:rephine-scr-browse}{c} is extended in both
+directions, resulting in \subfigref{fig:rephine-scr-browse}{d}
+and its 7 phrases.  Of these 7 phrases, 3 are right extensions
+and 4 are left extensions to the phrase ``canadian prime minist''.
+The selected phrase is broken down into its two components through
+its child pointers, as shown in 
+\subfigref{fig:rephine-scr-browse}{e}.  This phrase browsing
+example commenced with the word ``prime'' and, in four steps,
+arrived at the name of a Canadian prime minister.  In \rephine,
+the refinement of a query term is done interactively with the
+help of the phrase hierarchy's graph.
+
+%%  A double-page figure
+%%  Snapshot created using the command:
+%%  import -frame -window "Main browsing session" ~/thesis/t/ch07/scrshots/snapshot1.eps
+%%  Then, export to PS with xv (greyscale).
+\fig{
+    \setlength{\tabcolsep}{3pt}
+    \begin{tabular}{ccc}
+      \multicolumn{2}{c}{\includegraphics*[scale=0.6]{./scrshots/browse-0.ps}} &
+      \includegraphics*[scale=0.6]{./scrshots/browse-1.ps} \\ 
+      \multicolumn{2}{c}{(a) Initial window} & (b) Extend right \\ \\
+      \includegraphics*[scale=0.6]{./scrshots/browse-2.ps} &
+      \includegraphics*[scale=0.6]{./scrshots/browse-3.ps} &
+      \includegraphics*[scale=0.6]{./scrshots/browse-4.ps} \\
+      (c) Extend left & (d) Extend both ways & (e) Decompose \\
+    \end{tabular}
+%  }
+%  \end{leftfullpage}
+}{A sample phrase browsing session of the \news document.}
+{Sample phrase browsing session of \rephine (\news)}{fig:rephine-scr-browse}
+%\end{figure}
+
+A sample decoding session is illustrated in 
+\figref{fig:rephine-scr-decode}.  The selected phrase of
+\subfigref{fig:rephine-scr-browse}{e} is the starting point
+for the decoding.  The first of 17 occurrences
+of the phrase ``pierr elliott trudeau''
+is given in \subfigref{fig:rephine-scr-decode}{a}.  The results
+are presented to the user in the order in which they occur in
+the original document.  In the first window, the phrase exists
+in a longer phrase, which has been marked.  A fixed context
+of 10 symbols in either direction of the highlighted symbol
+has been selected for \rephine.  In the absence of detailed information
+about the
+non-words, a space character is inserted between each word
+token, with linefeeds added as appropriate.  
+Even though the words in this window 
+have been stemmed and case folded, reasonable guesses can
+be made with most of the words.  In 
+\subfigref{fig:rephine-scr-decode}{b}, the user has skipped
+ahead to the 15th result.  As this section of text may be
+of interest, the case folding is first reversed in 
+\subfigref{fig:rephine-scr-decode}{c}, and then the stemming
+modifiers are applied in 
+\subfigref{fig:rephine-scr-decode}{d}.  The corresponding modifiers are
+located by the system and only the small number of required
+modifiers are transmitted to the \rephine window.  Modifiers can 
+be toggled in any order, and allow the user to progressively
+change the displayed context.  Finally, in 
+\subfigref{fig:rephine-scr-decode}{e},
+the non-words are inserted into the text and the window is 
+enlarged for improved display.  The text exists in the 
+original \news document as shown.  
+
+\fig{
+    \setlength{\tabcolsep}{3pt}
+    \begin{tabular}{ccc}
+      \includegraphics*[scale=0.6]{./scrshots/decode-0.ps} &
+      \includegraphics*[scale=0.6]{./scrshots/decode-1.ps} &
+      \includegraphics*[scale=0.6]{./scrshots/decode-2.ps} \\ 
+      (a) Result 1 of 17 & (b) Result 15 of 17 & (c) Reverse case folding\\ \\
+      \includegraphics*[scale=0.6]{./scrshots/decode-3.ps} &
+      \multicolumn{2}{c}{\includegraphics*[scale=0.6]{./scrshots/decode-4.ps}} \\
+      (d) Reverse stemming & \multicolumn{2}{c}{(e) Add non-words} \\
+    \end{tabular}
+}{A sample decoding session of the \news document, 
+continuing from \subfigref{fig:rephine-scr-browse}{e}.}
+{Sample decoding session of \rephine (\news)}{fig:rephine-scr-decode}
+
+At this stage, the user's information need may be satisfied.  
+Alternatively, the 
+user may decide to select the phrase ``Progressive 
+Conservative'' as the new starting point for phrase browsing.
+Then, the starting point for the browsing session becomes
+the phrase ``progress conserv''.
+
+\rephine applies the modifiers only when requested by the user.
+This approach takes advantage of the fact that the modifier
+streams are encoded separately.  At least two other ways of
+handling modifiers are possible, which have not been implemented
+for \rephine.  If the cost of decoding and transmitting the 
+modifiers is acceptable, the user can be given the option to 
+reverse all modifiers by clicking one button.  This feature
+can be added by making a small change to the \rephine 
+interface.  Another option is to display initial word
+tokens with default stems and case information applied.  
+That is, the most frequent stemming and
+case folding modifier is recorded for each word in the lexicon
+during pre-processing with
+\prepair.  The additional disk space required is $2|\Sigma|$ 
+integers, uncompressed,
+for a compressed document collection of $|\Sigma|$ primitives.
+When phrases are first displayed (for example,
+in \subfigref{fig:rephine-scr-decode}{a}), these default modifiers
+can be applied immediately without any intervention from the user.
+While the phrases presented may occasionally be
+linguistically incorrect, they should be valid most of
+the time.
+These default modifiers can be transmitted as needed, or once
+at the beginning of the browsing session.  A similar idea was
+adopted by \citet{pwcb00:acmdl}.  
+The aim of both of these alternatives is to make the interface
+more user-friendly by minimising the amount of exposure users
+have to case folded, stemmed words.
+
+\newsection{Evaluating \rephine}{sec:rephine-evaluate}
+
+Information retrieval systems are generally evaluated
+in terms of efficiency and effectiveness.  Efficiency is
+measured as the amount of time required to return a response
+to the user.  Effectiveness is an assessment of the extent to which
+the set of results satisfies the user's information need.
+
+Suppose an IR system indexes the words in a 
+collection of $n$ documents, and that for some set of queries,
+the number of documents that are relevant is known.
+The effectiveness of the
+IR system for the query is determined by the number of
+documents the system returns which are relevant.
+Two standard methods of quantifying
+effectiveness are {\emph {precision}} and {\emph {recall}}.
+These and other methods of judging retrieval effectiveness 
+are described by various sources, including \citet{korfhage97:book},
+\citet{br99:book}, and \citet{wmb99:book}.
+
+Precision and recall are expressed on a scale from 0 to 1.
+Precision is the fraction of returned results that are relevant, 
+while recall is the proportion of all relevant
+documents that are returned.  If a user poses a query for which
+the set of relevant documents in the collection is $r$,
+and the set of documents returned by the system is $a$, then
+precision and recall are defined as follows:
+\neweqn{
+\textrm{Precision} = \frac{|r \cap a|}{|a|} \\
+\textrm{Recall} = \frac{|r \cap a|}{|r|}
+}{eqn:rephine-prec-rec}
+
+Ideally, the effectiveness of \rephine should
+be evaluated in a similar manner.  However, significant 
+differences between \rephine and traditional IR systems prevent 
+any straightforward comparison.
+
+Instead, \rephine is evaluated in three steps.  In the
+first step, an overview of past work related to phrase browsing
+is summarised.  
+Second, \rephine is analysed in detail in the context of related
+work and traditional query methods.  Some possible improvements
+to \rephine are also proposed.
+Finally, the phrase hierarchy used by 
+\rephine is compared to noun phrases formed
+through natural language processing techniques.
+
+\newsubsection{Related Work}{subsec:rephine-related}
+
+Previous work in the area of phrase browsing can be classified based
+on the method employed for drawing phrases from a document.
+Phrases can be obtained through
+the semantic meaning of the words using natural language processing
+techniques, or statistically, by applying a mechanism similar to
+\repair.
+
+Most work with natural language processing (NLP) techniques
+are related to tagging words according to their parts-of-speech (that is,
+noun, verb, etc.)\ and forming phrases according to the rules of
+grammar.  A significant amount of work has concentrated on 
+{\emph {noun phrases}}.
+A noun phrase is a linguistic unit.  In it,
+a noun is both required and designated as the most semantically
+important word and, as a result, is assigned as
+the phrase's head.
+\figref{fig:rephine-np} shows an example of a noun
+phrase, divided into its various parts.
+
+\fig{
+\includegraphics*{./nounphrase.eps}
+}{Definition of a noun phrase, adapted from 
+\citet[pg.~209]{greenbaum96:book}.}{Definition of a noun phrase}
+{fig:rephine-np}
+
+While some retrieval systems treat a query as being
+made up of individual words, occasionally, a query should be
+seen as a set of one or more noun phrases.  If a user posed
+the query ``University of Melbourne'', ideally, documents 
+about other universities or the city of Melbourne are not
+of interest.  In fact, the seemingly unimportant word ``of''
+is crucial for this phrase, since ``University in Melbourne'' has
+a completely different meaning.  \citet{kirsch98:sigirforum}
+provided some insight into the Internet search engine Infoseek 
+and noted that most users submitted queries which were noun phrases
+and that queries were, on average, 2.2 words in
+length.  
+
+Several researchers have made use of noun phrases for their
+phrase-based IR systems.
+The \clarit system \citep{ez96:acl} 
+identified both simplex and complex noun phrases  
+for the purpose of improved
+precision and recall in information retrieval, without the need
+for training data.  The difference between a simplex noun phrase and
+a complex noun phrase is that a simplex noun phrase omits all prepositional
+phrases (the postmodifier in \figref{fig:rephine-np}).
+\citet{av97:sigir} developed the \paraphrase system
+which partitioned documents into clusters and summarised each 
+cluster with noun phrases for the purpose of browsing.  A 
+variant of the Brill tagger \citep{brill94:aaai} labelled
+the words according to their parts-of-speech.  \linkit
+by \citet{wek01:jcdl} identified noun phrases, which were subsequently
+displayed by the \intellindex interface.  A part-of-speech
+tagger was used to determine simplex noun phrases, which were then grouped
+according to their heads.  As a result, phrases such as 
+``the university bookstore'' was associated with the
+phrase ``a bookstore''.
+
+Extraction of keyphrases (document keywords in the form of 
+phrases) with machine learning techniques was investigated by 
+\citet{fpwgn99:ijcai} and embedded within a system dubbed
+\kea.  Several interfaces have been built on top of \kea,
+including \kniles, \phrasier, and \keyphind.  \kniles and
+\phrasier uses the 
+phrases identified by \kea to link documents together via
+hyperlinks \citep{jones99:interact, jp99:dl}.  Browsing
+phrases identified by \kea are supported by the \keyphind
+system \citep{gpwnf99:dss}.  \keyphind removes all but twelve
+phrases for each document in a collection and constructs three
+types of indexes with the phrases:  
+a word-to-phrase index, a phrase-to-document
+index, and a document-to-phrase index.  A user study was conducted
+which compared the usability of \keyphind to a traditional IR system
+based on ranked queries.  The results of the study showed that
+\keyphind was preferred for certain browsing tasks, such as collection
+evaluation.  A more recent user study \citep{jp01:jcdl}
+with \kea and keyphrases looked at computer science papers and
+compared the phrases selected by \kea with those specified by
+the authors of each paper.  The study's conclusion was that the
+phrases selected by \kea were almost as good as ones chosen by
+the authors.
+
+Phrase selection through statistical methods is more relevant to
+\rephine than through semantic methods.  
+The \phind system of \citet{nwp97:acmdl} selected 
+phrases using the \sequitur compression mechanism, which is similar
+to \repair and was discussed in detail in \chapref{chap:repair}.  Like
+word-based \repair described here, \sequitur was modified to 
+operate on word tokens
+in order to ensure word alignment.  Punctuation marks were removed and
+words were case folded to lower case.  Word stems were handled by 
+the phrase
+browser so that if the word ``book'' was chosen, a search for the word
+with different endings was performed.  Follow-up work on a browsing
+system built on top of \sequitur was described by \citet{nwp99:ijdl}.
+In order to browse large document collections, a disk-based browsing
+system is proposed.  The phrase hierarchy is placed on disk with
+an inverted index.  Smaller auxiliary data structures are
+kept in main memory for accessing the phrase hierarchy.
+
+\citet{wza99:adc} describe an index structure called a {\emph {nextword index}}
+which provides explicit support for phrase querying.
+This multi-level data structure is an index to pairs of words 
+that appear in the document collection.  The word lexicon forms the
+top-level of the index.  Each word in the lexicon 
+has a nextword list that, together, indicates the word pairs that exist
+in the collection.  Every word pair has a position
+list as the third and final level in the nextword index.  The position
+list specifies the documents and the document positions where
+the pairs of words occur.  Subsequent extensions to this work include
+compaction techniques for improving storage requirements
+\citep{bwz01:spire}, and a description of how nextword indexes can be
+used for mono-directional phrase browsing \citep{bwz01:acsc}.  
+The nextword index for a transformed version of \wsjb 
+occupied 56\% of the collection size.  When a query phrase with
+more than two words is processed, it must be partitioned into pairs of
+words for look-up into the index.  The position lists obtained
+using the word pairs need to be combined in order to find locations
+of the original, longer phrase.  
+\citeauthor{bwz01:acsc} [\citeyear{bwz01:acsc, bwz02:sigir}] 
+showed how the word
+pairs should be selected in order to optimise querying time, and then
+implemented a retrieval system which combined a
+nextword index with a word-level IR system.
+It was shown that the addition of the nextword index provided
+more efficient retrieval when the first word is a common word.
+
+Several methods combine semantics with statistics for phrase 
+selection.  \citet{wolff80:ls} tagged words according to 
+their parts-of-speech, and replaced frequently
+occurring pairs of word classifications with a recursive pairing
+mechanism similar to \repair.  \citet{pwcb00:acmdl} improved on
+\phind by combining \sequitur with \kea.  A Brill tagger was combined with 
+\kea and applied to the documents in order to identify boundaries
+between noun phrases.  Next, \sequitur was applied to combine
+words into phrases, with constraints enforced to prevent any crossing
+over the boundaries.
+
+A separate, yet related area to retrieval with phrases
+is that of locality-based indexing
+(or proximity indexing \citep[pg.~101]{br99:book}).  Locality-based
+indexing creates an index at the granularity of individual word
+tokens instead of documents.  When multiple terms are included in
+the query, the results are chosen not only because of query
+frequency, but also the distance between query terms within 
+the documents.  Some past works with locality-based retrieval
+include those of \citet{bsms95:trec}, \citet{ccb95:trec},
+\citet{ht95:trec}, and \citet{dm99:sigir}.  
+
+\newsubsection{Analysing \rephine}{subsec:rephine-analyse}
+
+The \rephine system of this chapter can be analysed in
+terms of its efficiency, effectiveness, and similarity and
+differences with other work.
+With respect to the efficiency of \rephine, the time
+required by decompression has already been presented.
+Experiments in \chapref{chap:remerge}
+showed that the total decoding time for \news 
+was 236.9 seconds, when \shuff was used as the coder
+(\tabref{tab:remerge-pa-time} on 
+\pgref{tab:remerge-pa-time}).  For the purpose of \rephine,
+less time is required since only the phrase hierarchy and
+the two lexicons are fully decoded.  Decoding the
+two lexicons required 0.8 seconds (\tabref{tab:remerge-pa-otherstats} on
+\pgref{tab:remerge-pa-otherstats}).  The total time required for phrase 
+hierarchy decoding, including graph construction by \rephine was
+12.3 seconds, 
+averaged over three trials on a \vipe.  Experiments
+in \chapref{chap:review} showed that 
+searching for symbols in the reduced word sequence
+encoded with \reviewb is fast, but depends on the number of 
+symbols searched for (see Figures \ref{fig:review-ws-freq}
+and \ref{fig:review-ws-len} on pages
+\pageref{fig:review-ws-freq} and \pageref{fig:review-ws-len}, 
+respectively).  The values in these graphs
+provide a good estimate of the amount of time required
+to search a sequence coded with \reviewb.  Finally, locating 
+100 positions in a stream of modifiers with indexed Huffman
+coding requires no more than 2.2 elapsed seconds
+if a block size of 32,768 bytes was chosen, shown in
+\tabref{tab:review-modtime} on \pgref{tab:review-modtime}.
+
+In summary, 13.1 CPU seconds is required by \rephine to decode
+the phrase hierarchy and the two lexicons.  Approximately
+10 elapsed seconds is necessary for \reviewb to search 
+the compressed sequence for 100 different symbols.  The
+modifiers at a certain location in a stream can be found in
+less than 0.1 seconds.
+
+It is more 
+difficult to assess the effectiveness of \rephine, 
+or phrase browsing in general.  The main feature
+of phrase browsing is the 
+user-driven navigation between symbols in the phrase hierarchy.  This
+interface experience cannot be easily quantified.
+If the searching phase of \rephine is assessed using
+precision as the evaluation metric, then problems similar to those encountered with 
+Boolean queries need to be addressed, since every result returned contains
+the symbol being sought, and precision is 1.0.  
+
+On the other hand, the proportion of relevant results (recall) can 
+be measured, but in a slightly different manner than in the traditional
+definition.  Unlike with a Boolean query or an exhaustive string search, 
+recall is not guaranteed to
+be 1.0, because of the way in which the pairing process of \repair breaks up
+phrases.  For example, suppose part of a message contains the
+five symbols:  $\alpha$$\beta$$\delta$$\beta$$\delta$.
+Suppose also that the frequency of $\alpha$$\beta$ throughout the message
+is higher than the pair $\beta$$\delta$, and that the replacements
+made are \tc{1} $\rightarrow$ $\alpha$$\beta$ followed by
+\tc{2} $\rightarrow$ $\beta$$\delta$.  With these replacements, the segment
+$\alpha$$\beta$$\delta$$\beta$$\delta$
+reduces to \tc{1}$\delta$\tc{2}.  As a consequence, if the symbol \tc{2} is selected
+during phrase browsing, then only the second occurrence of it
+in this segment is found.  The first occurrence
+has been split by the replacement with symbol \tc{1}, and is not reported 
+to the user.  
+
+Experiments were conducted with the first \mib{20} of \news (\wsja), compressed
+with punctuation-aligned \repair, to evaluate the average recall.  Unlike
+results from \tabref{tab:prepair-stats} on \pgref{tab:prepair-stats}, 
+phase 1 of \remerge has been applied,
+removing 16 duplicates in the phrase hierarchy.  For each symbol in the phrase
+hierarchy, the frequency of the symbol and all other higher
+generation symbols that contained it were compared with the actual
+frequency in the word sequence.  The results from these
+experiments are presented in \tabref{tab:rephine-recall}.
+
+\tab{ccccc}
+{
+Symbol      & Number of symbols & \multicolumn{3}{c}{Distribution of recall values} \\ \cline{3-5}
+length      & in phrase hierarchy & Median      & Mean   & Standard   \\
+            & ($\Ph$) & recall       & recall & deviation  \\
+}
+{
+%%  39,638 changed artificially to 39,637 for 0-length word, total symbols actually 231,546
+%%  Upper range of #3 is 2.500
+%%  total symbols 16 less than ch4 due to Remerge phase 1
+{\D\D}1     &  \D39,637 & 1.000 & 1.000 & 0.000\\
+{\D\D}2     &  \D79,693 & 0.750 & 0.706 & 0.295\\
+{\D\D}3     &  \D60,825 & 1.000 & 0.794 & 0.260\\
+{\D\D}4     &  \D25,245 & 1.000 & 0.862 & 0.225\\
+{\D\D}5     &  \D10,932 & 1.000 & 0.917 & 0.184\\
+{\D\D}6     & \D\D4,998 & 1.000 & 0.938 & 0.163\\
+{\D\D}7     & \D\D2,895 & 1.000 & 0.954 & 0.141\\
+{\D\D}8     & \D\D1,686 & 1.000 & 0.954 & 0.144\\
+{\D\D}9     & \D\D1,180 & 1.000 & 0.957 & 0.136\\
+10+         & \D\D4,454 & 1.000 & 0.955 & 0.136\\[1.0ex]
+Overall     &   231,545 & 0.975 & 0.904 & 0.168 \\
+}{Recall of the symbols in the \wsja phrase hierarchy.
+Median recall values for each symbol length are in the third column,
+followed by the mean, and the standard deviation.
+}{Recall of symbols in the phrase hierarchy (\wsja)}{tab:rephine-recall}
+
+In \tabref{tab:rephine-recall}, the 231,545 distinct symbols formed from
+\wsja were separated into ten symbol groupings based on their expanded
+length, measured in word tokens.  Since the zero-length
+word token for separating a long non-word token is of no interest,
+it does not appear in the table.  
+
+The second column of the table shows
+the size of each grouping.  The majority of symbols were 2 or 3 word tokens
+in length.  The remaining three columns indicate some gross statistics
+for the distribution of recall values for these symbols:  the median,
+the mean, and the standard deviation.
+Generally, results
+were worse for symbols which represented 2 to 4 word tokens.
+For the remaining categories, the average recall was at least 0.9
+and their corresponding medians meant that at least half of the 
+symbols had a recall of 1.000.  This result is further reinforced
+by the standard deviation ranging from 0.000 to 0.184.  The average
+recall and standard deviations were less satisfactory for symbols lengths of 2
+to 4.  When the symbol length is 2, the median recall was only 
+0.750.
+
+The results from the table can be interpreted as follows.
+Short phrases are more difficult to accurately find than primitives and
+long phrases.  For example, in \wsja, the phrase ``prime 
+ministr'', can be easily split depending on the words immediately
+before and after it.  Note, however, that the most common phrase
+that includes each word is exactly the one most likely to have
+a high recall.  And, as phrases get longer, since their 
+underlying components are more frequent, \repair does not 
+separate them.
+
+One anomaly is not shown in the experiments with \rephine.  Even
+though precision across the set of symbols in the phrase hierarchy
+is always 1.0, not every symbol can be 
+searched.  In particular, while \rephine is able to locate
+every symbol chosen through phrase browsing,
+many combinations of words do not exist in the phrase hierarchy
+and cannot be searched for.
+In \subfigref{fig:rephine-scr-browse}{c}, the phrase 
+``prime minist'' was extended to the left, and one phrase found
+was ``canadian prime minister''.  However, the
+phrase ``canadian prime'' does not exist in the phrase hierarchy,
+and therefore, cannot be searched for by \rephine.  
+The problem is the symbol pairing order employed by \repair 
+(and \remerge) makes no attempt to place every multi-symbol combination
+into the phrase hierarchy.  This point is expanded further later in this chapter.
+
+Phrases for the dictionary are selected by \repair and \remerge 
+based solely on symbol frequency, and in this sense, \rephine is
+closely related to \sequitur's phrase browser, \phind.
+\citet{nwp97:acmdl} identified the phrase boundary problem
+with the phrase hierarchies produced by \sequitur; a problem
+which also affects the phrase hierarchies of \repair.  The phrase
+boundary problem refers to two symbols which expand to identical
+strings, but have differing compositions.
+For example,
+it is possible that ``canadian prime \textbar\ minist'' and
+``canadian \textbar\ prime minist'' become two separate symbols
+in the phrase hierarchy, creating no problems for compression,
+but confusing the browsing process.  
+On the other hand, phase 1 of \remerge explicitly addresses 
+this problem when phrase hierarchies are merged.  Recall
+that phase 1 expands each symbol into a string of primitives
+for comparison.  Symbols that represent duplicate strings are
+removed.
+
+Another drawback with \rephine is apparent in
+the first screen of \subfigref{fig:rephine-scr-browse}{a},
+which presents a list of the word tokens 
+in the document collection.  Such an exhaustive list is similar
+to a Boolean or ranked query system which lists every
+word found in the collection, and is analogous
+to a book index containing every word found in the book.
+The advantage of \rephine for phrase browsing is not the
+word lexicon,
+but the relationships formed between words in order
+to combine into longer phrases.  Nevertheless, such an opening
+window is distracting to users.  Subsequent lists also
+suffer from the same problem, but to a lesser degree.
+The words in the first window and phrases in the remaining
+windows of \figref{fig:rephine-scr-browse} could be
+filtered so that unhelpful symbols are removed.  
+
+Case folding and stemming by \prepair reduce the size of the
+word lexicon and phrase hierarchy, while also improving browsing 
+by providing one word which represents several similar ones.
+\chapref{chap:prepair} showed the effect stemming and case folding had 
+on the the word lexicon of \wsja 
+(\tabref{tab:prepair-lexicon-size} on \pgref{tab:prepair-lexicon-size}).
+\tabref{tab:rephine-cfstem} updates those results for
+\news.  Recall that the rules for stemming
+only apply to words in lower case.  In the third row of
+the table, if the part of a word 
+in upper case is examined by the stemming algorithm, and
+no case folding is applied first, then the word would be
+left unchanged.  For example, ``Searching'' stems to ``Search'',
+while ``SearchinG'' does not.  The third
+column of the table shows the number of primitives
+in the phrase hierarchy, while the last column indicates
+the number of phrases.  Case folding and stemming has an
+effect on the size of the word lexicon, confirming the
+results for the smaller \wsja file.  Moreover, 
+the average lengths of words in the lexicon 
+are slightly longer than the values listed in 
+\tabref{tab:prepair-lexicon-size}, as indicated in the fourth
+column of the table.
+
+\tab{ccccccccc}
+{
+Case & \multirow{3}*{Stem} & Unique      & Average & \multicolumn{4}{c}{Percentage of primitive extensions} & Unique \\ \cline{5-8}
+fold      &      & primitives  & length  & Left & Right & \multirow{2}*{Both} & \multirow{2}*{None} & phrases \\
+          &      &             & (chars) & only & only  &      &      &         \\
+}
+{
+No        & No   & 533,205    & 8.00 & 10.2\% & 11.3\% & 18.5\%  & 60.0\% & 8,464,282 \\
+Yes       & No   & 448,278    & 8.10 & \D9.6\%& 11.4\% & 18.8\%  & 60.2\% & 8,269,436 \\
+No        & Yes  & 401,448    & 7.34 & 10.3\% & 11.7\% & 18.2\%  & 59.8\% & 8,147,217 \\
+Yes       & Yes  & 336,739    & 7.46 & \D9.7\%& 11.8\% & 18.1\%  & 60.4\% & 7,940,620 \\
+}
+{The effect case folding and stemming has on the phrase 
+hierarchy created from punctuation-aligned \repair for
+\news with method E of \remerge.  The last row corresponds to
+the application of both case folding and stemming of word tokens, 
+and reflects the arrangement used for the experiments with 
+\news in this chapter.}{The effect 
+case folding and stemming has on the phrase hierarchy (\news)}
+{tab:rephine-cfstem}
+
+In the fifth, sixth, seventh, and eighth columns of the table, 
+the set of primitives has been divided into four
+groups based on whether or not each one can be extended. 
+In all cases, about 60\% of the symbols do not participate as
+a component of a higher generation symbol.  However,
+simply eliminating these symbols from the opening 
+window of \rephine is too extreme.  If a word token 
+fails to become part of a phrase, it does not mean that the 
+word is not interesting or is infrequent.
+
+\citet{nwp97:acmdl} noticed a similar problem with the
+phrase browser \phind.  The
+solution adopted was to filter words and phrases based on
+word categories.  Words were labelled as {\emph {rare}}, 
+{\emph {interesting}}, or {\emph {common}} based on
+a set of frequency thresholds.  When the phrase hierarchy
+is explored, an expanded phrase is shown only if it
+differs from the previous phrase by at least one interesting word.
+For example, if ``book'' is an interesting word, but ``the'' 
+is a common word, then the expansion of ``book''  
+to ``the book'' would not be displayed.  The reason is that adding a common word to 
+the original word does not add any value for the user.  
+However, ``book'' can be expanded directly to ``the new book'', 
+provided the word ``new'' is also an interesting word.
+The drawback of this heuristic is that a common word
+may still be of interest to users, and a rare word does not
+necessarily represent a typographical error.
+
+At the centre of the problem with \sequitur, 
+and \repair as well, is that selecting
+phrases based on frequency generates too many phrases,
+with many differing by only a common word like ``the''.  
+\citet{pwcb00:acmdl} proposed the solution of combining
+\sequitur with \kea, since \kea was known to select
+too few phrases by itself.  Likewise, the combination of
+\repair with a mechanism similar to \kea may improve the number of
+phrases presented by \rephine.
+A more detailed look at the phrases created by \repair
+for \rephine is provided next.
+
+\newsubsection{Comparing \rephine with Noun Phrases}{subsec:rephine-nlp}
+
+Another part of \rephine that is worth evaluating is the usefulness of 
+the phrases presented to the user.  The quality of the
+phrases is not related to precision or recall because 
+the primary concern is the type of phrases available for
+browsing, and not the result from searching.
+
+\citet{wolff80:ls} produced phrases through a recursive
+pairing mechanism called \mka.  In \mka, pairs are chosen based on
+the part-of-speech categories assigned to the word tokens.
+The quality of the phrases was compared to the phrases
+selected by a human linguist.  In a similar fashion, the
+phrases made available by \repair can be compared 
+with the ones identified by a reference program employing 
+natural language processing (NLP) techniques.
+
+As with other IR systems based on NLP techniques, the basis
+for these experiments is that a user is more interested in a
+complete noun phrase such as ``prime minister'' than 
+a broken phrase like ``Canadian prime''.  The aim of the experiments is to
+report on the probability that a symbol in the phrase hierarchy
+is a noun phrase, and the probability that noun phrases
+exist in the phrase hierarchy.
+Noun phrases are identified through an NLP
+technique called \linkgram \citep{st91:tech} embodied in a
+program by the same name, 
+available from \myurl{http://www.link.cs.cmu.edu/link/}.  The
+latest version of the software is 4.1, dated 
+August 2000.
+
+The \linkgram system processes a sentence at a time.  
+In the first step, individual words are assigned to part-of-speech 
+categories by consulting a static dictionary.
+The categories of novel words are guessed through
+a technique the authors call ``morpho-guessing''.  Words have links to
+both sides for combining with other words in the sentence.
+For example, the two words ``the book'' can merge because of
+a right-facing ``D$+$'' link on the word ``the''  
+and a corresponding left-facing ``D$-$'' link on the noun
+``book''.  The ``D'' in both cases symbolise a determiner
+such as ``the'' and ``an''.
+An edge is drawn between these two words to indicate
+that they are compatible with each other.  When a grammatical
+sentence is correctly parsed, a valid {\emph {linkage}} is said
+to be formed.  Several requirements 
+must be satisfied in order to obtain a linkage.  One of these
+requirements is that the graph formed must be connected, 
+with all of the words in the sentence reachable.
+
+Subsequent work on the system \citep{gls95:tech} permits 
+{\emph {null links}} and post-processing of valid linkages with a
+phrase parser for identifying constituents such as noun phrases and
+verb phrases.  If a sentence cannot be successfully parsed, then 
+words in the sentence are removed incrementally until a successful
+parsing can be found.  When the sentence is finally parsed, each
+removed word introduces a null link into the linkage.  When a linkage
+for a sentence has been established, the post-processing phrase
+parser combines words to form constituents of one or more words.
+On-line documentation for the phrase parser\footnote{Available
+at \myurl{http://www.link.cs.cmu.edu/link/ph-explanation.html}.}
+reports that the constituents determined by the parser were
+75\% correct on the Penn Treebank 
+text\footnote{The Penn Treebank project is at 
+\myurl{http://www.cis.upenn.edu/~treebank/}.}, 
+which is newspaper text already annotated linguistically.
+
+A sample parsing of a headline from \wsja 
+is shown in \figref{fig:rephine-linkgram}.
+In the figure the headline is shown in part (a).  The \linkgram
+system considers it a valid sentence since two linkages are 
+identified, as shown in parts (b) and (c).  In 
+\subfigref{fig:rephine-linkgram}{a}, the ``G'' link is used to
+pair ``South'' with ``Korea''.  A ``G'' link connects proper
+nouns together, identified by the upper case letters at the beginning
+of each of these words.  Similarly, a ``G'' link is inserted
+between ``Current'' and ``Account''.  The second linkage case folds
+``South'' so that the first ``G'' link is converted to an ``A''
+link.  An ``A'' link connects a adjective with the noun it follows.
+The ``Ss'' link pairs a subject with a verb, while ``Ost'' edges
+connect a transitive verb to a singular object.  So, \linkgram
+incorrectly treats ``'s'' as a verb in both linkages.
+Linkages are scored so that ones with less null links or a lower edge
+length total are displayed first.
+The constituents for the linkage in (b) is
+presented in \subfigref{fig:rephine-linkgram}{d}.  At the beginning
+of each constituent is its classification.
+The abbreviation ``VP'' denotes a verb phrase, 
+while ``NP'' is a noun phrase.
+
+\fig{
+\begin{tabular}{c}
+{\texttt {South Korea's Current Account}} \\[0.5ex]
+(a) News headline \\[1.5ex]
+\includegraphics*{./linkage-1.eps} \\[0.5ex]
+(b) First valid linkage \\[1.5ex]
+\includegraphics*{./linkage-2.eps} \\[0.5ex]
+(c) Second valid linkage \\[1.5ex]
+\parbox{5cm}{\input{./parser-ex.tex}} \\
+(d) Constituents derived from the first linkage \\
+\end{tabular}
+}{An example parsing of a headline from \wsja using the \linkgram
+system.  The headline is shown along the top as part (a).  Two
+linkages are determined by \linkgram, which are shown in (b) and (c).
+The linkage from (b) is post-processed for constituent identification,
+yielding the output in (d).  Noun phrases are marked with ``NP''.}{Example
+parsing of a headline with \linkgram (\wsja)}
+{fig:rephine-linkgram}
+
+As with previous work in IR and NLP, the focus of the 
+phrase comparison is with noun phrases.  
+The number of unique phrases that \linkgram found in \wsja was
+compared with \rephine's phrase hierarchy.  Since only grammatical
+sentences can produce linkages, the test data of news
+articles were filtered so that sequences of words that are not 
+expected to give many noun phrases were omitted.  First, \sgml tags
+were removed and multiple consecutive whitespaces collapsed into
+a single space.  Sentences were given to \linkgram one at
+a time.  Then, the constituent analysis was determined
+by the phrase parser.
+
+As with the earlier experiments to measure recall, the \wsja document was
+used as test data.  The computing resources of the \linkgram program were
+quite high.  It required just over 5 hours
+to process the first \mib{1} of \wsja
+on a \vipe test machine.  This time included
+the above steps, starting from the \sgml tag filtering, and ending
+with the identification of constituents.  Note that
+the amount of work performed by \linkgram is more than what is
+necessary to identify noun phrases.  Other systems, such as the
+\keyphind browser of \citet{gpwnf99:dss}, simply categorise words
+according to their parts-of-speech, and then form noun phrases based on a set
+of fixed rules.  Even so, \citeauthor{gpwnf99:dss}\ required 4 days to process
+\gib{1} of text on a Pentium 233 MHz machine running Linux.
+In contrast, \linkgram must first successfully find a linkage for a
+sentence, and only when this is done, can it isolate the noun phrases.
+
+After \linkgram completes, constituents which are noun phrases,
+and are not composed of other phrases, were
+recorded.  The noun phrases were case folded
+and then stemmed with the Porter stemming algorithm employed
+by \prepair.  In order to comply with the 16 character per word
+limitation imposed by \prepair, spaces were inserted into long
+words.  Finally, a list of all of the distinct noun phrases in
+\wsja was prepared.
+
+\figref{fig:rephine-sgmlsample} illustrates how a news article
+in \wsja was parsed, with linefeeds altered to improve display.
+Text that was stripped from the article is shown shaded.  All \sgml tags
+are removed, as well as text within most tags.  Only text
+between opening and closing {\tl}HL{\tg} and {\tl}TEXT{\tg} tags
+were retained, since the headline and the body of the article has
+the best chance of providing complete sentences.  The noun phrases
+found by \linkgram for this example are shown in boxes.  The headline used
+as an example in 
+\figref{fig:rephine-linkgram} was taken from the article shown in
+\figref{fig:rephine-sgmlsample}.  
+
+\fig{
+\begin{tabular}{l}
+\input{./wsja_sample_parse.sgml}
+\end{tabular}
+}
+{An example article from the \wsja document, with noun
+phrases indicated with outlined boxes.  Shaded boxes
+represent parts of the article that were removed prior to
+applying \linkgram.  The article has been formatted with
+linefeeds for improved display.}{Example article
+with noun phrases identified (\wsja)}{fig:rephine-sgmlsample}
+
+The \linkgram system successfully found 147,294 grammatical
+sentences in \wsja.  Within these sentences, 744,721 noun
+phrases were identified, of which 216,661 were unique
+after stemming and case folding.  These unique
+phrases were divided into groups based on their lengths, in words,
+and compared with the phrases available to \rephine, which were
+also grouped according to length.  The phrases for \rephine are
+identical to the ones reported in \tabref{tab:rephine-recall}.
+Information about these
+two sets of phrases are shown in \tabref{tab:rephine-nlpph-stats}.
+The sizes of the sets of phrases are listed by lengths in the
+second and third columns.
+Note that noun phrases are only found if a valid linkage has been determined.
+In the fourth column of
+this table, the number of phrases common to the phrase
+hierarchy and in the set of noun phrases has been tabulated.
+The probability of a symbol in $\Ph$ being a noun phrase is given in fifth
+column.  The reverse, the
+probability of randomly selecting a noun phrase which is in
+the phrase hierarchy, is listed in the last column of the table.  
+
+\tab{cccccc}
+{
+Phrase      & Number of        & Number of    & Size of                & Probability & Probability \\
+length      & phrases in       & unique noun  & $\Ph \cap {\text{NP}}$ & $\Ph$ has & noun phrase \\
+            & hierarchy ($\Ph$)& phrases (NP) &                        & noun phrase & in \Ph \\
+}
+{
+{\D\D}1     & \D39,637  &    13,172 &        13,172 & 0.332 &    1.000 \\
+{\D\D}2     & \D79,693  &    78,527 &        21,692 & 0.272 &    0.276 \\
+{\D\D}3     & \D60,825  &    72,492 &       \D6,350 & 0.104 &    0.088 \\
+{\D\D}4     & \D25,245  &    32,419 &       \D1,578 & 0.063 &    0.049 \\
+{\D\D}5     & \D10,932  &    12,304 &       \D\C397 & 0.036 &    0.032 \\
+{\D\D}6     & \D\D4,998 &    \D4,939 &      \D\C144 & 0.029 &   0.029  \\
+{\D\D}7     & \D\D2,895 &    \D1,696 &     \D\C\D32 & 0.011 &   0.019  \\
+{\D\D}8     & \D\D1,686 &    \D\C662 &    \D\C\D\D8 & 0.005 &   0.012  \\
+{\D\D}9     & \D\D1,180 &    \D\C247 &    \D\C\D\D2 & 0.002 &   0.008  \\
+10+         & \D\D4,454 &    \D\C203 &    \D\C\D\D1 & 0.000 &   0.005  \\[1.0ex]
+Total       & 231,545   &    216,661 &       43,376 & 0.187 &   0.200 \\
+}{Quantifying the quality of symbols in the phrase hierarchy of
+\wsja by calculating the intersection of noun phrases, as identified by 
+\linkgram, with the phrase hierarchy.  Symbols have been
+divided into 10 groups, based on length (in words).  The second and
+third columns provide insight into the number of symbols (or 
+noun phrases).  The intersection of these two columns are reported
+in the fourth column.  The last two columns indicate the proportion of
+phrases in $\Ph$ which are noun phrases (fourth column divided
+by the second column), and the probability a noun phrase also being in
+$\Ph$ (fourth column divided by the third column), 
+respectively.}{Comparing the phrase hierarchy against the
+noun phrases (\wsja)}{tab:rephine-nlpph-stats}
+
+As \tabref{tab:rephine-nlpph-stats} shows, the majority of phrases in
+the phrase hierarchy and noun phrases from \linkgram are
+2 or 3 words in length.  The overlap between the two sets
+is around 28\% for phrases of length two for both measures, 
+a somewhat disappointing result.  Worse, as the phrases
+increase in length, there is even less correlation with the phrase 
+hierarchy, as the last two columns show.  This difference is partly due to the methods used by \repair
+and \linkgram to build phrases.  The \linkgram system operated on sentences
+individually, so phrases were guaranteed to be aligned on sentence boundaries.
+Also, \sgml markup did not appear in any of the sentences, because of the
+preliminary filtering.  On the other
+hand, while punctuation-aligned \repair encourages alignment with punctuation,
+phrases can still span sentences, since they are not processed individually.
+Furthermore, since \repair was applied on the original version of \wsja,
+any phrase that contained markup would not have a corresponding phrase
+from \linkgram.  The analysis in \tabref{tab:rephine-nlpph-stats}
+is based solely on the existence of phrases, and takes no account of the
+frequency.  Because \repair finds common phrases, it is likely 
+that the scores would
+be considerably better if the probabilities were assessed over the 
+sequence instead 
+of over the phrase hierarchy.
+
+Making phrases available in the phrase hierarchy is only half of \rephine's
+purpose since matching contexts must also be located in
+the reduced sequence.  Using the same methodology as established for
+\tabref{tab:rephine-recall}, the recall of the phrases that exist
+in both the phrase hierarchy and the list of noun phrases is presented
+in \tabref{tab:rephine-recall-nlp}.  This time, rather than
+presenting recall values for all symbols in the phrase
+hierarchy, only the ones that were also noun phrases identified
+by \linkgram are considered.  The second column of this
+table lists the number of noun phrases that were also 
+in the phrase hierarchy, copied from the fourth column of 
+\tabref{tab:rephine-nlpph-stats}.  In \tabref{tab:rephine-recall-nlp},
+as with the earlier experiment, 
+the median recall value for each phrase length group is reported.
+The mean and standard deviation of
+each set of recall values is also shown.
+
+\tab{ccccc}
+{
+Phrase      & Size of                & \multicolumn{3}{c}{Distribution of recall values} \\ \cline{3-5}
+length      & $\Ph \cap {\text{NP}}$ & Median       & Mean   & Standard   \\
+            &                        & recall       & recall & deviation  \\
+}
+{
+{\D\D}1     &   13,172 & 1.000 & 1.000 & 0.000\\
+{\D\D}2     &   21,692 & 0.800 & 0.720 & 0.298\\
+{\D\D}3     &  \C6,350 & 1.000 & 0.787 &  0.271\\
+
+{\D\D}4     &  \D1,578 & 1.000 & 0.845 & 0.242\\
+
+{\D\D}5     &  \D\C397 & 1.000 & 0.831 &  0.264\\
+{\D\D}6     &  \D\C144 & 1.000 & 0.849 & 0.250\\
+
+{\D\D}7     & \D\C\D32 & 1.000 & 0.853 & 0.258\\
+{\D\D}8     &\D\C\D\D8 & 1.000 & 1.000 &  0.000\\
+{\D\D}9     &\D\C\D\D2 & 1.000 & 1.000 & 0.000\\
+10+         &\D\C\D\D1 & 1.000 & 1.000 & 0.000\\[1.0ex]
+Overall     &   43,376 & 0.980 & 0.889 &  0.158\\
+}{Recall effectiveness of the noun phrases in the phrase hierarchy
+for \wsja.  The median has been calculated
+based on phrase length (in words)
+in the third column, with the mean, and the
+standard deviation indicated in the last two columns.}
+{Recall of noun phrases in the phrase hierarchy (\wsja)}
+{tab:rephine-recall-nlp}
+
+The results from \tabref{tab:rephine-recall-nlp} mirror those
+of \tabref{tab:rephine-recall}, but note the small size of the
+sample for phrases of length 7 or more.  Again, the average 
+recall is above 0.7, and more than half
+of the symbols had perfect recall.  The standard deviation 
+is wider and affects more groupings than in 
+\tabref{tab:rephine-recall}.  
+
+\newsection{Tools for Retrieval}{sec:rephine-summary}
+
+The \rephine system allows users to perform two inter-related
+tasks.  The first of these is phrase browsing.  Starting
+from a list of the distinct words found in the document, the user can
+either extend the current symbol by adding symbols to the left or 
+to the right, or decompose
+the current symbol into its two constituents.  A graph structure
+with one symbol from the phrase hierarchy at each node
+was established for the purpose of phrase browsing.  Each node
+has six pointers for navigation and defining its structure.
+
+Once the user has found a phrase of interest, the graph
+structure is consulted again to determine the complete set of phrases
+containing the chosen one.  This set of symbols, $\Criteria$,
+is the basis for the search in the reduced word sequence to determine 
+all of the locations at which any symbol in $\Criteria$ appears, along
+with a suitable context for each.  The second job of \rephine
+is to interactively display this set of results one by one to the user.
+Each result consists of word tokens which have been stemmed and
+case folded.  The non-words that follow each word token are
+also initially unavailable.  Each presented result can be refined by the 
+user by requesting modifiers from the three modifier streams, in any
+combination.  If at this stage, another symbol of interest has been
+isolated, it can be passed back to the phrase browsing part of 
+\rephine.
+
+In this chapter, \rephine has been demonstrated with a document collection 
+\mib{1,000} in size on a \vipe.  Before considering larger collections, note that
+only three of the seven streams available to \rephine must reside
+in memory.  The four remaining streams are compressed in blocks so that
+only parts of them are read from disk into memory.  The phrase hierarchy
+and the two lexicons occupy 1.8\% of disk space compared to the size of
+\news, and all of them must be accessible by \rephine in decoded form.
+The complexity and size of the phrase hierarchy ensures that it requires 
+the most memory during browsing after it has been fully decoded.
+
+Based on these observations, several
+approaches may be selected in order to browse larger collections.
+First, \secref{sec:remerge-append} showed how \remerge can be extended
+so that documents are appended to a compressed representation while
+keeping the phrase hierarchy static.  Experiments demonstrated this
+technique with character-based \repair, and an analysis of the changes
+necessary for punctuation-aligned \repair was discussed.  In particular,
+a method of handling novel words is required.  Second, either the maximum
+generation or the maximum symbol length can be limited so that the
+phrase hierarchy only contains moderately long phrases.  Third, while all
+word tokens must exist in the phrase hierarchy as primitives, additional
+heuristics, such as those offered by \kea and \linkgram, 
+may be used when building the phrase hierarchy.  Instead of reducing
+the number of phrases shown by \rephine, this approach would prevent
+certain symbols from being added to the phrase hierarchy.  Finally, any
+combination of these three methods can be used in order for larger document
+collections to be compressed by \repair and \remerge, and subsequently
+browsed.
+
+The \rephine implementation has not reached
+the stage where it could sensibly be made the 
+subject of a user study.  As with \sequitur, too many symbols 
+exist in \repair's phrase hierarchy, and some filtering is
+necessary to improve usability.  The removal of symbols
+through NLP techniques has been trialled by other IR systems, and
+it is likely that \rephine would be more feasible if similar 
+techniques could be employed.  An extension of this idea is to 
+rank symbols using some metric so that those that are expected to
+be the most useful are presented at the top.  Since there are
+reasons why users would want frequent and
+and infrequent phrases, simply sorting symbols
+by frequency would not help.
+
+User studies have been conducted to quantify the usefulness
+of phrase browsing retrieval systems \citep{gpwnf99:dss, jp01:jcdl}, 
+with some results being in favour of phrase browsing, and some less
+conclusive.  \citet{wm01:sigirforum} concluded that
+more work is still required in the area of phrase browsing
+evaluation with users.  But even if the suggested changes 
+were adopted for \rephine, it is expected that
+a comparative user study would not favour \rephine.  While providing
+users with a phrase browser was one of the aims of this development, the
+necessary tension between browsing and compression inevitably means
+that \rephine is not as careful as a dedicated phrase
+searching mechanism.  One necessary improvement appears to be
+achieving higher recall.
+It is possible that the solution lies in
+closely regulating word-based \repair's phrase selection 
+heuristic.  As word-aligned \repair showed, preventing
+certain pairs of symbols from joining does not necessarily
+degrade compression effectiveness (see 
+\figref{fig:prepair-bargraph-all} on 
+\pgref{fig:prepair-bargraph-all}).
+
+The benefits to
+compression are easier to quantify than the benefits of phrase
+browsing.  Since the latter quantity cannot be measured,
+it is also difficult to assess when a reasonable compromise
+between the two has been achieved.
+Instead, the goal of this thesis has been to 
+identify areas where compression and retrieval effectiveness and
+efficiency are lost, so that one can be adjusted in favour
+of another, as necessary.
+
+\rephine is built on top of a compression mechanism, a structure which
+limits its ability to browse and retrieve data.  
+Throughout this thesis, the amount of compression effectiveness
+lost in favour of faster retrieval times has been highlighted as
+a means of compromising between the two competing sets of constraints.  In this
+chapter, the current drawbacks with \rephine
+represent the amount of
+retrieval functionality lost in favour of supporting the
+lossless compression of a document collection
+with the underlying mechanism.
+Employing NLP techniques with \rephine
+may be the ideal solution for compensating
+for \rephine's loss in retrieval effectiveness.  As mentioned
+above, at the same time, NLP techniques may also reduce the
+number of symbols that reside in memory during browsing.
+
+Regardless of the improvements made to \rephine, phrase
+browsing in general is one of many IR techniques.  This chapter
+has also provided a glimpse into other querying techniques, 
+including ranked queries,
+proximity queries, and Boolean queries.  The system a user 
+chooses depends on factors such as how familiar the user is
+with the document, whether query terms include phrases, and whether
+the order and the positions of the words in a phrase matter.
+As \citet{gpwnf99:dss} pointed out, no single IR method 
+is perfect and the most viable solution 
+might be to provide ``several search tools that can 
+make up for each others' shortfalls''.  
+
+This chapter concludes the discussion in this thesis
+about the balance between compression and phrase browsing.
+Before summarising the thesis in \chapref{chap:summary},
+the next chapter discusses a separate topic related to the
+compression of small \html files.
+

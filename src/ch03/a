@@ -1,0 +1,17 @@
+how{\tvs}much{\tvs}wood{\tvs}could{\tvs}a{\tvs}woodchuck{\tvs}chuck & & & \\
+how{\tvs}mu\tc{1}{\tvs}wood{\tvs}could{\tvs}a{\tvs}wood\tc{1}uck{\tvs}\tc{1}uck & \tc{1} $\rightarrow$ c h & 3 & 1\\
+\tc{1} $\rightarrow$ ch\\%
+how{\tvs}mu\tc{1}{\tvs}woo\tc{2}coul\tc{2}a{\tvs}wood\tc{1}uck{\tvs}\tc{1}uck & \tc{2} $\rightarrow$ d \tvs & 2 & 1\\
+\tc{2} $\rightarrow$ d{\tvs}\\%
+how{\tvs}mu\tc{1}\tc{3}oo\tc{2}coul\tc{2}a\tc{3}ood\tc{1}uck{\tvs}\tc{1}uck & \tc{3} $\rightarrow$ \tvs w & 2 & 1\\
+\tc{3} $\rightarrow$ {\tvs}w\\%
+how{\tvs}mu\tc{1}\tc{3}oo\tc{2}coul\tc{2}a\tc{3}ood\tc{1}u\tc{4}{\tvs}\tc{1}u\tc{4} & \tc{4} $\rightarrow$ c k & 2 & 1\\
+\tc{4} $\rightarrow$ ck\\%
+how{\tvs}mu\tc{1}\tc{3}\tc{5}\tc{2}coul\tc{2}a\tc{3}\tc{5}d\tc{1}u\tc{4}{\tvs}\tc{1}u\tc{4} & \tc{5} $\rightarrow$ o o & 2 & 1\\
+\tc{5} $\rightarrow$ oo\\%
+how{\tvs}mu\tc{1}\tc{3}\tc{5}\tc{2}coul\tc{2}a\tc{3}\tc{5}d\tc{6}\tc{4}{\tvs}\tc{6}\tc{4} & \tc{6} $\rightarrow$ \tc{1} u & 2 & 2\\
+\tc{6} $\rightarrow$ chu\\%
+how{\tvs}mu\tc{1}\tc{7}\tc{2}coul\tc{2}a\tc{7}d\tc{6}\tc{4}{\tvs}\tc{6}\tc{4} & \tc{7} $\rightarrow$ \tc{3} \tc{5} & 2 & 2\\
+\tc{7} $\rightarrow$ {\tvs}woo\\%
+how{\tvs}mu\tc{1}\tc{7}\tc{2}coul\tc{2}a\tc{7}d\tc{8}{\tvs}\tc{8} & \tc{8} $\rightarrow$ \tc{6} \tc{4} & 2 & 3\\
+\tc{8} $\rightarrow$ chuck\\%

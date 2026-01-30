@@ -1,0 +1,1422 @@
+\newchapter{Text Compression}{chap:tc}
+
+Compression is the fundamental area of text management
+which recognises and removes redundancies, and represents 
+the remaining content in a more
+economical way so that the underlying information is retained.
+The compressed document is then transmitted 
+or stored for later use.  The receiver of the compressed document
+must reverse the transformation in order to obtain the original.
+The reduction in document size usually comes at the expense
+of another factor, such as processing time for the conversion.
+
+This chapter provides some background information on 
+compression, and is structured as follows.  \secref{sec:tc-fundamental}
+presents fundamental theory which forms the foundation of all
+compression methods.  \secref{sec:tc-compsys} 
+gives an overview of compression systems, and how they are
+divided into its three parts:
+model, probability estimator, and coder.  \secref{sec:tc-model}
+describes models and probability estimators in the context of
+three classes of
+algorithms prevalent in text compression:  dictionary-based, statistical,
+and block sorting.  \secref{sec:tc-coder} gives insight into
+static and entropy coding techniques.  The focus of this 
+chapter shifts to practice in \secref{sec:tc-practice},
+when some complete compression systems are described.
+Details of the framework for the experiments performed
+throughout this thesis are covered in \secref{sec:tc-expt}.
+Finally, this chapter concludes in \secref{sec:tc-summary}
+with a discussion of the
+effect compression has on searching.
+
+\newsection{Fundamentals in Compression}{sec:tc-fundamental}
+
+Some definitions and background about
+the area of information theory as the foundation for compression
+are required as a first step.  We suppose that a
+{\emph {message}} is created by some
+{\emph {source}}.  Whether a message is created for transmission
+or storage for archival purposes, its recipient is the 
+{\emph {receiver}}.  The {\emph {channel}} is the medium between
+the source and the receiver, and can be a communications line or
+a disk drive.  Between the source and the channel is the process
+which performs compression:  the {\emph {compressor}}.  Its counterpart
+is the {\emph {decompressor}}, employed by the receiver to 
+reconstruct the message.
+
+The smallest unit in the message is a
+{\emph {symbol}}.  The set of all possible symbols available
+to the source for building messages is the {\emph {alphabet}},
+denoted as $\Sigma$.
+The symbols in the alphabet depend on the source and the type
+of messages being transmitted.  For example, if the source
+only produces telephone numbers, then an alphabet
+which includes the 10 digits and the hyphen is sufficient.  
+The size of this
+alphabet (denoted as $|\Sigma|$) 
+is 11.  In this thesis, all messages are encoded using the \eascii
+character set \citep{latin1:std}, an extension to the \ascii
+character set \citep{ascii:std}.  The \ascii alphabet
+consists of 128 symbols, including the 26 letters of the English
+alphabet in both cases, the 10 digits, and a range of
+punctuation marks and non-printing characters.  
+The \eascii alphabet adds an additional 128 symbols to
+\ascii, to permit the encoding of text in most western European
+languages.  The symbols in a message encoded with \eascii are also
+called {\emph {characters}}.
+
+Each symbol in a message conveys some information to the 
+receiver.  The amount of 
+information conveyed depends on the probability of the
+symbol occurring in the message.
+Since a highly probable symbol offers little
+surprise to the receiver, the information
+content is small.  On the other hand, an unlikely symbol 
+has a high information content.
+If $\alpha$ represents a symbol in the alphabet, 
+then the relationship between its information content, 
+$I(\alpha)$, and its probability, 
+$P(\alpha)$, was defined by \citet{shannon48:bell} as:
+
+\neweqn{I(\alpha) = -\log_2 P(\alpha)\,.}{eqn:tc-info}
+
+In \eqnref{eqn:tc-info}, any base can be selected for
+the logarithm.  However, since compression is usually performed
+with computers based on the binary counting system,
+a base of two is a convenient choice, and the information 
+content is measured in units of bits.  For example, in a message
+representing a sequence of throws of a six-sided dice,
+the probability of any value appearing is $1/6$.  The
+information content of each of the 6 events is
+$-\log_2 (1/6) = 2.58$ bits.
+
+If the information content of all of the symbols in some 
+alphabet $\Sigma$
+are averaged, then the {\emph {zero-order entropy}} of the 
+source is obtained 
+\citep{shannon48:bell}:
+
+%% If the frequency of $\alpha$ and
+%% the length of the message is taken into account, then the number
+%% of bits per symbol (bps) for each instance of $\alpha$ in the 
+%% message is given by:
+
+%% \neweqn{\text{bps}(\alpha) = P(\alpha) \cdot I(\alpha) = - P(\alpha) \cdot \log_2 P(\alpha)}{eqn:tc-info2}
+
+\neweqn{H = \sum_{\alpha \in \Sigma} P(\alpha) \cdot I(\alpha)
+= -\sum_{\alpha \in \Sigma} P(\alpha) \cdot \log_2 P(\alpha)\,.}
+{eqn:tc-entropy}
+
+If the probabilities are derived from a specified message, rather than the
+source, then the quantity described in \eqnref{eqn:tc-entropy}
+is the per-symbol zero-order {\emph {self-information}} of the message.  
+\citeauthor{shannon48:bell} demonstrated that the entropy
+is the lowest limit (in bits per symbol) with which a message 
+from the source can, on average, be coded.
+
+The definitions for information content and entropy depend on
+two factors.  First, they assume that the probability of the
+symbols in the alphabet can be obtained.  While other definitions
+of entropy exist, this definition assumes a Markov source
+that generates the symbols in a message independently and 
+identically distributed.  That is, the value of a symbol
+does not affect the values of neighbouring symbols.  Of course,
+this is not true for the letters that appear in an 
+English message, for example.  Despite these requirements, the 
+definition of entropy has served as a guide for work in
+compression for many decades.  A more thorough coverage of
+information theory can be found in books such as 
+\citet{ct91:book}.
+
+\newsection{Compression Systems}{sec:tc-compsys}
+
+Many types of compression systems exist in order to satisfy
+a range of needs.  A system is {\emph {lossless}}
+if the decoder is able to recreate the original message
+exactly.  A system that does not achieve this goal is
+{\emph {lossy}}.  Lossy compression is commonly
+found in the audio and video compression fields, since
+changes to the message that go unnoticed by the human senses
+are considered acceptable.  Some work has been conducted in
+the area of lossy compression for text.  \citet{ngbpll97:sigcomm}
+considered the lossy compression of \html documents by transforming
+them to improve bandwidth, provided they rendered correctly
+within
+a web browser.  \citet{kpt86:spe} applied a syntax-directed
+compression scheme to Pascal source code.  As a higher priority 
+was given to the program source code, other free-form text such
+as comments and extraneous whitespaces were modified as necessary.
+Despite these counterexamples, text compression is usually
+taken to imply lossless compression, because a missing character or
+word from a sentence can greatly alter the meaning of the 
+sentence.
+
+Whether a compression system is tailored for audio, video, or
+text, it can usually be divided
+into three tasks:  modelling, probability estimating, and
+coding \citep{rl81:ieeeit}.  
+The model receives the message from the source and 
+accumulates knowledge about it.  The definition
+of entropy earlier was based on independently occurring
+symbols, which is not true for most messages.  
+If the probability a symbol occurs is based on
+neighbouring symbols, it is during the first phase of the 
+compression system that this relationship is captured.
+Next, the probability
+estimator assigns probabilities to symbols in the message to form 
+the model, usually
+based on the observed frequencies derived from the part of the 
+message processed.  
+Finally, the coder maps the output of the probability
+estimator to a set of codewords based
+on the {\emph {channel alphabet}}, which in this thesis
+is assumed to be binary.
+
+As shown in \figref{fig:tc-modelcoder}, these three components 
+are situated before (and after) the
+channel, forming the compressor (and decompressor).  
+The decompressor reverses the 
+operations performed by the compressor to obtain the original 
+message.  In a compression system, these three parts may each
+exist in isolation, or be tightly bounded together, with no
+apparent division between them.
+
+\fig{\includegraphics*{./modelcoder.eps}}{The separation
+of a compression system into a model, probability 
+estimator, and coder.}{Separation of a compression system}
+{fig:tc-modelcoder}
+
+Each component of the compression system operates {\emph {statically}}, 
+{\emph {semi-statically}}, or {\emph {adaptively}}.  A static
+algorithm makes use of fixed, pre-determined statistics to process
+the input.  These statistics are presumed to be available at both ends
+of the
+channel, so that explicit transmission is unnecessary.  The
+drawback to such a regime is that it is only suitable when
+the static probabilities match those found in the input.  When
+there is a mismatch, compression effectiveness degrades.
+
+On the other hand, an adaptive algorithm learns about the
+input throughout the compression process, and typically 
+commences with bland statistics.  As compression progresses,
+these statistics are updated, 
+in an attempt to match those possessed by the message.  
+Like static algorithms, adaptive ones have the advantage of 
+requiring only a single pass.  Furthermore, adaptive mechanisms
+are suitable for any type of message.
+
+Semi-static algorithms encode the message in two
+passes.  The first pass collects information about the message.
+That knowledge is then applied in the second pass.
+The primary difference between a static algorithm
+and a semi-static equivalent is that the information that exists
+on both sides of the channel in the static approach must be
+explicitly transmitted by the semi-static one.  Thereafter,
+the process is the same.
+
+Closely related to these three algorithm classifications are
+the categories {\emph {on-line}} and {\emph {off-line}}.  An
+on-line algorithm processes a symbol, and then immediately commits
+it to the channel as a stream of bits before reading in the 
+next symbol.  An off-line
+mechanism has the luxury of examining a significant block of the
+input before sending anything to the decoder, at the cost of
+buffering symbols in memory.
+
+In the next two sections, models and coders are discussed in
+greater detail through sample algorithms.  Coverage of
+probability estimators is absorbed into the 
+description of models, because of their close relationship.
+
+\newsection{Modelling}{sec:tc-model}
+
+The model analyses and learns about
+the message, and in the process, identifies the redundancies
+that allow the message to be represented in an 
+alternate, yet cost-effective manner.
+Three different models are considered in this chapter:  dictionary-based,
+statistical, and block sorting.
+
+A short passage has been 
+chosen as the example for most of this thesis.  The 
+``Woodchuck'' tongue twister from
+\citet[pg.~30]{oo59:book} is shown in \figref{fig:tc-woodchuck}.
+All words in the message have been case folded, and all punctuation
+has been removed.  In addition, all whitespace characters have
+been collapsed into a single space, as indicated in the figure
+as ``\tvs''.  While linefeeds are used in the figure to
+improve display, they are not considered to be part of the message.
+
+\fig{
+\begin{tabular}{l}
+{\texttt {how{\tvs}much{\tvs}wood{\tvs}could{\tvs}a{\tvs}woodchuck{\tvs}chuck{\tvs}}} \\
+{\texttt {if{\tvs}a{\tvs}woodchuck{\tvs}could{\tvs}chuck{\tvs}wood{\tvs}}} \\
+{\texttt {as{\tvs}much{\tvs}wood{\tvs}as{\tvs}a{\tvs}woodchuck{\tvs}would{\tvs}chuck{\tvs}}} \\
+{\texttt {if{\tvs}a{\tvs}woodchuck{\tvs}could{\tvs}chuck{\tvs}wood}} \\
+\end{tabular}
+}{The ``Woodchuck'' message.  A space is indicated by a ``\tvs''
+character.  Linefeeds have been inserted to improve readability.}
+{The ``Woodchuck'' message}{fig:tc-woodchuck}
+
+\newsubsection{Dictionary-Based Models}{subsec:tc-dict}
+
+Dictionary-based models (or {\emph {macro encoding}} mechanisms
+\citep{ss82:jacm}) seek
+to represent the input message in a more cost effective way by building a
+dictionary of phrases.  Sections of the message are substituted by
+references to the dictionary's entries.  Compression is achieved if 
+the cost of expressing the dictionary is less than the total number
+of symbols it replaces.
+
+A static dictionary-based model would hard-code the phrases in the
+compressor and the decompressor.  The dictionary can also be built
+semi-statically or adaptively so that each compressed message has
+an associated dictionary.  In this case, either the 
+dictionary must
+be explicitly sent to the decompressor, or enough information must
+be transmitted for the decompressor to reconstruct the dictionary.
+The overall effectiveness of a dictionary-based model depends on the 
+frequency with which dictionary phrases occur, and their lengths.
+
+This section focuses on two dictionary-based models, both of which
+operate adaptively and on-line.  The first is the \lza algorithm
+by \citet{zl77:ieeeit}, which creates a dictionary by maintaining
+a window of recently seen symbols.  Each symbol in the window
+is considered to be the beginning of a phrase of arbitrary length.  
+Sequences (or strings) of 
+symbols in the message are replaced by phrase references.
+
+\algo{\input{./alg-lz77.tex}}{Algorithm for \lza.}
+{\lza}{alg:tc-lza}
+
+\algref{alg:tc-lza} presents the algorithm for \lza.  
+The input and output messages are represented as $\mathcal{M}$
+and $\mathcal{M}'$, respectively.  The size of the window is
+denoted as $N$.  As each symbol is read, 
+it is appended to
+the string $\omega$, which is initialised to the empty string
+$\lambda$ at the beginning of the algorithm on line 
+\ref{algline:tc:lza:2}.  On line \ref{algline:tc:lza:5}, a 
+search for $\omega$
+is performed on the dictionary of phrases for the set of strings
+that have $\omega$ as a prefix.  A match is indicated by a
+distance offset backwards, counting from the end of the window.
+When $\omega$ cannot be found, an offset of $0$ is returned from
+the search, and the string $\omega$ is encoded as a 3-tuple of
+the form ${\langle}d,l,s{\rangle}$.  The location in the window
+of the last successful match is specified by $d$, while the length
+of this match (one less than the length of $\omega$) is specified
+by $l$.  The last
+symbol in $\omega$ that caused the mismatch is transmitted directly 
+as $s$.
+As a special case, when the string $\omega$ only contains one symbol,
+$\alpha$, the novel symbol is replaced with the tuple:  
+${\langle}0,0,\alpha{\rangle}$.  
+
+The size
+of the window is restricted to some value $N$, and as more of the message
+is processed, symbols at the beginning of the window are removed 
+so that the window is kept recent.  The eradication of 
+old symbols and the addition of
+new ones give the illusion of a window sliding over the message.
+So, mechanisms based on \lza are sometimes referred to as ``sliding window''
+compression schemes.  For efficiency reasons, $N$
+is usually chosen as a power of 2.
+
+\tabref{tab:tc-lz77} illustrates the \lza algorithm with an example.  The
+sample text is formed from part of the ``Woodchuck'' message, 
+``woodchuck{\tvs}chuck{\tvs}if''.  Each line in the figure indicates
+one 3-tuple.
+The dictionary window is indicated by a shaded box, while $\omega$ is
+placed in a framed box.  The window is $N=8$ symbols in length.
+In row (a) of the table, the window is initially empty, and
+the tuple ${\langle}0,0,$w${\rangle}$ is transmitted, to get the first
+character through.  Later, 
+in row (c), the second occurrence of the letter ``o''
+creates an $\omega$ two characters in size.  At the second to last step in
+the table, $\omega$ is 7 characters in length and the longest
+match is 6 characters from the end of the window.  At this stage, the
+first two characters in the message, ``wo'', have departed from the
+window.
+
+\tab{ccc}
+{ & Tuple & Message \\}
+{
+(a) & ${\langle}0,0,$w${\rangle}$      & {\texttt {\nogreyboxtt{w}oodchuck{\tvs}chuck{\tvs}if}} \\ [0.5ex]
+(b) & ${\langle}0,0,$o${\rangle}$      & \greyboxtt{w}{\texttt {\nogreyboxtt{o}odchuck{\tvs}chuck{\tvs}if}} \\ [0.5ex]
+(c) & ${\langle}1,1,$d${\rangle}$      & \greyboxtt{wo}{\texttt {\nogreyboxtt{od}chuck{\tvs}chuck{\tvs}if}} \\ [0.5ex]
+(d) & ${\langle}0,0,$c${\rangle}$      & \greyboxtt{wood}{\texttt {\nogreyboxtt{c}huck{\tvs}chuck{\tvs}if}} \\ [0.5ex]
+(e) & ${\langle}0,0,$h${\rangle}$      & \greyboxtt{woodc}{\texttt {\nogreyboxtt{h}uck{\tvs}chuck{\tvs}if}} \\ [0.5ex]
+(f) & ${\langle}0,0,$u${\rangle}$      & \greyboxtt{woodch}{\texttt {\nogreyboxtt{u}ck{\tvs}chuck{\tvs}if}} \\ [0.5ex]
+(g) & ${\langle}3,1,$k${\rangle}$      & \greyboxtt{woodchu}{\texttt {\nogreyboxtt{ck}{\tvs}chuck{\tvs}if}} \\ [0.5ex]
+(h) & ${\langle}0,0,${\tvs}${\rangle}$ & w\greyboxtt{oodchuck}{\texttt {\nogreyboxtt{{\tvs}}chuck{\tvs}if}} \\ [0.5ex]
+(i) & ${\langle}6,6,$i${\rangle}$ & {\texttt {wo}}\greyboxtt{odchuck{\tvs}}{\texttt {\nogreyboxtt{chuck{\tvs}i}f}} \\ [0.5ex]
+(j) & ${\langle}0,0,$f${\rangle}$ & {\texttt {woodchuck}}\greyboxtt{{\tvs}chuck{\tvs}i}{\texttt {\nogreyboxtt{f}}} \\ [0.5ex]
+}{Dictionary-based compression using the \lza 
+algorithm.  Each row illustrates the string 
+$\omega$ being encoded and its associated 3-tuple.  
+On the right, the shaded region is the current window, which 
+grows until a fixed size and then ``slides'' across the 
+text.  The unshaded region is the section of text being 
+processed ($\omega$).}{Dictionary-based compression using \lza}{tab:tc-lz77}
+
+%% \fig{\begin{tabular}{llp{7cm}}
+%% \multirow{3}*{(a)} &
+%% \multirow{3}*{{\textless}0,0,l{\textgreater}} & 
+%% \multirow{3}*[0.5pt]{\subfigure[]{\label{fig:tc-lz77a}\input{./lz77-a.pstex_t}}} \\
+%% & \\
+%% & \\
+%% \multirow{3}*{(b)} &
+%% \multirow{3}*{{\textless}6,2,a{\textgreater}} & 
+%% \multirow{3}*[5pt]{\subfigure{\label{fig:tc-lz77b}\input{./lz77-b.pstex_t}}} \\
+%% & \\
+%% & \\
+%% \multirow{3}*{(c)} &
+%% \multirow{3}*{{\textless}13,5,c{\textgreater}} & 
+%% \multirow{3}*[5pt]{\subfigure{\label{fig:tc-lz77c}\input{./lz77-c.pstex_t}}} \\
+%% & \\
+%% & \\
+%% \end{tabular}}{Dictionary-based compression using the \lza 
+%% algorithm.  The shaded region is the current window, which 
+%% grows until a fixed size and then ``slides'' across the 
+%% text.}{Dictionary-based compression using \lza.}{fig:tc-lz77}
+
+In terms of memory, the \lza algorithm requires at least space
+proportional to $N$ in order to hold the sliding window.  However,
+since searching for $\omega$ in the dictionary can be the most
+costly operation in the algorithm, additional data structures are used
+to improve efficiency.  Some basic data structures include 
+sorted lists and binary search trees.  Other possible mechanisms
+include tries (also called multi-way tries \citep{sedgewick97:book}) and
+hash tables.  A trie is a tree where each node has an outdegree equal to
+$|\Sigma|$.  When searching for a string $\omega$, reading each
+character results in one transition from the current node to one of its
+$|\Sigma|$ child nodes.  A hash table can be implemented so that the
+first few characters of each phrase are used to calculate a position in
+the table.  The data structure chosen must also take
+into account the fact that symbols leave the window as well as join
+it.  So, phrases are continually added and removed from the data structure.
+
+In comparison, the decoder is
+simpler than the compressor.  While a sliding window must be 
+maintained, string searching is not required.  Each tuple in
+the compressed message indicates explicitly where in the window
+to copy phrases from, and the number of symbols to copy.  Hence, 
+decoding is extremely quick.
+In fact, the fast decoding time is a trait shared by most 
+dictionary-based algorithms.  Reconstructing the message 
+by directly copying strings from the dictionary is attractive from
+a pragmatic point of view.
+
+Some variations on the \lza algorithm include \lzr and \lzss.  The
+\lzr scheme \citep{rpe81:jacm} removes the size of the sliding window so that all
+of the message seen so far is used as phrases.  \citet{bell86:ieeec} designed
+\lzss to remove the restriction on constant tuple sizes by mixing the
+output stream with characters and back pointers.  A bit flag was used
+to indicate whether a literal character or a back pointer exists in
+the stream.  This work was taken further by \citet{fenwick93:dcc}, who
+investigated other lengths of bit flags.
+
+The second dictionary-based algorithm discussed in this chapter
+is the \lzb algorithm of \citet{zl78:ieeeit}.  Like \lza,
+\lzb is adaptive, operates on-line, and replaces sections of
+the message with pointers to the dictionary.  However, rather
+than using a sliding window of symbols as a phrase book,
+an explicit dictionary is built.  \algref{alg:tc-lzb} lists the
+algorithm for \lzb.  As before, symbols are read one at a time and 
+appended to the string
+$\omega$.  If $\omega$ exists in the dictionary $D$, then the next
+input symbol is considered.  But if $\omega$ cannot be found, then it
+is replaced with a 2-tuple, ${\langle}p,s{\rangle}$.  The last successful
+match for a phrase (that is, $\omega$ without its last character) is
+specified by $p$ as a position in the dictionary.  The last
+symbol in $\omega$ is encoded explicitly as a literal, $s$.  Whenever
+a new phrase has been found, it is added to the dictionary on
+line \ref{algline:tc:lzb:8} of the algorithm.
+Dictionary entries are indexed from 1 so that
+a new symbol, $\alpha$, is encoded as ${\langle}0,\alpha{\rangle}$.
+The dictionary is initially empty.
+
+\algo{\input{./alg-lz78.tex}}{Algorithm for \lzb.}
+{\lzb}{alg:tc-lzb}
+
+A sample application of the \lzb algorithm on the same 
+message as \tabref{tab:tc-lz77} is shown in 
+\tabref{tab:tc-lz78}.  Each row in the table shows a section
+of text being encoded as a 2-tuple (indicated by 
+the column marked ``Tuple'').  The
+position in the dictionary of each new string is shown
+in the next column, followed by the progress of the compression.
+The shaded region represents
+text that has already been seen, while the framed box draws
+attention to the string $\omega$.  Due to the short example,
+the message is encoded only as strings of length 1 or 2.
+Since the dictionary gradually grows, the repetition of the
+string ``chuck{\tvs}'' is not captured within the text shown, 
+and more pointers are required than the equivalent \lza parsing.
+Also, in row (k), note that the letter ``k'' is encoded as a
+literal, even though it is the second time it has been seen.  The
+first time it was encountered, it was part of a string of length
+2.
+
+\tab{ccc@{\,}c@{\,}lc}
+{ 
+& \multirow{2}*{Tuple} & \multicolumn{3}{c}{Current} & \multirow{2}*{Message} \\ 
+&                      & \multicolumn{3}{c}{dictionary} & \\
+}
+{
+(a) & ${\langle}0,$w${\rangle}$ &   1  & $\rightarrow$ & {\texttt {w}} & {\texttt {\nogreyboxtt{w}oodchuck{\tvs}chuck{\tvs}if}} \\ [0.5ex]
+(b) & ${\langle}0,$o${\rangle}$ &   2  & $\rightarrow$ & {\texttt {o}} & \greyboxtt{w}{\texttt {\nogreyboxtt{o}odchuck{\tvs}chuck{\tvs}if}} \\ [0.5ex]
+(c) & ${\langle}2,$d${\rangle}$ &   3  & $\rightarrow$ & {\texttt {od}} & \greyboxtt{wo}{\texttt {\nogreyboxtt{od}chuck{\tvs}chuck{\tvs}if}} \\ [0.5ex]
+(d) & ${\langle}0,$c${\rangle}$ &   4  & $\rightarrow$ & {\texttt {c}} & \greyboxtt{wood}{\texttt {\nogreyboxtt{c}huck{\tvs}chuck{\tvs}if}} \\ [0.5ex]
+(e) & ${\langle}0,$h${\rangle}$ &   5  & $\rightarrow$ & {\texttt {h}} & \greyboxtt{woodc}{\texttt {\nogreyboxtt{h}uck{\tvs}chuck{\tvs}if}} \\ [0.5ex]
+(f) & ${\langle}0,$u${\rangle}$ &   6  & $\rightarrow$ & {\texttt {u}} & \greyboxtt{woodch}{\texttt {\nogreyboxtt{u}ck{\tvs}chuck{\tvs}if}} \\ [0.5ex]
+(g) & ${\langle}4,$k${\rangle}$ &   7  & $\rightarrow$ & {\texttt {ck}} & \greyboxtt{woodchu}{\texttt {\nogreyboxtt{ck}{\tvs}chuck{\tvs}if}} \\ [0.5ex]
+(h) & ${\langle}0,${\tvs}${\rangle}$ &   8  & $\rightarrow$ & {\texttt {{\tvs}}} & \greyboxtt{woodchuck}{\texttt {\nogreyboxtt{\tvs}chuck{\tvs}if}} \\ [0.5ex]
+(i) & ${\langle}4,$h${\rangle}$ &   9  & $\rightarrow$ & {\texttt {ch}} & \greyboxtt{woodchuck{\tvs}}{\texttt {\nogreyboxtt{ch}uck{\tvs}if}} \\ [0.5ex]
+(j) & ${\langle}6,$c${\rangle}$ &  10  & $\rightarrow$ & {\texttt {uc}} & \greyboxtt{woodchuck{\tvs}ch}{\texttt {\nogreyboxtt{uc}k{\tvs}if}} \\ [0.5ex]
+(k) & ${\langle}0,$k${\rangle}$ &  11  & $\rightarrow$ & {\texttt {k}} & \greyboxtt{woodchuck{\tvs}chuc}{\texttt {\nogreyboxtt{k}{\tvs}if}} \\ [0.5ex]
+(l) & ${\langle}8,$i${\rangle}$ &  12  & $\rightarrow$ & {\texttt {{\tvs}i}} & \greyboxtt{woodchuck{\tvs}chuck}{\texttt {\nogreyboxtt{{\tvs}i}f}} \\
+(m) & ${\langle}0,$f${\rangle}$ &  13  & $\rightarrow$ & {\texttt {f}} & \greyboxtt{woodchuck{\tvs}chuck{\tvs}i}{\texttt {\nogreyboxtt{f}}} \\ [0.5ex]
+}
+{Dictionary-based compression using the \lzb
+algorithm.  Each row illustrates the string 
+$\omega$ being encoded, with the generated 2-tuple 
+in the first column.  The position in the dictionary
+and the equivalent string of the new tuple is shown in
+the second column.
+At the end of each row is the progress of the algorithm.
+The shaded region indicates text that has already been
+processed, while the unshaded region is the section of
+text being processed ($\omega$).  Dictionary strings grow 
+one character longer at each step.}
+{Dictionary-based compression using \lzb}{tab:tc-lz78}
+
+In comparison to the \lza algorithm, \lzb searches for phrases
+in an explicit dictionary, rather than a sliding window of
+phrases.  The relevance of the dictionary to the text being compressed is
+no longer limited by a window size.
+Even so, in practice, a limitation on memory usage 
+is imposed on \lzb so that the amount of space is bounded.  Also,
+while phrases are explicitly added into $D$, note that the addition
+of a phrase does not give assurance that it will be used.  
+
+The same data structures described for \lza can also be employed by
+\lzb for maintaining phrases.
+But since phrases are never deleted from the dictionary, one 
+complication inherent in \lza is eliminated by \lzb.  The \lzb algorithm,
+though, requires the dictionary to be maintained by both the decompressor
+and the compressor.  As a result, decoding with \lzb is usually slower
+than \lza.  
+
+In \lzb implementations, several approaches exist when dealing 
+with a full dictionary.  First, the dictionary can
+be deleted, and re-constructed from scratch.  Second, a least recently
+used policy can be employed, so that the oldest phrases are removed to
+make space for new ones \citep{tischer87:acsc}.  Alternatively,
+if every symbol in the
+alphabet is used to initialise the dictionary (such as the case with 
+\lzw by \citet{welch84:computer}), then it can be kept static for 
+the remainder of the message.  Because of this, the output from
+the \lzw algorithm only contains pointers to phrases.  Combinations of
+these three policies are possible; for example \lzw rebuilds
+the dictionary if compression degrades significantly.
+
+\newsubsection{Statistical Models}{subsec:tc-stat}
+
+Instead of building a dictionary, statistical models directly
+estimate the probability for each symbol in the message.  As an
+example, suppose symbols are words and the following sentence 
+fragment has to be
+completed with a word, ``I purchased a book from the ...''. 
+Many plausible
+guesses exist, but most of them would be sources of
+books, such as ``bookstore'' and ``Internet''.  
+This conclusion can be drawn from the information provided
+by the preceding words.
+
+Generalising the problem to symbols, rather than words,
+statistical models combine with probability estimation modules
+in order to gather statistics and provide estimates
+for each symbol as it is encountered. Restricting the context to 
+the preceding symbols permits messages to be processed in a single
+pass.   
+An {\emph{order-$K$}} context uses the previous 
+$K$ symbols to predict the current symbol.  By definition, an 
+order-0 context does not use any preceding symbols, while an order of minus-one
+assigns the same probability to every symbol.  The \eascii
+standard can be thought of as a very simple compression system
+based on a fixed minus-one order context.  An order-1 statistical
+model predicts
+each symbol in the context of one immediately preceding symbol.
+Intuitively, the higher
+the order, the more accurately the model is able to predict
+symbols.  However, if the size of the alphabet is $|\Sigma|$, 
+then an increase in the context by one symbol
+results in an increase in memory usage by a factor of as much
+as $|\Sigma|$, and in
+general, for an order-$K$ context, the amount of
+memory required is potentially proportional to $|\Sigma|^{(K + 1)}$.
+
+The Prediction by Partial Matching (\ppm) algorithm 
+\citep{cw84:ieeec} is one example of a statistical model.  
+In order to conserve memory, instead of creating
+all possible contexts initially, \ppm records contexts
+as they are encountered
+in the message.  If a symbol cannot be predicted in the current
+context, then the algorithm reduces the context by 
+one symbol and tries again, until a context can be found.
+
+Implementations of the \ppm algorithm are typically 
+parameterised in terms of the maximum order $K$. 
+The encoding of a symbol $\alpha$ is first attempted using
+the previous $k = K$ symbols.  If $\alpha$ has not occurred in
+this context, then a special {\emph {escape symbol}}
+is transmitted to indicate that a context
+of length $k - 1$ should be attempted.  This is repeated
+until $\alpha$ can be estimated based on a previously seen context, 
+or when $k = -1$ and the symbol is encoded
+as a literal.
+
+Several variations on the \ppm algorithm exist, differing primarily
+in the probability assigned to the escape symbol.  The probability
+given to the escape symbol is related to the {\emph 
+{zero frequency problem}} \citep{wb91:ieeeit}.  The zero frequency
+problem refers to the dilemma of assigning a probability to an
+event that has not occurred.  Since there is a chance it could occur
+later, novel events that have not yet occurred must still be assigned 
+non-zero probabilities.
+
+With respect to \ppm, the probability of the escape symbol is
+an instance of the zero frequency problem since the escape symbol
+is emitted when a symbol has not occurred in the current context.
+Several methods related to this problem have been explored.
+Method A of \ppm increases the count of each context by 1 
+for the escape probability.  Method B subtracts 1 from the 
+counts of every context so that an event is considered to have
+occurred only if has happened twice.  The remaining counts
+are allocated to the escape symbol.  Methods A and B were described
+by \citet{cw84:ieeec}.  Method C \citep{moffat90:ieeec} assigns 
+a probability
+of $d / (n + d)$, where $d$ is the number of distinct symbols seen
+in the current context, and $n$ is the total number of symbols 
+encountered in that context.  Method D \citep{howard93:phd}, 
+estimates the probability of the escape symbol as $d / (2n)$.  
+Implementations of \ppm
+which make use of the latter two methods generally achieve better
+compression effectiveness than variants using methods A and B \citep{wmb99:book}.  
+\citet{ct97:cj} looked at \ppm with an unbounded context.
+
+An example of the \ppm algorithm is shown in \tabref{tab:tc-ppm}.
+The sample message is again ``\texttt{woodchuck{\tvs}chuck{\tvs}if}''.
+A row in the table represents the processing of a character in
+the message.  The message is in the last column, with the shaded region 
+representing text that has already been
+seen.  The framed box indicates the character under
+consideration.  In this example, the maximum order is fixed at $K = 2$.  
+So, an attempt is made to first predict each character using the two
+immediately preceding characters.
+The columns labelled ``Order'' and ``Context'' indicate the order
+and context that is finally used to predict the current character.
+Novel characters are always encoded 
+using a $-1$ order model.
+In the example, four of the letters in the second occurrence of 
+``\texttt{chuck}'' can be predicted using a second order model.
+
+\tab{cccc}
+{ & Order & Context & Message \\ }
+{
+(a) & -1 & - & \nogreyboxtt{w}{\texttt{oodchuck{\tvs}chuck{\tvs}if}} \\
+(b) & -1 & - & \greyboxtt{w}{\nogreyboxtt{o}}{\texttt{odchuck{\tvs}chuck{\tvs}if}} \\
+(c) &  0 &   & \greyboxtt{wo}{\nogreyboxtt{o}}{\texttt{dchuck{\tvs}chuck{\tvs}if}} \\
+(d) & -1 & - & \greyboxtt{woo}{\nogreyboxtt{d}}{\texttt{chuck{\tvs}chuck{\tvs}if}} \\
+(e) & -1 & - & \greyboxtt{wood}{\nogreyboxtt{c}}{\texttt{huck{\tvs}chuck{\tvs}if}} \\
+(f) & -1 & - & \greyboxtt{woodc}{\nogreyboxtt{h}}{\texttt{uck{\tvs}chuck{\tvs}if}} \\
+(g) & -1 & - & \greyboxtt{woodch}{\nogreyboxtt{u}}{\texttt{ck{\tvs}chuck{\tvs}if}} \\
+(h) &  0 &   & \greyboxtt{woodchu}{\nogreyboxtt{c}}{\texttt{k{\tvs}chuck{\tvs}if}} \\
+(i) & -1 & - & \greyboxtt{woodchuc}{\nogreyboxtt{k}}{\texttt{{\tvs}chuck{\tvs}if}} \\
+(j) & -1 & - & \greyboxtt{woodchuck}{\nogreyboxtt{\tvs}}{\texttt{chuck{\tvs}if}} \\
+(k) &  0 &   & \greyboxtt{woodchuck{\tvs}}{\nogreyboxtt{c}}{\texttt{huck{\tvs}if}} \\
+(l) &  1 & \texttt{c} & \greyboxtt{woodchuck{\tvs}c}{\nogreyboxtt{h}}{\texttt{uck{\tvs}if}} \\
+(m) &  2 & \texttt{ch} & \greyboxtt{woodchuck{\tvs}ch}{\nogreyboxtt{u}}{\texttt{ck{\tvs}if}} \\
+(n) &  2 & \texttt{hu} & \greyboxtt{woodchuck{\tvs}chu}{\nogreyboxtt{c}}{\texttt{k{\tvs}if}} \\
+(o) &  2 & \texttt{uc} & \greyboxtt{woodchuck{\tvs}chuc}{\nogreyboxtt{k}}{\texttt{{\tvs}if}} \\
+(p) &  2 & \texttt{ck} & \greyboxtt{woodchuck{\tvs}chuck}{\nogreyboxtt{\tvs}}{\texttt{if}} \\
+(q) & -1 & - & \greyboxtt{woodchuck{\tvs}chuck{\tvs}}{\nogreyboxtt{i}}{\texttt{f}} \\
+(r) & -1 & - & \greyboxtt{woodchuck{\tvs}chuck{\tvs}i}{\nogreyboxtt{f}} \\
+}
+{Statistical modelling using \ppm.  Each row indicates the 
+order and context used to predict the current character.
+The progress of the algorithm is presented at the end of 
+each row, with the current character placed in a box.  The
+shaded region indicates the characters that have been processed.}
+{Statistical modelling using \ppm}{tab:tc-ppm}
+
+The amount of memory required by the \ppm algorithm is
+higher than dictionary-based algorithms, due to the number of
+contexts that have to be maintained.  Typical implementations 
+use several megabytes of memory for data structures.  \citet{bcw90:book}
+showed how an implementation of \ppm would use a trie of
+context nodes, with each node representing a unique context
+of symbols.  Nodes are interlinked with 
+{\emph {vine pointers}} so that when a shorter context is needed, 
+it can be reached in $O(1)$ time.
+Even so, \ppm tends to execute slower for both encoding and 
+decoding in comparison to \lza and \lzb because of the overhead of
+maintaining the context tree, and the fact that \ppm operates on a
+per symbol basis.  It is widely accepted that the combination of \ppm 
+with an arithmetic coder (to be discussed
+below), is one of the best general-purpose compression 
+systems\footnote{The Canterbury Corpus web site 
+at {\myurl {http://corpus.canterbury.ac.nz/}} compares a wide range
+of compression systems.}. 
+\citet{bcw90:book} summarise work by others (including
+\citet{shannon48:bell}, \citet{rl81:ieeeit}, and \citet{bw87:tech}),
+and show that an equivalent 
+statistical model exists for any dictionary-based algorithm which
+selects phrases in a greedy fashion.  This relationship was further
+discussed by \citet{bw94:jacm}.
+So, a greedy dictionary-based model cannot outperform a 
+statistical one.
+
+\newsubsection{Block Sorting}{subsec:tc-bsort}
+
+The last modelling technique considered in this chapter is the block
+sorting mechanism devised by \citet{bw94:tech}.  Also called the 
+Burrows-Wheeler transform (or BWT),
+the algorithm differs from dictionary-based and statistical ones 
+in that it applies a transformation to the message to improve
+compression.
+A subsequent move-to-front mechanism is invoked 
+in order to underscore
+the locality created by the transformation, and eventually, a 
+zero-order coder is applied.
+
+The block sorting transform is best explained through an example.
+\figref{fig:tc-bs} demonstrates the algorithm with the string,
+``woodchuck''\footnote{See other sources, such as \citet[pg.~66]{wmb99:book}, 
+for an example of block sorting using a longer message with more
+redundancy.}.
+The first step in block sorting is to partition the message into 
+blocks so that each one can be processed independently in an off-line 
+manner.  For each block of $n$ symbols, a set of $n$ strings is created,
+starting from each symbol in the block.  When the end of the 
+string is reached, the string wraps-around to the beginning.
+The $n$ strings for the example string are 
+presented in \subfigref{fig:tc-bs}{a}.  The block of strings is
+then sorted by comparing from the second-to-last symbol until
+the beginning of the string, in a reverse lexicographic order.  
+This is shown in \subfigref{fig:tc-bs}{b}.
+Sorting into context order gives a good indication about 
+what characters appear after a particular conditioning sequence.  
+For example, the first two strings of \subfigref{fig:tc-bs}{b} show that
+in this string, the character ``c'' only forms a context for
+``h'' and ``k''.
+The sequence of last characters of the block of sorted strings
+is shown with a shaded column in the figure.  This string of characters
+is encoded for transmission.  The 
+encoder notifies the decoder as to the location of the symbol 
+at the beginning of the original message.  In this example, it is 
+the ``w'' in the fifth position of the string, as indicated by the asterisk (*).
+
+
+
+\fig{
+\begin{tabular}{ll@{}l@{}ll}
+\LCC
+& & \llightgray & & \\
+{\texttt {woodchuck}} & {\texttt {uckwoodc}} & {\texttt {h}} & & {\texttt {c h}} \\
+{\texttt {oodchuckw}} & {\texttt {woodchuc}} & {\texttt {k}} & & {\texttt {c k}} \\
+{\texttt {odchuckwo}} & {\texttt {huckwood}} & {\texttt {c}} & & {\texttt {d c}} \\
+{\texttt {dchuckwoo}} & {\texttt {ckwoodch}} & {\texttt {u}} & & {\texttt {h u}} \\
+{\texttt {chuckwood}} & {\texttt {oodchuck}} & {\texttt {w}} &*& {\texttt {k w}}* \\
+{\texttt {huckwoodc}} & {\texttt {dchuckwo}} & {\texttt {o}} & & {\texttt {o o}} \\
+{\texttt {uckwoodch}} & {\texttt {chuckwoo}} & {\texttt {d}} & & {\texttt {o d}} \\
+{\texttt {ckwoodchu}} & {\texttt {kwoodchu}} & {\texttt {c}} & & {\texttt {u c}} \\
+{\texttt {kwoodchuc}} & {\texttt {odchuckw}} & {\texttt {o}} & & {\texttt {w o}} \\
+\ECC
+\multicolumn{1}{c}{(a)} & \multicolumn{3}{c}{(b)} & \multicolumn{1}{c}{(c)} \\
+\end{tabular}}{Example of the block sorting algorithm with the
+word ``woodchuck''.  The $n$ strings (for a block of $n$ 
+characters) are obtained by permuting the original word as shown 
+in (a).  Then, the strings are sorted in (b), with the first letter
+of the word indicated by the asterisk (``*'').  
+The characters indicated in the grey
+column are transformed using MTF before being transmitted to the
+receiver.  Decoding is shown in (c).}
+{Block sorting example}{fig:tc-bs}
+
+The decoder receives the permuted string, and sorts it.  In
+\subfigref{fig:tc-bs}{c}, the sorted string on the left is
+placed next to the received unsorted string, shown to its right.  
+The sorted string of received characters
+is identical to the column of second-to-last characters in 
+\subfigref{fig:tc-bs}{b}.  That is, each character in the sorted string
+forms a one-symbol context for the character to its right.
+Moreover, in both strings, the relative order of characters
+which have the same value is preserved.  The second ``o'' in the
+sorted string (seventh character) is the same 
+character as the second ``o'' in the
+unsorted string (last character).
+One symbol is decoded by examining a character from the 
+received string, then the same character in the sorted version,
+and finally, the character it forms a context with, to its right,
+as illustrated in \subfigref{fig:tc-bs}{c}.  In this example, the first character in
+the unsorted string is the ``w'' in position 5.  This character
+is the same as the ``w'' at the end of the sorted string, which forms 
+a context for the second ``o'' in the unsorted string.
+
+The difference between the transmitted string and the original message
+is that the permuted string has localised character occurrences.
+In the first two strings of \subfigref{fig:tc-bs}{b}, the
+characters ``h'' and ``k'' appear in the context of ``c''.  Even if
+the message was longer, only the few character that appear after a
+``c'' would cluster in this region.  
+
+To exploit the localised clustering, a move-to-front (MTF) 
+transformation is then
+applied.  The transformation translates each symbol
+in the string to a number that indicates how many distinct symbols
+have been observed since this one was last seen.
+A symbol that
+was recently seen gets translated into a small value.
+In a cluster of symbols where there is little variation, sequences
+of small numbers result.  
+In the end, the permuted string becomes a list of
+numbers with a skewed distribution of mainly small values, and it is that
+sequence that is passed to a coder.  If the seven distinct characters
+in ``woodchuck'' are initially ordered alphabetically, then the MTF values
+for the permuted string is $\{3, 4, 3, 6, 7, 7, 7, 5, 3 \}$.  If the
+original message was longer, then clusters of symbols in the permuted
+sequence would generate runs of small MTF numbers.  As an alternative,
+\citet{wm01:dcc} compressed the output from block sorting directly
+using other schemes, without
+applying the MTF transform.
+
+Generally, systems which implement block sorting with 
+MTF yield compression ratios close to \ppm due to their exploitation
+of symbol contexts \citep{ct97:cj}.  As the most time consuming operation
+in BWT is string sorting, others have considered ways of improving
+this phase of the algorithm \citep{sadakane98:dcc, seward00:dcc, seward01:dcc}.
+Several other authors have explored refinements to improve compression
+effectiveness \citep{deorowicz00:spe, fenwick96:acsc, fenwick96:cj}.
+
+\newsection{Coders}{sec:tc-coder}
+
+The model and probability estimator identifies the redundant
+information in the message and produces a
+{\emph {reduced message}}.  This reduced message
+must then be coded to achieve the desired
+transmission across the channel.
+Based on the description of models presented earlier in this 
+chapter, the reduced message may contain components of
+a 3-tuple from a \lza implementation, a stream of symbols indicating which
+\ppm contexts were chosen, or MTF values for a message permuted with
+block sorting.
+
+The coder obtains the reduced message, the set of distinct symbols
+in the reduced message ($D$), and the probabilities with which these
+symbols occur ($P$).  From these three pieces of information, the
+coder creates a set of {\emph {codewords}} ($C$) which map each symbol
+in the reduced message to a string of letters in the channel 
+alphabet.  Compression has been achieved if the set of codewords
+(collectively called {\emph {codes}}) chosen produce an output
+message shorter than the original message.  Furthermore, if 
+the codes are selected so that no codeword is a prefix of any other
+codeword, then the codes are {\emph {prefix-free}}.  Prefix-free codes
+ensure that the compressed message is uniquely decodable, without the 
+need to buffer codewords.
+
+Two classes of coders are presented next.  Methods in the first class 
+assign codewords statically, based solely on a symbol's value
+within the alphabet.
+The second class of coders are entropy coders,
+which use the supplied symbol probabilities to produce a 
+compressed message whose length is intended to be close to the
+self-information of the reduced message.
+
+\newsubsection{Static Coders}{subsec:tc-static}
+
+Static coders map each symbol in the reduced message to a
+particular codeword, without acknowledging the
+probabilities with which the symbols occur.  The simplest scheme
+is a unary code, which encodes the symbol $x$ as a codeword
+made up of $x - 1$ one-bits, and terminated by a zero bit.
+Unary codes are biased toward smaller values
+of $x$, since the codeword for $x$ is exactly $x$ bits in length.
+
+Another straightforward coding mechanism is binary, which
+allocates a codeword of length $\lceil \log_2 N \rceil$ bits
+for each $x$, for some upper limit $N$.  Unlike unary coding, 
+binary coding assumes a 
+uniform distribution of the symbols and a definite range.  
+Some examples of binary
+coding are the \ascii and \eascii character sets, which encode
+each symbol in 7 and 8 bits, respectively.  
+The second and third columns of
+\tabref{tab:tc-staticcodes} list the unary and binary codes
+for the values 1 to 9, respectively.
+The binary codes in this table are based on an
+upper limit of $N = 8$.  Because of this, no binary code is possible
+for $x = 9$.
+
+\tab{clcll}
+{ $x$ & \multicolumn{1}{c}{unary} & binary & \multicolumn{1}{c}{gamma} & \multicolumn{1}{c}{delta} \\}
+{
+1     & 0         & 000 & \greybox{0}      & \greybox{0} \\
+2     & 10        & 001 & \greybox{10}0    & \greybox{100}0 \\
+3     & 110       & 010 & \greybox{10}1    & \greybox{100}1 \\
+4     & 1110      & 011 & \greybox{110}00  & \greybox{101}00 \\
+5     & 11110     & 100 & \greybox{110}01  & \greybox{101}01 \\
+6     & 111110    & 101 & \greybox{110}10  & \greybox{101}10 \\
+7     & 1111110   & 110 & \greybox{110}11  & \greybox{101}11 \\
+8     & 11111110  & 111 & \greybox{1100}00 & \greybox{11000}000 \\
+9     & 111111110 & --- & \greybox{1100}01 & \greybox{11000}001 \\
+}{Some sample static codes for the values 1 to 9.  The prefix of the
+gamma and delta codes are shaded in grey.}{Sample static codes}
+{tab:tc-staticcodes}
+
+The fourth column of the table shows the codewords produced by
+gamma coding \citep{elias75:ieeeit}.  Gamma codes offer a compromise
+between the skewed distribution assumed by unary coding, and the
+uniform distribution of binary coding.  A gamma code has two parts,
+a prefix and a suffix.
+The prefix, shown shaded in the fourth column, uses a unary code to specify
+the binary length of the symbol.  The suffix part
+specifies the exact symbol in binary within that order of magnitude.
+For the symbol $x$, the prefix specifies 
+$1 + \lfloor \log_2 x \rfloor$ in $1 + \lfloor \log_2 x \rfloor$ 
+bits, while the suffix indicates $x - 2^{\lfloor \log_2 x \rfloor}$
+in $\lfloor \log_2 x \rfloor$ bits.  The total length of the gamma
+code for $x$ is thus $1 + 2\lfloor \log_2 x \rfloor$ bits.  If the prefix
+is coded using a gamma code, and the suffix in binary, then
+the delta codes result, also described by \citeauthor{elias75:ieeeit}.
+The last column of \tabref{tab:tc-staticcodes} 
+presents some delta codes, with the prefix again highlighted.  The length
+of a delta code for a symbol $x$ is 
+$1 + 2\lfloor \log_2 \log_2 2x \rfloor + \lfloor \log_2 x \rfloor$ bits.
+
+There are two benefits of using \citeauthor{elias75:ieeeit}
+codes instead of unary and binary codes.  In comparison to
+unary codes, \citeauthor{elias75:ieeeit} codes are 
+shorter for all but a very small number of values of $x$.  
+And while the length of binary codes are even
+shorter, binary codes are assigned based on a known range,
+which might not be a reasonable restriction.
+On the other hand, \citeauthor{elias75:ieeeit} codes and 
+unary codes can represent arbitrarily large values.  All four 
+codes are prefix-free.
+
+\newsubsection{Huffman Coding}{subsec:tc-huffman}
+
+Entropy coders assign codes derived from symbol probabilities that
+are calculated directly 
+from symbol frequencies in the reduced message, or through other means.
+Either way, they are assumed to
+be true for the symbols being processed.  Entropy coders that
+decide on codewords based on the observed frequency of symbols in the reduced
+message can do so using either semi-static or adaptive mechanisms.  Two
+entropy coding regimes are considered in this section:  semi-static
+Huffman coding, and adaptive arithmetic coding.
+
+Huffman coding is a famous entropy coding technique 
+\citep{huffman52:ire}.  This algorithm assigns codewords 
+so that frequent symbols 
+obtain shorter codewords than rare symbols.  The Huffman algorithm
+calculates codewords incrementally, by first
+placing each symbol of the alphabet in a {\emph {package}}, and
+then by repeatedly merging the two packages with the lowest combined
+probabilities,
+until only one package remains.  Whenever two packages
+are combined, the probabilities are summed.  Every symbol has an
+associated codeword length which is incremented by one every time
+the symbol participates in a merge. 
+When the algorithm concludes, the set of 
+lengths are used to assign codewords to each symbol.
+
+\figref{fig:tc-huffman} explains the Huffman algorithm through
+an example.  Let the set of packages be $D$, the associated probabilities
+of each symbol in the alphabet be $P$, and their corresponding codeword
+lengths $L$.  In the example, the alphabet consists of the four symbols
+$D = \{\{\textrm{w}\}, \{\textrm{x}\}, \{\textrm{y}\}, \{\textrm{z}\}\}$,
+with respective probabilities $P = \{0.1, 0.2, 0.2, 0.5\}$.  The codeword
+lengths are all initialised to 0 so that, $L = \{0, 0, 0, 0\}$.  
+First,  the two packages with the 
+lowest probabilities are merged in \subfigref{fig:tc-huffman}{b}.  
+Since the packages $\{\textrm{x}\}$ and $\{\textrm{y}\}$
+have the same probabilities, either one can be combined with
+$\{\textrm{w}\}$.  The selected packages, shown shaded, are merged and
+their codeword lengths are incremented by 1.
+Once the package $\{\textrm{z}\}$, is processed in \subfigref{fig:tc-huffman}{d},
+the final set of codeword lengths is $L = \{3, 3, 2, 1\}$.  
+
+\fig{
+\begin{tabular}{cc}
+  \begin{tabular}{ccc}
+  \hline
+  $D$ & $P$ & $L$ \\
+  \hline
+  w & 0.1 & 0 \\
+  x & 0.2 & 0 \\
+  y & 0.2 & 0 \\
+  z & 0.5 & 0 \\
+  \hline
+  \end{tabular}
+  &
+  \begin{tabular}{ccc}
+  \hline
+  $D$ & $P$ & $L$ \\
+  \hline
+\LCC
+  \lightgray & & \\
+  w & \multirow{2}*{0.3} & 0 \\
+  x &                    & 1 \\
+\ECC
+  y & 0.2                & 0 \\
+  z & 0.5                & 0 \\
+  \hline
+  \end{tabular} \\ [0.5ex]
+  (a) Initial packages. & (b) Combine w with x. \\ [1.0ex]
+
+  \begin{tabular}{ccc}
+  \hline
+  $D$ & $P$ & $L$ \\
+  \hline
+\LCC
+  \lightgray & & \\
+  w & \multirow{3}*{0.5} & 2  \\
+  x &                    & 2  \\
+  y &                    & 1 \\
+\ECC
+  z & 0.5                & 0 \\
+  \hline
+  \end{tabular}
+  &
+  \begin{tabular}{ccc}
+  \hline
+  $D$ & $P$ & $L$ \\
+  \hline
+\LCC
+  \lightgray & & \\
+  w & \multirow{4}*{1.0} & 3   \\
+  x &                    & 3   \\
+  y &                    & 2 \\
+  z &                    & 1 \\
+\ECC
+  \hline
+  \end{tabular} \\ [0.5ex]
+  (c) Combine wx with y. & (d) Combine wxy with z. \\
+\end{tabular}}{The merging of packages to build a set of
+Huffman codes.  Lightly shaded packages are merged and
+their codeword lengths incremented by 1.}
+{Huffman code construction}{fig:tc-huffman}
+
+Next, a set $C$ of prefix-free codewords is assigned to each 
+symbol based on $L$ to complete Huffman's algorithm.  
+One set of codewords that satisfy this
+condition is $C = \{000, 001, 01, 1\}$.  Note that the assignment of
+codewords is not unique.  If there are $n$ packages,
+then there are $n - 1$ merge operations.  Each merge operation is
+equivalent to appending a 0 bit to one package and a 1 bit to the
+other, once $L$ has been calculated.  As the algorithm does not
+state the bit a package receives, there are $2^{n - 1}$
+sets of Huffman codes.  Moreover, as shown in the example, when
+multiple packages share the same probability, ties are broken
+arbitrarily.  
+
+An alternative method to the Huffman code construction described is the
+bottom-up method which employs a binary tree 
+\citep{johnsonbaugh93:book, salomon00:book, clrs01:book}.
+\figref{fig:tc-huffman-pic} shows a tree for the codewords $C$ that
+were assigned using the lengths $L$ from 
+the example of \figref{fig:tc-huffman}.  Symbols are placed at
+the leaves of the tree.  In this graph representation,
+symbol lengths translate to depths of symbols in the tree, so
+that each edge signifies a bit in the codeword.  
+A bit stream is decoded by traversing the tree
+starting from the root, so that a bit permits one edge transition.
+When a leaf has been reached, the symbol at
+that leaf is output and the process begins again from the root.
+While visualising the decoding of Huffman codes with a tree 
+is helpful, \citet{mt97:ieeec} 
+presents a more efficient method for decoding which replaces
+tree construction by both the encoder and the decoder with a
+set of arrays.  The primary requirement is that the codes must
+be {\emph {canonical}}.  A set of Huffman codes are
+canonical if they are ordered lexically when sorted by length.
+
+According to the codewords of \figref{fig:tc-huffman},
+the reduced message ``yzzw'' would be coded in 7 bits as 
+0111000.  Unfortunately, this bit stream alone is not 
+enough for the decoder to recreate the original message.
+A {\emph {prelude}} is required which indicates the alphabet
+of the reduced message ($D$).  
+Details about the construction and 
+transmission of the prelude for Huffman coding is described
+by \citet{tm00:ieeec}.
+
+\fig{
+\includegraphics*{./huffman.eps}
+}{Visualising Huffman codes as a binary tree.}{Huffman codes as 
+a binary tree}{fig:tc-huffman-pic}
+
+Other variations to the Huffman algorithm include length-limited
+coding \citep{lh90:jacm, lm02:dcc} and adaptive Huffman coding
+\citep{vitter87:jacm, knuth85:jalg}.  In length-limited coding, codewords
+are assigned so that none of them are longer than $L_m$ bits, for some
+upper limit $L_m$.  Adaptive
+Huffman coding differs from the semi-static paradigm described above
+in that the probabilities of the symbol are modified while the message is
+processed.  Moreover, like the \ppm algorithm described earlier, the
+zero-frequency problem re-emerges since a probability must be assigned
+to novel symbols.
+
+\newsubsection{Arithmetic Coding}{subsec:tc-arith}
+
+All of the coding techniques described so far have one trait
+in common.  Regardless of the value of a symbol, 
+or its probability in the message, the symbol must be coded in at 
+least one bit.  Arithmetic coding by \citet{rissanen76:ibm} 
+and \citet{wnc87:cacm}, and later revised 
+by \citet{mnw98:tis}, eliminates this restriction by coding
+sequences of symbols at a time.  
+
+\figref{fig:tc-arith} explains the algorithm through the sample
+message ``yzzw'', using the symbol probabilities used earlier.
+At first, the interval [0, 1) is divided according to the 
+cumulative probabilities of $D$.  As each symbol in the message
+is encountered, the section corresponding to the symbol is 
+further divided.  In the example, after ``y'' has been processed,
+the interval [0.3, 0.5) is divided into four parts based on
+the symbol probabilities.  Once the last symbol is read,
+the interval [0.45, 0.455) has been isolated.  In binary, with
+the decimal removed, this interval is [0111001, 0111010001).  The
+message can be encoded by specifying any number within this interval.
+One sequence that meets this requirement is 011101 (or, 0.453125).
+
+\fig{
+\includegraphics*{./arith.eps}
+}{The division of intervals when arithmetic coding is applied
+to the message ``yzzw'', for the four symbol alphabet,
+$\{\textrm{w}, \textrm{x}, \textrm{y}, \textrm{z}\}$.
+The intervals are broken down further with
+each symbol encountered.}{Arithmetic coding example}
+{fig:tc-arith}
+
+As with Huffman coding, the prelude must be sent to the decoder.
+Furthermore, in order for the decoder to mimic the encoder, the
+probabilities of the symbols need to be transmitted as well.  Then,
+the decoder operates by dividing and selecting intervals in the
+same order as the encoder.  Several other simplifications
+have been made.  For example, an actual implementation would
+use integers instead of real numbers so as to avoid any rounding
+error.  Also, intervals must be scaled when they become too narrow.
+\citet{mt02:book} provides a detailed discussion about the
+implementation issues associated with arithmetic coding.
+
+Generally, arithmetic coding
+performs better than other coding techniques for highly skewed
+probabilities -- especially when the self-information of any
+of the symbols is less than one bit.  In fact, the compression
+effectiveness attained by arithmetic coding is better able 
+to approach the self-information of the message than any other
+coding technique.  However, in comparison to other coding methods, 
+arithmetic coding is relatively slow for both encoding and decoding,
+since an interval has to be divided for each symbol in the message.
+
+\newsection{Compression in Practice}{sec:tc-practice}
+
+Three compression systems are explained next, 
+in the context of the algorithm descriptions presented
+above.  These systems, two of which are readily available on the
+Internet, are used throughout this thesis as baseline comparisons.
+The three implementations are \gzip, \ppmd, and \bzip.
+
+The dictionary-based system \gzip \citep{gzip:program} employs the \deflate
+algorithm \citep{deflate:rfc}, which combines a
+variant of the \lza algorithm with Huffman coding.  The \deflate
+algorithm partitions a message into blocks, and processes a block at
+a time for efficiency reasons.  The \deflate algorithm 
+uses 1-tuples for literal symbols and 2-tuples
+for references into the dictionary, and neither type of tuple specifies
+the next symbol.  The sliding window size is fixed at
+32 KiB\footnote{In this thesis, 
+\kib{1} = $2^{10}$ bytes = 1,024 bytes; 
+\mib{1} = $2^{20}$ bytes = 1,048,576 bytes; 
+\gib{1} = $2^{30}$ bytes = 1,073,741,824 bytes.
+\citep{iec60027:std}.}.  
+The \deflate algorithm assumes that the message is
+encoded in bytes, so that literal symbols fall within the range of
+0 to 255.  Literal symbols and phrase lengths are encoded using one
+set of Huffman codes, while distances are encoded with another set.
+For each block, \deflate chooses between static or semi-static Huffman
+codes.  If semi-static Huffman codes are selected, then the prelude is
+situated at the beginning of the compressed block.
+A publicly available library called \zlib \citep{zlib:program} is available,
+which allows \deflate to be compiled into any program.  
+The default compression 
+effectiveness of \gzip can be improved by adding the 
+{\texttt {-9}} option.  The {\texttt {-9}} option forces \gzip to 
+search more exhaustively for a longer match.  All experiments with
+\gzip in this thesis use version 1.3.2 with the {\texttt {-9}}
+option.
+
+The \ppmd system by Alistair Moffat (University of Melbourne)
+couples a \ppm mechanism based
+on escape method D with an arithmetic coder.  
+Two parameters can be set by the user to alter the program's behaviour.
+The first parameter specifies the maximum context, while the second
+one sets a limit on the amount of memory that can be used.  Context nodes are created
+by \ppmd until the memory limit is reached.  If this happens while
+a message is being processed, then all context nodes are deleted, and
+compression continues with a fresh trie.  Experiments in this investigation
+make use of a seventh order model with a memory limit of \mib{255}, both
+chosen to favour compression effectiveness.
+
+The \bzip program \citep{bzip:program} combines block sorting with a
+Huffman coder.  The block sorting mechanism divides the message into
+blocks ranging from 100,000 to 900,000 bytes in size, depending 
+on the value of a command line argument.  In this thesis, the 
+program parameter {\texttt {-9}} is always given so that 
+a block size of 900,000 bytes is used.  The documentation that
+accompanies the program states that the memory required by \bzip for
+encoding with this block size is around \mib{7.4}, while decoding
+requires about \mib{3.6}.  A compression library similar to \zlib
+called \libbzip is available from the \bzip web site.  The
+version of \bzip used in this thesis is 1.0.2.  Details of the implementation
+of \bzip are given by \citet{seward00:dcc} and \citet{seward01:dcc}.
+
+Two additional programs are purely entropy coders which presume a zero-order
+model, and hence that all modelling processes have already been allowed for.  
+Input to these coders is a sequence of 
+integers.  The \shuff
+system \citep{mt97:ieeec, tm00:ieeec}
+is a semi-static Huffman coder that compresses an integer sequence
+in blocks in two passes.  The end of a block is determined either
+by an explicit size from the user, or when a special end-of-block
+symbol has been found in the input stream.
+The second coding mechanism is an arithmetic
+coder called \uint, developed as part of a package of software to
+demonstrate the attributes of arithmetic coding by \citet{mnw98:tis}.
+
+With the exception of the \ppmd system,\footnote{One publicly available
+\ppm system which employs escape method D is at 
+\myurl{http://www.cs.waikato.ac.nz/~singlis/}.} the remaining four 
+programs are publicly
+available for download, with source code, from web sites mentioned
+in their respective bibliography entries at the back of this thesis.
+
+\newsection{Experimental Framework}{sec:tc-expt}
+
+Experiments are performed in this thesis in order to validate
+the compression and retrieval ideas presented.  
+All tests are carried out on a \vipe running Debian Linux.
+Programs implemented for this thesis are written in the
+C programming language and
+compiled with version 2.95.4 of the GNU {\texttt {gcc}} compiler with the
+{\texttt {-O3}} optimisation flag.
+Compression systems have been evaluated in terms of efficiency
+and effectiveness.  Unless
+otherwise stated, compression times are expressed in CPU seconds,
+averaged over three trials.  CPU seconds reflects the amount of 
+time the computer spent on the program, but excluding the time spent 
+accessing files, for example.  Due to the small variations
+in execution times, an average calculated from three runs was
+sufficient for most of the experiments.
+
+Compression ratios throughout the investigation are 
+primarily expressed in one of two different ways.  
+If the original message is composed of 32-bit integers, 
+then the ratios are expressed in bits per symbol (bps).  However,
+for most of this thesis, the message is encoded in \eascii and
+the units employed are bits per character (bpc).
+
+The test data that was chosen for this 
+investigation included the Large Canterbury 
+Corpus\footnote{URL:  {\myurl {http://corpus.canterbury.ac.nz/}}} 
+(\largecc) and data
+from the Text REtrieval 
+Conference\footnote{URL:  {\myurl {http://trec.nist.gov/} }}
+(\trec).  The Large Canterbury Corpus includes three files:  
+{\texttt {E.coli}}, {\texttt {world192.txt}}, and {\texttt {bible.txt}}.  
+The {\texttt {E.coli}} file 
+consists of the complete genome of the E.coli bacterium and only contains
+the four characters a, c, g, and t, with no whitespace.  The file
+{\texttt {world192.txt}} is the CIA world fact book, 
+while {\texttt {bible.txt}} is the King James version of the bible.  
+The sizes of these three files are listed in \tabref{tab:tc-bpc}.
+
+Three data files were drawn from the news articles of disks 1 and 2
+of \trec's 
+\tipster collection \citep{har95:ipm}.  The largest data
+file is \news, which is composed of news articles from the Wall
+Street Journal (\wsj) from 1987 to 1992, as well as articles 
+from the Associated Press (\ap)
+from 1988 and 1989.  All of the news articles have been marked
+up with the Standard Generalized Markup Language (\sgml)
+\citep{sgml:std}.  Due to the wide range in years covered by
+the articles, and the fact that the \sgml tags differ between
+\wsj and \ap, there are some discontinuities of style caused by the
+concatenation.  However, the homogeneous data collection of news articles
+permits a data file of
+about \mib{1,000} in size to be processed.  Small excerpts from
+\wsj and \ap are shown in \figref{fig:tc-sgmlsample}.  The 
+remaining two data files from \trec are \wsjb and \wsja.  The 
+\wsjb file includes all of the Wall Street Journal articles from
+\trec, which is \mib{508} in total.  A smaller data file, \wsja,
+consists of just the first \mib{20} of \wsjb.
+
+\fig{
+\begin{tabular}{c}
+\input{./wsja_sample.sgml} \\ [0.5ex]
+(a) Excerpt from \wsj (\wsja and \wsjb). \\ [2ex]
+\input{./ap_sample.sgml} \\ [0.5ex]
+(b) Excerpt from \ap. \\
+\end{tabular}}{Two excerpts from the \news data set.}
+{Excerpts from the \news data set}{fig:tc-sgmlsample}
+
+The three compression systems, \gzip, \bzip, and \ppmd, were
+applied to these 6 data files.  The results are presented in
+\tabref{tab:tc-bpc} and \tabref{tab:tc-time}.  Since \shuff and \uint
+are coding mechanisms and not general-purpose compression systems,
+experiments with them are detailed later in \chapref{chap:repair}
+with different data files.
+
+\tabref{tab:tc-bpc}
+shows the exact file sizes of the 6 files and the compression 
+effectiveness attained with the compression programs.  Both \gzip and
+\bzip were executed with the {\texttt {-9}} option, while \ppmd
+used a seventh order model and \mib{255} of memory in order to 
+favour compression effectiveness.  For all 6 files, the statistical model
+of \ppmd consistently performed the best, followed by \bzip, 
+and then \gzip.  This order is expected, given their respective
+models and coders, as well as the amount of memory available for
+them, and the consequential use of very large blocks by \ppmd.
+
+\tab{lcccc}
+{
+Filename & File size & \gzip & \bzip & \ppmd \\
+}
+{
+{\texttt {E.coli}}        & \C\D\D4,638,690    & 2.240 & 2.158 & 2.034 \\
+{\texttt {world192.txt}}  & \C\D\D2,473,400    & 2.333 & 1.584 & 1.454 \\
+{\texttt {bible.txt}}     & \C\D\D4,047,392    & 2.326 & 1.671 & 1.564 \\
+\wsja         & \C\D20,971,520     & 2.908 & 2.078 & 1.656 \\
+\wsjb         & \C533,196,049      & 2.941 & 2.105 & 1.637 \\
+\news         & 1,048,491,001      & 2.963 & 2.145 & 1.674 \\
+}{Compression ratios for the Large Canterbury Corpus, \wsja, 
+\wsjb, and \news using \gzip, \bzip, and \ppm, expressed in 
+bits per character.  File sizes are
+indicated in bytes.}{Compression ratios using \gzip, 
+\bzip, and \ppm (all data)}{tab:tc-bpc}
+
+\tabref{tab:tc-time} examines the compression experiments with respect
+to time in CPU seconds, averaged over three trials on the test machine discussed
+earlier.  In almost every scenario, \gzip required the least 
+amount of time for 
+both encoding and decoding, followed by \bzip, and then \ppmd.  The
+notable exception is the compression of {\texttt {E.coli}}, where \gzip
+required the most time for encoding.  This phenomenon is due to the small
+set of characters in the file, which made looking for the longest match
+more time consuming.  
+
+The tables demonstrate a common trade-off in compression between 
+efficiency and effectiveness.  Generally, the best compression
+effectiveness comes at the cost of execution time.  These results
+also indicate why these three programs were selected for this chapter.  
+Besides demonstrating the three types of models mentioned earlier, 
+the \gzip system was chosen for its speed, while \ppmd was chosen for
+its compression effectiveness.  The \bzip system demonstrates the
+compromise in time and space between the other two systems.  Throughout
+this thesis, these two tables are frequently referred to as benchmarks
+for these compression systems and the test data.
+
+Finally, note that \gzip is particularly fast for decoding,
+a trait that is common with most dictionary-based algorithms, and one
+that forms the foundation for much of this thesis, as explained in 
+the next section of this chapter.
+
+\tab{lccccccc}
+{
+\multirow{2}*{Filename} & \multicolumn{3}{c}{Encoding (s)} & & \multicolumn{3}{c}{Decoding (s)} \\ \cline{2-4}\cline{6-8}
+& \gzip & \bzip & \ppmd & & \gzip & \bzip & \ppmd \\
+}
+{
+{\texttt {E.coli}}        & \D14.0  & \D\D4.4 & \C\D\D3.6 &  & \D0.2   & \D\D1.5   & \C\D\D3.6  \\
+{\texttt {world192.txt}}  & \D\D0.6 & \D\D2.1 & \C\D\D3.3 &  & \D0.1   & \D\D0.7   & \C\D\D3.4  \\
+{\texttt {bible.txt}}     & \D\D1.8 & \D\D3.4 & \C\D\D4.4 &  & \D0.1   & \D\D1.1   & \C\D\D4.5  \\
+\wsja         & \D\D6.4 & \D17.9  & \C\D31.0  & & \D0.8   & \D\D6.2   & \C\D31.5 \\
+\wsjb         & 170.0   & 447.3   & \C800.9 & & 20.4  & 155.8 & \C821.5\\
+\news         & 323.3   & 871.5   & 1,600.8 & & 40.3  & 304.3 & 1,641.0\\
+}{Compression times for the Large Canterbury Corpus, \wsja, \wsjb, and 
+\news using \gzip, \bzip, and \ppm.  Times are reported in CPU seconds
+on a \vipe, averaged over three trials.}
+{Compression times using \gzip, \bzip, and \ppm (all data)}{tab:tc-time}
+
+\newsection{Effect of Compression on Browsing}{sec:tc-summary}
+
+The central theme in this thesis is the exploration of the 
+compromises required in order to accommodate both 
+compression and browsing.
+The compression systems surveyed 
+in this chapter can reduce a message to less than a fifth of its
+original size.  However, several aspects of their underlying
+algorithms preclude any form of retrieval, let alone browsing,
+without performing a complete decompression.
+
+The support for searching a compressed message is important,
+since time and space could be saved while still being
+able to obtain information from the compressed representation.
+The solution offered by the \zgrep script 
+\citep{zgrep:program}, is to decompress a reduced message 
+created by \gzip temporarily, and then 
+search this copy with a standard pattern matcher.
+However, while such a solution is convenient for the user,
+the solution is somewhat unsettling given that the compressed
+message is fully decoded.  The source of the problem is
+the compression algorithms themselves.
+
+The main drawback to the dictionary-based and statistical models
+presented is their adaptive, on-line nature.  
+In order to retrieve from an arbitrary point in a message 
+processed with either
+\lza, \lzb, or \ppm, everything
+before it must be decoded.  In the case of block sorting, only
+the block where the point of interest is located must be decoded.
+So, extending this solution to the other algorithms, creating more
+blocks would improve retrieval feasibility.  Generalising the
+solution, {\emph {synchronisation points}} could be inserted 
+throughout the
+compressed message so that retrieval from a location in the
+compressed stream only requires a full decode from the last 
+synchronisation point.  However, since synchronisation points 
+indicate a location in the compressed message where the model
+is re-built, as the frequency of these points increase, compression
+can be expected to suffer.
+
+Furthermore, while compression systems are measured in terms of
+effectiveness and efficiency, retrieval systems are usually
+interactive.  That is, users are more concerned with response
+times and expect a short waiting period for results to appear.
+The importance of access time provides another reason
+why a full decode of the compressed document is discouraged.
+
+In addition to these two points, coding algorithms present a
+third problem, which is byte-alignment.  Even though the
+channel alphabet is based on the binary system, computers
+access data in bytes consisting of 8 bits each.  The low-level
+operations on bits which are intrinsic to static and entropy
+coding algorithms also affect both retrieval and decoding 
+times.
+
+These three problems are considered in the remainder
+of this thesis, beginning with \chapref{chap:repair}.  At the
+heart of this investigation is the \repair algorithm of 
+\citet{lm00:procieee}, which is described next.  The
+algorithm is dictionary-based and has many similarities with
+\lza and \lzb.  However, \repair possesses other qualities that
+make it ideal for browsing.  The chapters that follow 
+\chapref{chap:repair} build on the algorithm and address the 
+three problems posed here.
+

@@ -1,0 +1,39 @@
+\begin{minipage}{\textwidth}
+\dontprintsemicolon
+
+\SetFuncSty{textnormal}
+\SetArgSty{textnormal}
+\SetDataSty{textnormal}
+
+\SetKwInOut{Input}{input}
+\SetKwInOut{Output}{output}
+
+\SetKwFunction{encodeShuff}{encodeShuff}
+
+\SetKwData{block}{\var{current\_block}}
+
+\SetKwData{false}{{\textsc {FALSE}}}
+\SetKwData{true}{{\textsc {TRUE}}}
+
+\Input{$\Seq$, block size $B$}
+\Output{$\Seq'$, index $I$}
+
+\BlankLine
+
+\lnl{algline:review:huffblocks:1}
+$i \leftarrow 0$; $\Seq' \leftarrow \{\}$; $I \leftarrow \{\}$\;
+\lnl{algline:review:huffblocks:2}
+\For{$i < |\Seq|$}{
+\lnl{algline:review:huffblocks:3}
+  $\block \leftarrow$ \encodeShuff{$\Seq[i...i+B-1]$} \;
+\lnl{algline:review:huffblocks:4}
+  append $|\block|$ to $I$ \;
+\lnl{algline:review:huffblocks:5}
+  append $\block$ to $\Seq'$ \;
+\lnl{algline:review:huffblocks:6}
+  $i \leftarrow i + B$ \;
+}
+
+\lnl{algline:review:huffblocks:7}
+\Return ($\Seq'$, $I$) \;
+\end{minipage}

@@ -1,0 +1,103 @@
+newgraph
+  X 4
+  Y 5.5
+
+  xaxis 
+    min 0 max 4.05
+    hash_labels
+      fontsize 9
+      font Helvetica
+    label 
+      fontsize 9
+      font Helvetica
+      : Pre-Pair / Re-Pair method
+    no_auto_hash_labels no_draw_hash_marks 
+  yaxis 
+    min 0 max 3.1
+    hash_labels
+      fontsize 9
+      font Helvetica
+    label 
+      fontsize 9
+      font Helvetica
+      : Compression effectiveness (bpc)
+    hash 1
+    mhash 4
+    (* font is Helvetica *)
+
+  xaxis hash_label at 0.650000 : character 
+    newcurve pts 0.650000 1.773663 marktype xbar fill 0.75
+      marksize 0.7 1 pattern stripe -45
+    newcurve pts 0.650000 1.550673 marktype xbar fill 0.1
+      marksize 0.7 1 pattern stripe -45
+
+  xaxis hash_label at 1.650000 : word-align 
+    newcurve pts 1.650000 1.733749 marktype xbar fill 0.75
+      marksize 0.7 1 pattern stripe -45
+    newcurve pts 1.650000 1.532845 marktype xbar fill 0.1
+      marksize 0.7 1 pattern stripe -45
+
+  xaxis hash_label at 2.650000 : word 
+    newcurve pts 2.650000 2.342469 marktype xbar fill 0.3
+      marksize 0.7 1 pattern stripe -45
+    newcurve pts 2.650000 2.313816 marktype xbar fill 0.75
+      marksize 0.7 1 pattern stripe -45
+    newcurve pts 2.650000 2.171014 marktype xbar fill 0.1
+      marksize 0.7 1 pattern stripe -45
+    newcurve pts 2.650000 0.941383 marktype xbar fill 1.0
+      marksize 0.7 1 pattern solid
+    newcurve pts 2.650000 0.709060 marktype xbar fill 0.2
+      marksize 0.7 1 pattern solid
+    newcurve pts 2.650000 0.321040 marktype xbar fill 0.5
+      marksize 0.7 1 pattern stripe 45
+    newcurve pts 2.650000 0.320203 marktype xbar fill 0
+      marksize 0.7 1 pattern stripe 45
+
+  xaxis hash_label at 3.650000 : punctuation 
+    newcurve pts 3.650000 2.362118 marktype xbar fill 0.3
+      marksize 0.7 1 pattern stripe -45
+    newcurve pts 3.650000 2.333464 marktype xbar fill 0.75
+      marksize 0.7 1 pattern stripe -45
+    newcurve pts 3.650000 2.195582 marktype xbar fill 0.1
+      marksize 0.7 1 pattern stripe -45
+    newcurve pts 3.650000 0.941383 marktype xbar fill 1.0
+      marksize 0.7 1 pattern solid
+    newcurve pts 3.650000 0.709060 marktype xbar fill 0.2
+      marksize 0.7 1 pattern solid
+    newcurve pts 3.650000 0.321040 marktype xbar fill 0.5
+      marksize 0.7 1 pattern stripe 45
+    newcurve pts 3.650000 0.320203 marktype xbar fill 0
+      marksize 0.7 1 pattern stripe 45
+
+  newcurve pts 0 2.908130 4.05 2.908130 linetype dotdotdash marktype none
+    label : GZIP
+  newcurve pts 0 2.078099 4.05 2.078099 linetype dotted marktype none
+    label : BZIP2
+  newcurve pts 0 1.655965 4.05 1.655965 linetype dashed marktype none
+    label : PPMD
+
+  newcurve marktype xbar fill 0.3 marksize 0.7 0.25 pattern stripe -45
+    label : word lexicons
+  newcurve marktype xbar fill 0.75 marksize 0.7 0.25 pattern stripe -45
+    label : phrase hierarchies
+  legend bottom defaults hjl font Helvetica fontsize 9
+    x -0.5 y -0.65
+
+copygraph xaxis nodraw yaxis nodraw (* for second legend *)
+  (* second column of legend *)
+  legend bottom defaults hjl font Helvetica fontsize 9
+    x 2.5 y -0.65
+  newcurve marktype xbar fill 0.1 marksize 0.7 0.25 pattern stripe -45
+    label : reduced word sequences
+  newcurve marktype xbar fill 1.0 marksize 0.7 0.25 pattern solid
+    label : case folding modifiers
+  newcurve marktype xbar fill 0.2 marksize 0.7 0.25 pattern solid
+    label : stemming modifiers
+  newcurve marktype xbar fill 0.5 marksize 0.7 0.25 pattern stripe 45
+    label : non-word lexicons
+  newcurve marktype xbar fill 0 marksize 0.7 0.25 pattern stripe 45
+    label : non-word modifiers
+
+(* font Times-Italic x 1.5 y 3.5 hjc vjb *)
+
+

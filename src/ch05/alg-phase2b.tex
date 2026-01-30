@@ -1,0 +1,110 @@
+\begin{minipage}{\textwidth}
+\dontprintsemicolon
+
+\SetFuncSty{textnormal}
+\SetArgSty{textnormal}
+\SetDataSty{textnormal}
+
+\SetKwInOut{Input}{input}
+\SetKwInOut{Output}{output}
+
+\SetKwFunction{binarySearch}{binarySearch}
+\SetKwFunction{findExtendSymbol}{findExtendSymbol}
+\SetKwFunction{addEdge}{addEdge}
+\SetKwFunction{findShortestPath}{findShortestPath}
+
+\SetKwData{leftside}{$\alpha_{\text{left}}$}
+\SetKwData{rightside}{$\alpha_{\text{right}}$}
+\SetKwData{minvar}{\var{min}}
+\SetKwData{maxvar}{\var{max}}
+\SetKwData{algdepth}{\var{depth}}
+\SetKwData{algpath}{\var{path}}
+
+\SetKwData{pone}{$\Ph_1$}
+\SetKwData{psort}{$\Ph_s$}
+\SetKwData{pprime}{$\Ph'$}
+\SetKwData{sone}{$\Seq_1$}
+\SetKwData{sprime}{$\Seq'$}
+
+\SetKwData{longest}{$\alpha_L$}
+
+\SetKwData{false}{{\textsc {FALSE}}}
+\SetKwData{true}{{\textsc {TRUE}}}
+
+\Input{\pone, \psort, and \sone}
+\Output{\pprime and \sprime}
+
+\BlankLine
+
+\lnl{algline:remerge2b:1}
+\longest $\leftarrow$ longest symbol in \pone \;
+
+\lnl{algline:remerge2b:2}
+  \minvar $\leftarrow 0$;
+  $i \leftarrow 1$ \;
+\lnl{algline:remerge2b:3}
+\While{not end of \sone}{
+\lnl{algline:remerge2b:4}
+  decode and expand next symbol in \sone and append the expansion to $\tau_i$ \;
+
+\lnl{algline:remerge2b:5}
+  \While{$|\tau_i| > |\alpha_L|$}{
+\lnl{algline:remerge2b:6}
+    $\beta \leftarrow$ initial search position at $v_i$ \;
+
+\lnl{algline:remerge2b:7}
+    \While{longest match not found}{
+\lnl{algline:remerge2b:8}
+      $\delta \leftarrow$ primitive at $v_{i + |\beta|}$ \;
+\lnl{algline:remerge2b:9}
+      (\leftside, \rightside) $\leftarrow$ \findExtendSymbol ($\beta$$\delta$) \;
+\lnl{algline:remerge2b:10}
+      \lIf{\leftside $= \lambda$}{
+        break \;
+      }
+
+\lnl{algline:remerge2b:11}
+      \algdepth $\leftarrow |\beta|$ \;
+\lnl{algline:remerge2b:12}
+      $\beta_{\text{temp}} \leftarrow$ \binarySearch ($\tau_i$, \psort, $\alpha_{\text{left}}$, $\alpha_{\text{right}}$, \algdepth) \;
+
+\lnl{algline:remerge2b:13}
+      \lIf{$\beta_{\text{temp}} = \lambda$}{
+        break \;
+      }
+\lnl{algline:remerge2b:14}
+      $\beta \leftarrow \beta_{\text{temp}}$ \;
+    }
+
+\lnl{algline:remerge2b:15}
+    \While{$\beta \neq \lambda$}{
+\lnl{algline:remerge2b:16}
+      \addEdge ($\beta$, $v_i$) \;
+\lnl{algline:remerge2b:17}
+      update \maxvar \;
+\lnl{algline:remerge2b:18}
+      $\beta \leftarrow$ primary prefix symbol of $\beta$ \;
+    }
+\lnl{algline:remerge2b:19}
+    update initial search position of $v_{i+1}$ \;
+\lnl{algline:remerge2b:20}
+    $i \leftarrow i + 1$ \;
+
+\lnl{algline:remerge2b:21}
+   \If{$i =$ \maxvar}{
+\lnl{algline:remerge2b:22}
+      \algpath $\leftarrow$ \findShortestPath ($v_{\subvar{min}}$, $v_{\subvar{max}}$) \;
+\lnl{algline:remerge2b:23}
+      append \algpath to \sprime \;
+\lnl{algline:remerge2b:24}
+      \minvar $\leftarrow$ \maxvar \;
+    }
+  }
+}
+
+\lnl{algline:remerge2b:25}
+\pprime $\leftarrow$ \pone \;
+
+\lnl{algline:remerge2b:26}
+\Return (\pprime, \sprime) \;
+\end{minipage}

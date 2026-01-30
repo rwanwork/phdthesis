@@ -1,0 +1,70 @@
+\begin{minipage}{\textwidth}
+\dontprintsemicolon
+
+\SetFuncSty{textnormal}
+\SetArgSty{textnormal}
+\SetDataSty{textnormal}
+
+\SetKwInOut{Input}{input}
+\SetKwInOut{Output}{output}
+
+\SetKwFunction{searchHashTable}{searchHashTable}
+
+\SetKwData{newsym}{$\gamma$}
+\SetKwData{sym}{$\alpha_i$}
+\SetKwData{prevsym}{$\alpha_{i-1}$}
+\SetKwData{rep}{\var{replacement}}
+
+\SetKwData{pone}{$\Ph_1$}
+\SetKwData{pprime}{$\Ph'$}
+\SetKwData{sone}{$\Seq_1$}
+\SetKwData{sprime}{$\Seq'$}
+
+\SetKwData{false}{{\textsc {FALSE}}}
+\SetKwData{true}{{\textsc {TRUE}}}
+
+\Input{\pone and \sone}
+\Output{\pprime and \sprime}
+
+\BlankLine
+
+\lnl{algline:remerge2a:1}
+\ForEach{symbol in \pone}{
+\lnl{algline:remerge2a:2}
+  insert symbol into hash table using its components \;
+}
+
+\BlankLine
+
+\lnl{algline:remerge2a:3}
+\For{$i < |\Seq_1|$}{
+\lnl{algline:remerge2a:4}
+  \rep $\leftarrow$ \true \;
+\lnl{algline:remerge2a:5}
+  \While{\rep $=$ \true}{
+\lnl{algline:remerge2a:6}
+    \newsym $\leftarrow$ \searchHashTable{\prevsym, \sym} \;
+\lnl{algline:remerge2a:7}
+    \If{\newsym found}{
+\lnl{algline:remerge2a:8}
+      \prevsym $\leftarrow$ \newsym \;
+\lnl{algline:remerge2a:9}
+      $i \leftarrow i - 1$ \;
+\lnl{algline:remerge2a:10}
+      \rep = \true \;
+    }
+\lnl{algline:remerge2a:11}
+    \Else{
+\lnl{algline:remerge2a:12}
+      \rep = \false \;
+    }
+  }
+}
+
+\lnl{algline:remerge2a:13}
+\pprime $\leftarrow$ \pone ;
+\sprime $\leftarrow$ \sone \;
+
+\lnl{algline:remerge2a:14}
+\Return (\pprime, \sprime) \;
+\end{minipage}

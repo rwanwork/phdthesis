@@ -1,0 +1,191 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  General
+
+%%  Special symbols
+\newcommand{\tl}{\textless}
+\newcommand{\tg}{\textgreater}
+\newcommand\puttag[1]{{\tt {\tl#1\tg}}}
+\newcommand{\tc}[1]{\textcircled{\scriptsize #1}}
+\newcommand{\tvs}{\textvisiblespace}
+\newcommand{\tb}{\textbullet}
+\newcommand{\crarrow}{\ensuremath{\hookleftarrow}}
+%\newcommand{\ul}[1]{\ULforem \uline{#1} \normalem}
+\newcommand{\var}[1]{\mbox{\emph {#1}}}
+\newcommand{\subvar}[1]{\mbox{\scriptsize\emph {#1}}}
+
+\newcommand{\Ph}{\ensuremath{\mathcal{P}}\xspace}
+\newcommand{\Seq}{\ensuremath{\mathcal{S}}\xspace}
+
+\newcommand{\Criteria}{\ensuremath{\mathcal{C}}}
+\newcommand{\Result}{\ensuremath{\mathcal{R}}}
+
+%%  Abbreviations for Porter stemming algorithm
+\newcommand{\stem}{\ensuremath{\omega\xspace}}
+\newcommand{\stemadd}[1]{\ensuremath{\stem \rightarrow \stem\mathrm{#1}}}
+\newcommand{\stemchange}[2]{\ensuremath{\stem\mathrm{#1} \rightarrow \stem\mathrm{#2}}}
+
+%%  Put a frame around words
+\PScommands
+
+%%  Multirow and multicolumn commands
+\newcommand{\mc}[2]{\multicolumn{#1}{c|}{#2}}
+\newcommand{\mr}[1]{\multirow{2}*{#1}}
+
+%%  normal font, no grey box, with line (frame)
+\newgray{llightgray}{0.8}  %%  PS Tricks
+\newcommand{\greyboxline}[1]{\psframebox[framesep=0pt,linestyle=solid,fillstyle=none,fillcolor=llightgray]{\rule[-3pt]{0pt}{11pt}#1}}
+
+%%  texttt, grey box, with no line
+\newcommand{\greyboxtt}[1]{\psframebox[framesep=0pt,linestyle=none,fillstyle=solid,fillcolor=llightgray]{\rule[-3pt]{0pt}{11pt}{\texttt {#1}}}}
+
+%%  texttt, no grey box, with line (frame)
+\newcommand{\nogreyboxtt}[1]{\psframebox[framesep=0pt,linestyle=solid,fillstyle=none,fillcolor=llightgray]{\rule[-3pt]{0pt}{11pt}{\texttt {#1}}}}
+
+%%  normal font, grey box, with no line
+\newcommand{\greybox}[1]{\psframebox[framesep=0pt,linestyle=none,fillstyle=solid,fillcolor=llightgray]{\rule[-3pt]{0pt}{11pt}#1}}
+
+%%  Bytes sizes
+%%  Source:  http://physics.nist.gov/cuu/Units/binary.html
+\newcommand\kib[1]{#1\,KiB\xspace}
+\newcommand\mib[1]{#1\,MiB\xspace}
+\newcommand\gib[1]{#1\,GiB\xspace}
+\newcommand\mhz[1]{#1\,MHz\xspace}
+\newcommand\kibonly{KiB\xspace}
+\newcommand\mibonly{MiB\xspace}
+
+
+%%  Character sets
+\newcommand\ascii{{\textsc {ASCII}}\xspace}
+\newcommand\eascii{{Latin-1}\xspace}
+%\newcommand\unicode{{\textsc {UNICODE}}\xspace}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  File formats
+
+%%  Graphic and movie files
+%\newcommand\gif{{\textsc {gif}}\xspace}
+%\newcommand\jpeg{{\textsc {jpeg}}\xspace}
+%\newcommand\mpeg{{\textsc {mpeg}}\xspace}
+
+%%  Text files
+%\newcommand\dtd{{\textsc {DTD}}\xspace}
+\newcommand\html{{\textsc {HTML}}\xspace}
+\newcommand\sgml{{\textsc {SGML}}\xspace}
+%\newcommand\xhtml{{\textsc {XHTML}}\xspace}
+\newcommand\xml{{\textsc {XML}}\xspace}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  Compression Algorithms
+
+%%  Pre-processors
+\newcommand\lipt{{\textsc {lipt}}\xspace}
+
+%%  Coders
+\newcommand\uint{{\textsc {uint}}\xspace}
+\newcommand\shuff{{\textsc {shuff}}\xspace}
+\newcommand\flatbin{{\textsc {flat-binary}}\xspace}
+
+%%  Statistical Models
+\newcommand\libbzip{{\textsc {libbzip2}}\xspace}
+\newcommand\bzip{{\textsc {bzip2}}\xspace}
+\newcommand\ppm{{\textsc {ppm}}\xspace}
+\newcommand\ppmd{{\textsc {ppmd}}\xspace}
+
+%%  Dictionary-based Models (on-line)
+%\newcommand\compress{{\textsc {compress}}\xspace}
+\newcommand\deflate{{\textsc {deflate}}\xspace}
+\newcommand\gzip{{\textsc {gzip}}\xspace}
+\newcommand\xmill{{\textsc {XMill}}\xspace}
+%\newcommand\xmlzip{{\textsc {XMLZip}}\xspace}
+%\newcommand\xbmill{{\textsc {XBMill}}\xspace}
+\newcommand\zlib{{\textsc {zlib}}\xspace}
+\newcommand\lza{{\textsc {LZ77}}\xspace}
+\newcommand\lzb{{\textsc {LZ78}}\xspace}
+\newcommand\lzw{{\textsc {LZW}}\xspace}
+\newcommand\lzss{{\textsc {LZSS}}\xspace}
+\newcommand\lzr{{\textsc {LZR}}\xspace}
+\newcommand\mka{{\textsc {MK10}}\xspace}
+\newcommand\mkb{{\textsc {MK10H}}\xspace}
+
+%%  Dictionary-based Models (off-line)
+\newcommand\bpe{{\textsc {BPE}}\xspace}
+\newcommand\ray{{\textsc {Ray}}\xspace}
+\newcommand\offline{{\textsc {Off-Line}}\xspace}
+\newcommand\sequitur{{\textsc {Sequitur}}\xspace}
+\newcommand\xray{{\textsc {XRay}}\xspace}
+
+%%  IR systems
+\newcommand\clarit{{\textsc {CLARIT}}\xspace}
+\newcommand\glimpse{{\textsc {Glimpse}}\xspace}
+\newcommand\intellindex{{\textsc {Intell-Index}}\xspace}
+\newcommand\kea{{\textsc {Kea}}\xspace}
+\newcommand\keyphind{{\textsc {Keyphind}}\xspace}
+\newcommand\linkit{{\textsc {LinkIT}}\xspace}
+\newcommand\mg{{\textsc {MG}}\xspace}
+\newcommand\paraphrase{{\textsc {Paraphrase}}\xspace}
+\newcommand\phind{{\textsc {Phind}}\xspace}
+\newcommand\phrasier{{\textsc {Phrasier}}\xspace}
+\newcommand\kniles{{\textsc {Kniles}}\xspace}
+
+%%  NLP programs
+\newcommand\linkgram{{\textsc {Link Grammar}}\xspace}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  Current work
+\newcommand\despair{{\textsc {Des-Pair}}\xspace}
+\newcommand\prepair{{\textsc {Pre-Pair}}\xspace}
+\newcommand\intseek{Uncompressed search{\xspace}}
+\newcommand\review{{\textsc {Re-View}}\xspace}
+\newcommand\reviewa{{\textsc {Re-View}}\textsubscript{8}\xspace}
+\newcommand\reviewb{{\textsc {Re-View}}\textsubscript{16}\xspace}
+\newcommand\reviewl{{\textsc {Re-View}}\textsubscript{$L$}\xspace}
+\newcommand\repair{{\textsc {Re-Pair}}\xspace}
+\newcommand\restore{{\textsc {Re-Store}}\xspace}
+\newcommand\rephine{{\textsc {Re-Phine}}\xspace}
+\newcommand\remerge{{\textsc {Re-Merge}}\xspace}
+
+%%  Compression methods for chapter 8
+\newcommand\nocompression{{\textsc {no-compression}}\xspace}
+\newcommand\independent{{\textsc {independent}}\xspace}
+\newcommand\commondict{{\textsc {common-dictionary}}\xspace}
+\newcommand\transmitteddict{{\textsc {transmitted-dictionary}}\xspace}
+\newcommand\oneprior{{\textsc {one-prior}}\xspace}
+\newcommand\allprior{{\textsc {all-prior}}\xspace}
+\newcommand\allavailable{{\textsc {all-available}}\xspace}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  Miscellaneous
+
+%%  Programs
+\newcommand\grep{{\textsc {grep}}\xspace}
+\newcommand\zgrep{{\textsc {zgrep}}\xspace}
+\newcommand\gtk{{\textsc {GTK+}}\xspace}
+
+%%  Protocols
+\newcommand\http{{\textsc {HTTP}}\xspace}
+
+%%  Test files
+\newcommand\largecc{{\texttt {LCC}}\xspace}
+\newcommand\wsj{{\texttt {WSJ}}\xspace}
+\newcommand\wsja{{\texttt {WSJ20}}\xspace}
+\newcommand\wsjb{{\texttt {WSJ508}}\xspace}
+\newcommand\ap{{\texttt {AP}}\xspace}
+\newcommand\news{{\texttt {NEWS}}\xspace}
+\newcommand\tipster{{\textsc {tipster}}\xspace}
+\newcommand\trec{{\textsc {TREC}}\xspace}
+
+%%  Machine names
+\newcommand{\vipe}{933 MHz Pentium~{III} with \gib{1} RAM and \kib{256}
+on-die cache\xspace}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  Important in-line notes
+%%  Removed 2003/09/12
+%\newcommand{\cont}{{\textbf{CONTINUE HERE...}}}
+
+%\newcommand{\todotext}[1]{[[XXX #1 ({\textbf text})]]\xspace}
+%\newcommand{\todofig}[1]{[[XXX #1 ({\textbf fig})]]\xspace}
+%\newcommand{\todotab}[1]{[[XXX #1 ({\textbf table})]]\xspace}
+%\newcommand{\todocite}[1]{[[XXX #1 ({\textbf cite})]]\xspace} 
+

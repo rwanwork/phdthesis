@@ -1,0 +1,16 @@
+Program suffixes for Re-Store
+
+suffix		program			meaning
+
+.cfm		Pre-Pair		case-folding modifiers
+.map		skipblocks		mapping file for a skipblock file
+.nwd		Pre-Pair		non-word dictionary
+.nws		Pre-Pair		non-word sequence
+.wd		Pre-Pair		word dictionary
+.ws		Pre-Pair		word sequence
+.review		Re-View			Re-view'ed-16 sequence
+.prel		Re-Pair			Re-Pair phrase hierarchy
+.sb		skipblocks		compressed skipblock file
+.seq		Re-Pair			Re-Pair sequence
+.sm		Pre-Pair		stemming modifiers
+.wl		Re-Pair / Re-Merge	Word lengths for Re-View

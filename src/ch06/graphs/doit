@@ -1,0 +1,8 @@
+jgraph time-freq-high.jgr >../time-freq-high.eps
+jgraph time-freq-medium.jgr >../time-freq-medium.eps
+jgraph time-freq-low.jgr >../time-freq-low.eps
+
+jgraph time-len-short.jgr >../time-len-short.eps
+jgraph time-len-medium.jgr >../time-len-medium.eps
+jgraph time-len-long.jgr >../time-len-long.eps
+

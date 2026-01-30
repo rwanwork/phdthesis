@@ -1,0 +1,139 @@
+newgraph
+  X 3.5
+  Y 3.75
+
+  xaxis 
+    min 0 max 8
+    hash_labels
+      fontsize 9
+      font Helvetica
+    label 
+      fontsize 9
+      font Helvetica
+      : Re-Merge phase
+    no_auto_hash_labels no_draw_hash_marks 
+  yaxis 
+    min 0 max 2.5
+    size 2.5
+    hash_labels
+      fontsize 9
+      font Helvetica
+    label 
+      fontsize 9
+      font Helvetica
+      : Compression effectiveness (bpc)
+    hash 1
+    mhash 4
+    (* font is Helvetica *)
+
+  (* expt 575 and 578  *)
+  (* 
+    w=533196049
+    (820315880+297)/8/w*8
+    1.538488
+  *)
+  xaxis hash_label at 0.650000 : None
+    newcurve pts 0.650000 1.806172 marktype xbar fill 0.75
+      marksize 0.7 1 pattern solid
+    newcurve pts 0.650000 1.583479 marktype xbar fill 1.0
+      marksize 0.7 1 pattern solid
+    newcurve pts 0.650000 1.538488 marktype xbar fill 0.1
+      marksize 0.7 1 pattern stripe -45
+
+  (*
+    (832423028+155)/8/w*8
+    1.561192
+  *)
+  xaxis hash_label at 1.650000 : 1
+    newcurve pts 1.650000 1.777308 marktype xbar fill 0.75
+      marksize 0.7 1 pattern solid
+    newcurve pts 1.650000 1.597434 marktype xbar fill 1.0
+      marksize 0.7 1 pattern solid
+    newcurve pts 1.650000 1.561192 marktype xbar fill 0.1
+      marksize 0.7 1 pattern stripe -45
+
+  (*
+    (841935087+86)/8/w*8
+    1.579032
+  *)
+  xaxis hash_label at 2.650000 : 1
+    newcurve pts 2.650000 1.755816 marktype xbar fill 0.75
+      marksize 0.7 1 pattern solid
+    newcurve pts 2.650000 1.608568 marktype xbar fill 1.0
+      marksize 0.7 1 pattern solid
+    newcurve pts 2.650000 1.579032 marktype xbar fill 0.1
+      marksize 0.7 1 pattern stripe -45
+
+  (*
+    (850573452+52)/8/w*8
+    1.595232
+  *)
+  xaxis hash_label at 3.650000 : 1
+    newcurve pts 3.650000 1.741760 marktype xbar fill 0.75
+      marksize 0.7 1 pattern solid
+    newcurve pts 3.650000 1.619416 marktype xbar fill 1.0
+      marksize 0.7 1 pattern solid
+    newcurve pts 3.650000 1.595232 marktype xbar fill 0.1
+      marksize 0.7 1 pattern stripe -45
+
+  (*
+    (857436273+34)/8/w*8
+    1.608104
+  *)
+  xaxis hash_label at 4.650000 : 1
+    newcurve pts 4.650000 1.730557 marktype xbar fill 0.75
+      marksize 0.7 1 pattern solid
+    newcurve pts 4.650000 1.627882 marktype xbar fill 1.0
+      marksize 0.7 1 pattern solid
+    newcurve pts 4.650000 1.608104 marktype xbar fill 0.1
+      marksize 0.7 1 pattern stripe -45
+
+  (*
+    (867100633+32)/8/w*8
+    1.626232
+  *)
+  xaxis hash_label at 5.650000 : 1
+    newcurve pts 5.650000 1.731132 marktype xbar fill 0.75
+      marksize 0.7 1 pattern solid
+    newcurve pts 5.650000 1.643490 marktype xbar fill 1.0
+      marksize 0.7 1 pattern solid
+    newcurve pts 5.650000 1.626232 marktype xbar fill 0.1
+      marksize 0.7 1 pattern stripe -45
+
+  (*
+    (814804680+29)/8/w*8
+    1.528152
+  *)
+  xaxis hash_label at 6.650000 : 2b
+    newcurve pts 6.650000 1.633788 marktype xbar fill 0.75
+      marksize 0.7 1 pattern solid
+    newcurve pts 6.650000 1.546146 marktype xbar fill 1.0
+      marksize 0.7 1 pattern solid
+    newcurve pts 6.650000 1.528152 marktype xbar fill 0.1
+      marksize 0.7 1 pattern stripe -45
+
+  (*
+    (777515139+28)/8/w*8
+    1.458216
+  *)
+  xaxis hash_label at 7.650000 : 3
+    newcurve pts 7.650000 1.618080 marktype xbar fill 0.75
+      marksize 0.7 1 pattern solid
+    newcurve pts 7.650000 1.481734 marktype xbar fill 1.0
+      marksize 0.7 1 pattern solid
+    newcurve pts 7.650000 1.458216 marktype xbar fill 0.1
+      marksize 0.7 1 pattern stripe -45
+
+  newcurve marktype xbar fill 0.5 marksize 0.7 0.25 pattern solid
+    label : phrase hierarchy
+  newcurve marktype xbar fill 0.1 marksize 0.7 0.25 pattern stripe -45
+    label : sequence codes
+  legend bottom defaults hjl font Helvetica fontsize 9
+    x 0.1 y -0.65
+
+copygraph xaxis nodraw yaxis nodraw (* for second legend *)
+  (* second column of legend *)
+  legend bottom defaults hjl font Helvetica fontsize 9
+    x 4.5 y -0.65
+  newcurve marktype xbar fill 1.0 marksize 0.7 0.25 pattern solid
+    label : sequence prelude

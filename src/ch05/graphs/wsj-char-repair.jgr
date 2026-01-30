@@ -1,0 +1,136 @@
+newgraph
+  X 3.5
+  Y 3.75
+
+  xaxis 
+    min 0 max 7
+    hash_labels
+      fontsize 9
+      font Helvetica
+    label 
+      fontsize 9
+      font Helvetica
+      : Block size (MiB)
+    no_auto_hash_labels no_draw_hash_marks 
+  yaxis 
+    min 0 max 3.1
+    size 2.4
+    hash_labels
+      fontsize 9
+      font Helvetica
+    label 
+      fontsize 9
+      font Helvetica
+      : Compression effectiveness (bpc)
+    hash 1
+    mhash 4
+    (* font is Helvetica *)
+
+  (* expt 578 and 575  *)
+  (* 
+     w=533196049
+     [Add message bits and padding bits]
+     (947074819+7647)/8/w*8
+     1.776232
+  *)
+  xaxis hash_label at 0.650000 : 1
+    newcurve pts 0.650000 2.250797 marktype xbar fill 0.75
+      marksize 0.7 1 pattern stripe -45
+    newcurve pts 0.650000 1.861654 marktype xbar fill 0.5
+      marksize 0.7 1 pattern solid
+    newcurve pts 0.650000 1.776232 marktype xbar fill 0.1
+      marksize 0.7 0.25 pattern stripe -45
+
+  (*
+    (911090447+3598)/8/w*8
+    1.708736
+  *)
+  xaxis hash_label at 1.650000 : 2
+    newcurve pts 1.650000 2.119720 marktype xbar fill 0.75
+      marksize 0.7 1 pattern stripe -45
+    newcurve pts 1.650000 1.782703 marktype xbar fill 0.5
+      marksize 0.7 1 pattern solid
+    newcurve pts 1.650000 1.708736 marktype xbar fill 0.1
+      marksize 0.7 0.25 pattern stripe -45
+
+  (*
+    (878880146+1697)/8/w*8
+    1.648320
+  *)
+  xaxis hash_label at 2.650000 : 4
+    newcurve pts 2.650000 2.007891 marktype xbar fill 0.75
+      marksize 0.7 1 pattern stripe -45
+    newcurve pts 2.650000 1.712543 marktype xbar fill 0.5
+      marksize 0.7 1 pattern solid
+    newcurve pts 2.650000 1.648320 marktype xbar fill 0.1
+      marksize 0.7 0.25 pattern stripe -45
+
+  (*
+    (851532840+787)/8/w*8
+    1.597032
+  *)
+  xaxis hash_label at 3.650000 : 8
+    newcurve pts 3.650000 1.912741 marktype xbar fill 0.75
+      marksize 0.7 1 pattern stripe -45
+    newcurve pts 3.650000 1.652754 marktype xbar fill 0.5
+      marksize 0.7 1 pattern solid
+    newcurve pts 3.650000 1.597032 marktype xbar fill 0.1
+      marksize 0.7 0.25 pattern stripe -45
+
+  (*
+    (827733566+395)/8/w*8
+    1.552400
+  *)
+  xaxis hash_label at 4.650000 : 16
+    newcurve pts 4.650000 1.826040 marktype xbar fill 0.75
+      marksize 0.7 1 pattern stripe -45
+    newcurve pts 4.650000 1.595891 marktype xbar fill 0.5
+      marksize 0.7 1 pattern solid
+    newcurve pts 4.650000 1.552400 marktype xbar fill 0.1
+      marksize 0.7 0.25 pattern stripe -45
+
+  (*
+    (820315880+297)/8/w*8
+    1.538488
+  *)
+  xaxis hash_label at 5.650000 : 20
+    newcurve pts 5.650000 1.806172 marktype xbar fill 0.75
+      marksize 0.7 1 pattern stripe -45
+    newcurve pts 5.650000 1.583479 marktype xbar fill 0.5
+      marksize 0.7 1 pattern solid
+    newcurve pts 5.650000 1.538488 marktype xbar fill 0.1
+      marksize 0.7 0.25 pattern stripe -45
+
+  (*
+    (806281556+201)/8/w*8
+    1.512160
+  *)
+  xaxis hash_label at 6.650000 : 32
+    newcurve pts 6.650000 1.751965 marktype xbar fill 0.75
+      marksize 0.7 1 pattern stripe -45
+    newcurve pts 6.650000 1.545669 marktype xbar fill 0.5
+      marksize 0.7 1 pattern solid
+    newcurve pts 6.650000 1.512160 marktype xbar fill 0.1
+      marksize 0.7 0.25 pattern stripe -45
+
+(* expt 546 *)
+  newcurve pts 0 2.940693 7.35 2.940693 linetype dotdotdash marktype none
+  label : GZIP
+  newcurve pts 0 2.104506 7.35 2.104506 linetype dotted marktype none
+  label : BZIP2
+  newcurve pts 0 1.636951 7.35 1.636951 linetype dashed marktype none
+  label : PPMD
+  legend bottom defaults hjl font Helvetica fontsize 9
+    x 0.5 y -0.65
+
+copygraph xaxis nodraw yaxis nodraw (* for second legend *)
+  (* second column of legend *)
+  legend bottom defaults hjl font Helvetica fontsize 9
+    x 3.5 y -0.65
+  newcurve marktype xbar fill 0.75 marksize 0.7 0.25 pattern stripe -45
+    label : phrase hierarchies
+  newcurve marktype xbar fill 0.5 marksize 0.7 0.25 pattern solid
+    label : sequence preludes
+  newcurve marktype xbar fill 0.1 marksize 0.7 0.25 pattern stripe -45
+    label : sequence codes
+

@@ -1,0 +1,524 @@
+\newchapter{Compression of \html Documents}{chap:web}
+
+This chapter deals with the compression of documents published
+on the World Wide Web using the HyperText Markup Language (\html) 
+\citep{html:std}.  While the \html standard is a
+subset of the \sgml standard, \html documents have many 
+similarities with the \sgml documents considered for most
+of this thesis.  The \news document is \mib{1,000} 
+in size, but artificially constructed by concatenating news 
+articles together.  When the compression systems outlined in
+previous chapters were applied to \news, the best
+compression ratio achieved was 1.674 bpc 
+for \ppmd (\tabref{tab:tc-bpc} on 
+\pgref{tab:tc-bpc}).
+
+Typical \html files cannot be simply 
+concatenated together and compressed if they are 
+to be accessed on an individual basis.  While \html files are as
+brief as short news articles, news articles
+do not form relationships with other articles, except for their
+chronological order.  In addition, ``flattening'' the \html files 
+on a web server into a single document would
+lose the intricate hierarchical structure created by hyperlinks.
+On the other hand, most compression systems
+attain better compression effectiveness
+as more text is available as context.  
+
+In the case of the smaller
+\html files, context exists through hyperlinks.
+This chapter describes an investigation into a scheme under which
+\html files from a medium-sized web server are compressed 
+for storage and transport by exploiting the way they are accessed,
+either with or without hyperlinks.
+
+The rest of this chapter is laid out as follows.  In 
+\secref{sec:web-related}, related work by other researchers is
+summarised.  Then, in \secref{sec:web-data}, an overview of 
+the data collected from the web server is given.  
+In the context of this data, the experimental framework
+is described in \secref{sec:web-framework}, followed by the
+results in \secref{sec:web-results}.  Some
+conclusions about this work is drawn in
+\secref{sec:web-summary}.
+
+\newsection{Related Work}{sec:web-related}
+
+The two areas covered by this chapter are the reduction
+of bandwidth through compression
+and the detection of context in web pages.  Both of
+these areas have been studied extensively by others.
+
+Several techniques have been devised which reduce
+the bandwidth requirements of \html documents.  Delta encoding
+(for example, see \citet{mdfk97:sigcomm, mdfk98:ccr}) assumes that users 
+usually request a recent version of a previously downloaded file.  Instead
+of re-sending the entire file, a difference between the latest file
+and the version of the file in the client's cache is sent.
+\citet{ngbpll97:sigcomm} considered the benefits of lossy 
+compression of \html files by case folding tags
+without affecting the web browser's ability to render the document.
+\citeauthor{ngbpll97:sigcomm}\ also demonstrated that high-level
+compression of documents with the \zlib library \citep{zlib:program} was
+more effective than the compression systems built into the 
+set of modems that they considered.  
+
+On the World Wide Web, the current version of the
+HyperText Transfer Protocol (\http/1.1) \citep{http:std}
+supports compression through two header fields.
+The {\texttt {Accept-Encoding}} field allows the browser to
+notify the web server of its support for one of a set of encodings,
+as defined by the \http/1.1 standard.  These encodings are primarily
+used for compression, and include both \gzip and \deflate.  If the
+web server is able to support the specified encoding, then a
+compressed version of the requested document is sent to the client,
+and the {\texttt {Content-Encoding}} header field is embedded within
+the response.
+
+Support for these headers have been implemented by the {\texttt {mod\_gzip}}
+module\footnote{\myurl{http://sourceforge.net/projects/mod-gzip/}} for the
+Apache web server\footnote{\myurl{http://httpd.apache.org/}},
+used by approximately 63\% of the web sites on the Internet, 
+according to a September 2003 survey conducted by 
+Netcraft\footnote{\myurl{http://news.netcraft.com/}}.  
+The current version of {\texttt {mod\_gzip}} (1.3.26.1a) delivers
+compressed documents from a cache, but can 
+recompress files during a request when newer versions are found.
+
+With respect to hyperlinks, \citet{bp98:www} applied hyperlinks
+to IR by using them to judge the relevance of documents on the Web.
+\citet{mt99:ht} established a set of
+rules to determine the most likely path a user would take to 
+reach a certain \html file.  \citet{lkvt00:ht} later applied 
+a set of rules to a web site in order to divide it into
+a set of logical domains, with each domain relevant to the same
+topic.
+
+The experiments in this chapter are concerned with the compression
+of \html files based on the order in which they are accessed by
+users.
+
+\newsection{Data Overview}{sec:web-data}
+
+Rather than developing a compression mechanism embedded within 
+multiple web browsers and a web server, a simulation was 
+performed.  The simulation made
+use of access logs and web pages from the medium-sized web server of
+the University of Melbourne's
+Department of Computer Science and Software 
+Engineering\footnote{\myurl{http://www.cs.mu.oz.au/}}.
+The web server used version 1.1 of \http.
+
+Access logs lasting one week were taken, starting from 12.15 a.m.\ on
+17 July 2000 until 12.15 a.m.\ on 23 July 2000.  The access logs are in
+the Apache Common Log 
+Format\footnote{Described at \myurl{http://httpd.apache.org/docs/logs.html}}.
+Each entry in the log records the client that accessed the
+server, the file requested, and the date and time of the request.
+While version 1.1 of \http supports persistent connections, the log
+file does not indicate this.  Because of this, it is not possible to determine from
+the log file whether two consecutive requests from the same client was
+made by the same person, or by two different people using the same computer.
+
+To prepare these logs for our investigation, the entries in the access 
+logs were separated based on whether the client was local or external 
+to the department, and then, whether the document requested was an
+\html file, an image, or another file type.  The results from this
+breakdown are summarised in \tabref{tab:web-loginfo}.
+
+\tab{lccc}
+{
+\multirow{2}*{File type} & Number of & Total volume & Average \\
+          & requests  & (\mibonly)  & (\kibonly) \\
+}
+{
+\multicolumn{4}{l}{Local requests} \\
+{\D\D}\html text & \D55,976  & \C626.4  & \D11.5 \\
+{\D\D}images     & \D20,884  & \C\D73.6 & \D\D3.6 \\
+{\D\D}other      & \D\D1,871 & \C\D76.4 & \D41.8 \\
+\\
+\multicolumn{4}{l}{External requests} \\
+{\D\D}\html text & \D48,343  & \C443.1  & \D\D9.4 \\
+{\D\D}images     & \D83,585  & \C304.5  & \D\D3.7 \\
+{\D\D}other      & \D\D5,739 & \C637.4  & 113.7 \\
+\\
+Total            & 216,378   & 2,161.5  & \D10.2 \\
+}{Breakdown of requests by origin and file type, 17 
+July 2000 to 23 July 2000 inclusive.}{Breakdown of requests by 
+file type and origin}{tab:web-loginfo} 
+
+\tab{lccc}
+{
+\multirow{2}*{File type} & Number of & Total size & Average \\
+          & files     & (\mibonly)& (\kibonly) \\
+}
+{
+\html text & \D68,361 & \C721.0  & \D10.8 \\
+images     & \D16,840 & \C300.0  & \D18.2 \\
+other      & \D17,513 & 2,233.8 & 130.6 \\
+\\
+Total      & 102,714 & 3,254.8 & \D32.4 \\
+}{Snapshot of a web site, 24 July 2000.}{Snapshot of a 
+web site, 24 July 2000}{tab:web-fileinfo}
+
+A snapshot of the web site was taken on 24 July 2000, soon after 
+the access logs were acquired.  The snapshot was also split based 
+on file type, yielding \tabref{tab:web-fileinfo}.  For each
+file type, the number of files, the total file size, and the 
+average file size are indicated.
+
+The data described in these two tables forms the basis
+of the simulation.  Almost 40\% of the total requests were
+made from within the same network as the web server.  Since 
+transmission costs of local requests are relatively less than 
+external requests, these local requests have been omitted from the
+simulation.  Furthermore, 
+as the topic of this investigation is \html files, 
+the \mib{443.1} of \html files requested 
+from an external client is the focus of the work.
+The remaining externally requested files
+are used in the simulation, but are of lesser importance.
+
+The size of the \html files requested reflects their 
+average size on the web server.  In both cases, the average 
+\html file size was around \kib{10}.  According to 
+\tabref{tab:web-fileinfo}, most of the files on 
+the web server were \html files, but
+they occupied less than one quarter of the total disk space.
+The files labelled ``other'' include software packages
+(often in large archives) and documents created in 
+proprietary file formats.
+
+\newsection{Experimental Framework}{sec:web-framework}
+
+The purpose of the simulation was to establish the extend to which
+compression effectiveness could be improved, using the logs
+of requested files as an indication
+of typical access sequences.  Suppose $x^t$, 
+$y^t$, and $z^t$
+are \html files at time $t$.
+If a user obtains $x^i$ and then $y^j$, where $i < j$, 
+then the straightforward approach to achieving bandwidth 
+reduction is to compress each file 
+individually.  However, after $x^i$ has been transmitted,
+the web server can improve the compression of $y^j$ by making
+use of $x^i$, a file that is now assumed to exist on both
+sides of the communications channel.
+The compressed representation of $y^j$ given $x^i$
+(denoted as, $c(y^j|x^i)$) is transmitted instead of $c(y^j)$ alone.
+The compression system is said to be ``primed'' with 
+$x^i$ before $y^j$ is processed.
+
+Because relatively little structure exists in the access logs,
+heuristic approximations 
+have to be made with regard to whether two requests from
+the same client were made by the same user\footnote{On a computer where
+all users share the same cache, this distinction between clients
+and users is less relevant, though.}.  Also, a limit on 
+the difference between the times $i$ and $j$ was imposed
+in order to reduce the chance that the first file, $x^i$, had not
+changed.  A time interval, $\tau$, was introduced into the
+simulation, which is the most time a user can take to read
+a document and move on to the next one.  A {\emph {traversal}}
+occurs when a client visits $x^i$ and then $y^j$, provided the difference
+between $i$ and $j$ is constrained to be less than $\tau$.
+In the sequence of web page accesses by a client,
+if the interval between any two consecutive requests is less than $\tau$,
+then a {\emph {browsing session}} for that client has been found.
+
+There are two subtle points to note with respect to these
+definitions.  A valid traversal does not require a hyperlink
+to be followed, even though the motivation for this work was
+the hyperlinks within \html files.  This simplification is 
+required because the
+access logs only indicate the files that were accessed, and not
+whether they were accessed with hyperlinks, bookmarks, or by
+manually entering them into a browser.
+Furthermore, the files 
+within a browsing session can be of any type, but the experiments
+later are concerned with compression of \html files within the
+session.  So, the compression of $y^j$ 
+can be primed with $x^i$, even though many 
+non-\html files may be sent between times $i$ and $j$.  The
+only restriction is that
+no more than $\tau$ minutes has passed between any two adjacent
+file requests between $x^i$ and $y^j$.
+
+In the experiments of this chapter, $\tau$ was fixed at 5 
+minutes.  The access logs were separated into browsing sessions
+based on this value of $\tau$, and in \figref{fig:web-dist},
+only \html files are reported.
+The graph indicates the percentage of \html file requests for various
+browsing session lengths, measured in number of \html documents.  
+There were 21,067 browsing sessions found, and with 48,343 \html
+files requested overall, with each session containing 2 \html files,
+on average.  Approximately 30\% of the requests were to one-off
+documents with no traversal prior or following.  The remaining
+70\% of the requests were part of browsing sessions with other
+\html files.  In one browsing session, there were 2,163 \html
+files requested, presumably as part of a search engine crawl.
+As for the suitability in choosing 5 minutes for $\tau$, if the
+threshold was extended to 60 minutes, then the percentage
+of page requests that were part of a browsing session with only
+one \html file falls from 30\% to 20\%.  Given this result, it 
+would seem that 5 minutes is a plausible value.
+
+\fig{
+\includegraphics*{./dist.ps}
+}{Percentage of page requests as a function of browsing session
+length, in number of \html files, for $\tau = 5$ minutes.}
+{Percentage of page requests for each browsing session length}
+{fig:web-dist}
+
+Instead of using the most recently sent \html file for priming, the
+web server and the web browser can also share a file made exclusively
+for priming.  Of course, this priming file must be sent by the web
+server to every new client which accesses it, and the cost of
+its transmission must be accounted for in any analysis.
+
+Of the compression
+mechanisms discussed in this thesis, \gzip was selected as the
+basis for these experiments for two reasons.
+First, earlier results in Chapters \ref{chap:tc} and
+\ref{chap:repair} have shown
+that \gzip is relatively fast compared to other systems surveyed
+-- an important factor when the user is
+waiting in front of a web browser.
+More importantly, the sliding window mechanism employed by \gzip
+makes priming possible with little 
+modification, in comparison to other systems.  The \gzip system
+simply compresses the document after the window of phrases has been
+initialised with the priming text.
+This method of priming 
+has also been suggested by \citet[pg.~391]{wmb99:book} for
+algorithms related to \lza.
+Also, priming was investigated with more complex compression
+systems by \citet{teahan98:phd}.  
+
+There is a one important difference
+between the priming text for \gzip and
+the training data employed by \remerge when appending text 
+(see \secref{sec:remerge-append} from \pgref{sec:remerge-append}).  
+The phrase hierarchy is not
+altered by \remerge while text is being added.  In contrast,
+the phrases produced
+by \gzip from the priming text are updated as compression progresses
+through the file.
+
+Two dictionary files were constructed 
+for the sole purpose of priming \gzip.  These two
+files contain the most frequently occurring words from all
+of the \html files on the web server, in decreasing frequency 
+order.  After being compressed with the {\texttt {-9}} option of \gzip,
+these two files were \kib{1} and \kib{10} in size.  Uncompressed,
+these two files were 1,583 bytes and 17,736 bytes in size, respectively.
+\figref{fig:web-context} shows the first 250 bytes of the larger file.
+
+\fig{
+\begin{tabular}{c}
+\input{./context_10240.txt}
+\end{tabular}
+}{The first 250 bytes of the priming dictionary file, which
+compresses to \kib{10}.  Linebreaks have been introduced
+to allow display.}
+{First 250 bytes of the two dictionary files for priming}
+{fig:web-context}
+
+\newsection{Experimental Results}{sec:web-results}
+
+The experiments demonstrate the 
+reduction in the number of bytes transferred by priming the
+compression mechanism.  However, compressing each file before
+delivery to the client adds a time overhead to file transmission.
+Each file must be compressed by the web server, transferred, and 
+then decompressed by the client.  The impact of this
+can be minimised if files are compressed while the web server 
+is idle, and before they are requested.  Alternatively, 
+compressed files can be placed
+in a cache of recently requested files.  The second of these methods
+was chosen for the simulation.
+
+The simulation measures the bandwidth and the disk space required
+at the server.  Bandwidth is quantified as the number of bytes 
+sent to the client, 
+while the disk space is the extra overhead required for the cache.  It
+is assumed that all of the web pages exist uncompressed on disk
+at the server.  As
+pages are requested, they are compressed, sent to the client, and 
+copies of the compressed files are left in the cache, in the hope
+they can be used again.  For the purpose of
+the simulation, the cache is initially empty and never cleared, so
+that the total disk space taken is the size of the cache at the end of
+the simulation.
+
+Nine methods of processing \html files were evaluated.  Compression
+was executed with \gzip, using its {\texttt {-9}} option.
+Two methods, \nocompression and \independent, form
+the baseline for the experiments.  The \nocompression method
+assumes documents
+are sent as plain text, while the \independent method compresses
+each requested
+\html document individually, as a stand-alone file.  
+
+Then, several other methods were considered.
+The \commondict method compresses each
+file with either of the two standard dictionary files as priming
+text (\kib{1} or \kib{10}), assuming
+that the dictionary files are available to the client for ``free''
+and do not need to be explicitly sent.  For this reason, the
+\commondict method is unrealistic and the \transmitteddict corrects
+that by adding the cost of sending the respective dictionary files
+(in compressed form)
+for every browsing session.  The \oneprior and the \allprior methods
+utilise the browsing patterns of the users.  The \oneprior method 
+compresses each file, priming \gzip in each case
+using the previously requested file in the browsing session.
+The first file in any browsing session is compressed without
+any priming.  The \allprior method uses all \html files in the
+browsing session for priming.  Finally, the \allavailable
+method is the most optimistic method, since it combines the \commondict
+method with the \allprior method.  The \allavailable method
+assumes that a standard dictionary file is available for free and
+that it can be combined with all previously requested \html files in
+that browsing session to prime the compressor.
+
+The results from the simulation are presented in 
+\tabref{tab:web-compresults} as percentages.  
+The amount of disk space occupied by the \html files with
+no compression is
+100\%, since it is assumed an uncompressed version of
+the web pages must exist.  The bandwidth taken when no
+compression is applied is 100\%.  With each of the remaining
+compression methods, the disk space usage increases and the
+bandwidth decreases.
+
+\tab{lcc}
+{
+Method & Disk space & Network bandwidth\\
+& (\% uncompressed) & (\% uncompressed)\\
+}
+{
+{\nocompression}                        & 100.0 & 100.0\\
+{\independent}                          & 104.7 & \D27.9\\
+{\commondict, \kib{1}}                  & 104.5 & \D27.1\\
+{\commondict, \kib{10}}                 & 104.6 & \D27.2\\
+{\transmitteddict, \kib{1}}             & 104.5 & \D31.5\\
+{\transmitteddict, \kib{10}}            & 104.6 & \D71.2\\
+{\oneprior}                             & 109.0 & \D24.5\\
+{\allprior}                             & --    & \D23.9\\
+{\allavailable, \kib{10}}               & --    & \D23.5\\
+}{The extra disk space required and the bandwidth saved for
+each of the compression strategies employed.  The 
+simulation window spanned 7 days in July 2000.}{Disk 
+space required and bandwidth saved for each compression 
+strategy}{tab:web-compresults}
+
+The \independent method shows that applying \gzip to files individually
+already reduces the bandwidth requirements to 27.9\%.  The disk space
+rises only by 4.7\%, because only a small proportion of the 
+publicly available \html files 
+were accessed in the simulation window of 7 days.  
+Applying either of the dictionaries to
+prime \gzip slightly reduces both the disk space and bandwidth 
+requirements 
+in comparison to the \independent method.  Of course no change in
+disk space exists between the \commondict and the \transmitteddict
+methods.  However, when the more realistic situation of transmitting
+the dictionaries is considered, the bandwidth requirements rises
+from 27.1\% to 31.5\% for the \kib{1} dictionary, and from 27.2\%
+to 71.2\% for the \kib{10} dictionary.  
+The overall cost of transmitting the dictionaries is not
+recovered - a consequence of the large number of short browsing sessions,
+and the effectiveness of \gzip when dealing with moderate-length
+files.
+
+The \oneprior method is more effective than the previous methods, yet
+the gain is still marginal.  Unlike \transmitteddict, 
+no explicit dictionary needs to be sent to the client, and 
+for browsing sessions with only one \html file, the file is 
+compressed without a priming file.  Since the remaining two 
+methods in \tabref{tab:web-compresults} require multiple files 
+for priming, maintaining a cache
+appears difficult due to the many file combinations that could
+exist.  For this reason, disk space consumption is not reported.
+The bandwidth required by these two methods continues to decrease
+in comparison with \oneprior because on average, the \kib{32} sliding
+window of \gzip can hold more than one \html file or one dictionary
+file for priming.  Only the experiment with the \kib{10} 
+standard dictionary is shown for the \allavailable method.  It
+achieves the best result with respect to bandwidth, but this is
+partly because the dictionary is assumed to be available without
+charge.
+
+Some of the bandwidth results from the simulation are presented in
+more detail in
+\figref{fig:web-requests-bpc}.  In the figure, the cumulative 
+bandwidth is plotted against the number of browsing sessions, ordered
+according to decreasing length of session.  
+The right-hand end of the graph corresponds to the
+bandwidth results in \tabref{tab:web-compresults}.
+At the left end of the graph, long browsing sessions
+enable the \oneprior and the \allprior methods to perform 
+significantly better than the other three methods.  As the length of
+the browsing sessions decrease, this advantage slowly evaporates.
+Furthermore, when the short browsing sessions are introduced, the
+cumulative bandwidth of \transmitteddict rises sharply, and the
+cost of sending the priming dictionary outweighs the benefits
+obtained from using it.
+
+\fig{
+\includegraphics*{./diskspace_requests_bpc.ps}
+}{The cumulative bandwidths achieved with each of the compression
+methods.  The browsing sessions have been ordered from left
+to right in decreasing 
+length of session, with length assessed as the number of pages
+requested.}{Cumulative bandwidths versus browsing 
+session counts}{fig:web-requests-bpc}
+
+\newsection{Summary}{sec:web-summary}
+
+This chapter has shown how the order users visit web pages combined with
+a compression system such as \gzip can achieve small additional
+reductions in bandwidth requirements.  This idea was 
+demonstrated through a simulation with a web server and its
+corresponding access logs.  Additional experiments showed how
+a static dictionary of the most frequently occurring words on 
+the web server also improved compression, but only if the dictionary
+could be assumed to be static, and available free of charge.
+Ultimately, the high cost of transmitting the dictionary in the
+many short browsing sessions was too high
+to justify such an approach as a general solution.  The simulation
+has also demonstrated that \gzip alone is a good technique 
+which reduces bandwidth requirements to 27.9\%.
+
+The experiments have also demonstrated the tension that exists
+between bandwidth, processing time, and storage.  Bandwidth can 
+be reduced by priming the compression system with the previously 
+requested file.  But the extra latency in compressing each file
+as it is requested may be unacceptable to users, who already 
+wait impatiently during network delays.  Disk
+space can be used to alleviate this problem by compressing all files
+beforehand.  However, if \html files are compressed in the context of
+even just one previously requested file, then a quadratic number 
+of file variants need to be maintained.  The large number of
+document versions is required because a user can arrive at a \html file
+through any other file on the web site, or by manually entering its 
+location in the web browser.  A possible compromise
+would be to maintain a cache of recently requested documents, 
+in their various compressed forms, which in the
+simulation was assumed to be one week.  Nevertheless, it seems unlikely
+that all three factors can be simultaneously reduced.
+
+Future extensions to this work, include the possible 
+development of a compression mechanism specifically for \html documents
+that offers improved compression ratios.  However, unlike
+syntax-directed compression systems (for example, 
+\citet{kpt86:spe}), such a system
+must be capable of accepting syntactically incorrect
+data, as \html documents are often poorly structured and only rarely
+are error free.  Also, while
+experimental results have shown that priming with a standard 
+dictionary is problematic due to the added cost of sending it,
+it may be possible to separate a web server into logical domains
+and then to create a unique dictionary for each domain.
+

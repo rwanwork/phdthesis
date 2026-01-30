@@ -1,0 +1,227 @@
+%%  Title page, abstract, declaration, preface, and acknowledgments in 
+%%  the order required by the School of Graduate Studies
+
+%%  Definitions
+
+%%  title definition
+\newcommand{\prevdegree}{BSc (University of British Columbia, 1997)}
+\newcommand{\degreelocation}{Department of Computer Science 
+and Software Engineering \\The University of Melbourne}
+\pretitle{\begin{center}\Huge\textbf}
+\posttitle{\par\end{center}\vspace{1cm}}
+\preauthor{\begin{center}
+           \huge \lineskip 0.5em}
+\postauthor{\large \vspace{1cm} \par \degreelocation \end{center} \vspace*{\fill}}
+\predate{\vspace{1cm} \begin{center}\large}
+%\postdate{\\Produced on acid-free paper \end{center}}
+\postdate{\end{center}}
+
+\newcommand{\disclaimer}[1]{%
+  \gdef\Disclaim{#1}}
+\newcommand{\Disclaim}{}
+\renewcommand{\maketitlehookc}{%
+  \par\noindent \Disclaim}
+
+\disclaimer{\centering Submitted in partial fulfilment of the requirements of the degree of\\ Doctor of Philosophy (with coursework component)}
+
+
+%%  2003/06/05 title
+\title{Browsing and Searching\\Compressed Documents}
+\author{Raymond Wan}
+\date{December 2003}  %%  Date of resubmission was December 18, 2003
+\maketitle
+\thispagestyle{empty}
+\clearpage
+
+\pagestyle{rwanfootonly}
+%%  Abstract
+\vspace*{\fill}
+\begin{abstract}
+Compression and information retrieval are two areas of
+document management that exist separately due to the conflicting
+methods of achieving their goals.  This research examines a 
+mechanism which provides lossless compression and phrase-based 
+browsing and searching of large document collections.
+%% In this research a mechanism is described for combining
+%% compression and phrase-based searching on large text documents.
+The framework for the investigation is an
+existing off-line dictionary-based compression algorithm.
+
+An analysis of the algorithm, supported by previous work and
+experiments, highlights two factors that are important for
+retrieval:  efficient decoding, and a separate dictionary
+stream.  However, three areas of improvement are necessary, prior to 
+the inclusion of the algorithm into a browsing system.
+
+First, in order to accommodate retrieval, the algorithm must
+produce a dictionary built up on words, rather than 
+characters.  A pre-processing stage is introduced which
+separates the message into words and non-words, along with
+word modifiers.
+
+Second, the memory requirements of the algorithm prevent the
+processing of large documents.  Earlier work has proposed
+a solution which separates the message into individual
+blocks prior to compression.  Here, a post-processing stage is 
+proposed which combines the blocks in a series of phases.
+Experiments show the trade-offs between the number of phases
+performed and the improvements in compression levels.
+
+Organisations which provide access to an information retrieval 
+system to users are sometimes concerned with the amount of
+disk space available.  But users have a different point
+of view and may place response time at a higher priority.
+Indeed, faster computers and network connections translate
+into plummeting patience levels of users.
+The last improvement to the compression algorithm is
+two new coding schemes which 
+replace the entropy coder that was used in previous work.  
+While deploying them sacrifices compression effectiveness, these
+two mechanisms offer improved efficiency, as shown through
+experiments.
+
+With the enhancements to the compression algorithm in hand,
+a technique to efficiently support phrase browsing is presented.
+Phrase contexts can be searched and progressively refined through 
+the word modifiers.
+Because of the three changes to the algorithm, phrases are more
+visually appealing, larger documents can be processed, and response
+times are improved.
+
+%% \textsc command does not work?
+%%% A brief diversion into the compression of HTML
+%%% files completes the investigation.
+
+%% Finally, experiments with the compression of HTML files
+%% are conducted.  A simulation with a medium-sized web server
+%% shows how compression of these small files can be improved
+%% through the hyperlinks that connect them.
+
+\vspace*{\fill}
+\clearpage
+\end{abstract}
+
+%%  Declaration
+\renewcommand{\abstractname}{Declaration}
+\vspace*{\fill}
+\begin{abstract}
+\noindent This is to certify that
+\begin{enumerate}
+\item the thesis comprises only my original work towards the PhD except 
+where indicates in the Preface,
+\item due acknowledgement has been made in the text to all other material 
+used, and
+\item the thesis is less than 100,000 words in length, exclusive of 
+tables, maps, bibliographies, and appendices.
+\end{enumerate}
+\vspace*{2cm}
+
+\noindent Raymond Wan \\
+\noindent \prevdegree
+\vspace*{\fill}
+\clearpage
+\end{abstract}
+
+%%  Preface
+\renewcommand{\abstractname}{Preface}
+\vspace*{\fill}
+\begin{abstract}
+
+\begin{center}
+{\emph {Publications arising from this thesis.}}
+\end{center}
+
+\noindent The general concept of phrase browsing documents compressed
+with character-based \repair was introduced as a poster presentation at
+the 24th Annual International {ACM} {SIGIR} 
+Conference on Research and Development in Information 
+Retrieval \citep{wm01:sigir}, and then 
+subsequently expanded for the 2001 Symposium on String Processing 
+and Information Retrieval \citep{mw01:spire}. \\
+
+\noindent Merging compressed blocks, as covered in \chapref{chap:remerge},
+was presented at the 2002 Symposium for Combinatorial
+Pattern Matching \citep{wm02:cpm}. \\
+
+\noindent The results from the experiments of \chapref{chap:web} 
+on compression with \html hyperlinks
+was presented at the 2001 Australasian Database Conference
+\citep{wm01:adc}.
+
+\vspace*{\fill}
+\clearpage
+\end{abstract}
+
+%%  Acknowledgments
+\renewcommand{\abstractname}{Acknowledgements}
+%\vspace*{\fill}
+\begin{abstract}
+
+As expected, completing work of this magnitude is due to 
+the support of many people.  As I didn't know anyone
+in Australia before I arrived here for
+study, there are a lot of relationships I am
+thankful for.
+
+The continued support over the years from
+my supervisor, Alistair Moffat, has made much of this
+thesis possible.  I began this degree in the hope of 
+learning, and fortunately, Alistair has made sure of that
+from the first day until the last.
+
+The past and present members of Alistair's 
+group have contributed to an excellent support network, 
+and it has been a pleasure to
+be a part of it.  Tim Bell and Owen de Kretser helped me from
+the very beginning as I struggled with the transition back into
+university life.  Tim's continued maintenance of the ``vi''
+machines, and calmness whenever I brought them to a grinding 
+halt, is also very much appreciated.  Encouragement from Anh Ngoc Vo 
+over the years has certainly kept me going from day-to-day.
+Mike Ciavarella, Mike Liddell, Yugo Isal, Lily Sun, and Tony Wirth 
+have further contributed to my personal life and my studies.
+
+I'm also fortunate to have worked with (or next to) many 
+other people in the department.  Hongjian Fan, Kevin Glynn, 
+Bernard Pope, Robert Shelton, Qun Sun, Xiuzhen (Jenny) Zhang, 
+are only some of the people who
+have shared an office with me at some stage -- four
+offices in all, spread across two buildings!  Inga 
+Sitzmann and Lei Zheng also helped complete my network of
+postgraduates within the department, while working with Linda
+Stern on several occasions as a tutor has always been both 
+enjoyable and enriching.  
+
+Glen Gibb and Leslie Young have been great friends 
+during my stay in Melbourne, and through them, I have met
+many others.
+The love and support given to me from Ju Hyung (Juliet) Lee has 
+only grown since we first met.  During that time, she's been
+in the unfortunate position of bearing the brunt of the stress,
+and I thank her for that.
+
+\newpage
+I'm also thankful to many other friends who live overseas,
+and which I've had little opportunity to meet while living here.
+Wilson Lee has always been a close friend, and his advice 
+is something which I've depended on over the years.
+Joyce Cunningham and Yoshiko Yoshimura provided the 
+motivation to consider further study, 
+while Ed Knorr has always been a 
+mentor to me.  Ed's
+suggestion to do a research degree instead of a coursework one
+because ``I won't regret it'' was what started everything
+here.  Now that I'm at the end, I can say that he was
+right after all.
+
+And last, but most of all, to my parents,
+for their support and caring.
+Their patience while their son studied on the other side
+of the world is much appreciated, as is everything else they've
+done for me.
+
+\vspace*{\fill}
+\clearpage
+\end{abstract}
+
+

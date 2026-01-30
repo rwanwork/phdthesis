@@ -1,0 +1,72 @@
+newgraph
+  X 3
+  Y 3
+
+  xaxis 
+    min 0 max 0.43
+    size 2.5
+    hash_labels
+      fontsize 9
+      font Helvetica
+    label 
+      fontsize 9
+      font Helvetica
+      : Throughput (MiB/s)
+(*    no_auto_hash_labels no_draw_hash_marks *)
+  yaxis 
+    min 2 max 3
+    size 2.5
+    hash_labels
+      fontsize 9
+      font Helvetica
+    label 
+      fontsize 9
+      font Helvetica
+      : Compression effectiveness (bpc)
+    hash 0.5
+    mhash 1
+    precision 1
+    (* font is Helvetica *)
+
+newcurve marktype circle
+  label : punctuation-aligned Re-Pair (NEWS)
+  pts 0.405 2.272 
+      0.325 2.261 
+      0.236 2.239 
+      0.174 2.233 
+      0.219 2.244 
+      0.166 2.233
+
+(*
+  scale=4
+  1024*1024
+  1048576
+  1048491001/1048576
+  999.91893
+  w=999.91893
+  w/2466.5
+  .40539
+*)
+newcurve marktype text : none
+  pts 0.405 2.317 
+
+newcurve marktype text : A
+  pts 0.324 2.300 
+
+newcurve marktype text : B
+  pts 0.237 2.279 
+
+newcurve marktype text : C
+  pts 0.175 2.275 
+
+newcurve marktype text : D
+  pts 0.220 2.285 
+
+newcurve marktype text : E
+  pts 0.166 2.180
+
+legend off
+(*
+legend bottom defaults hjl font Helvetica fontsize 9
+  x 0.03 y 0.5
+*)

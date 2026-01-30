@@ -1,0 +1,65 @@
+newgraph
+X 3.25
+Y 2.25
+
+clip
+legend defaults
+  font Helvetica
+  fontsize 9
+  x 400 y 150 hjc vjb
+xaxis
+  size 2.50
+  min 0 max 520
+  hash_labels
+        fontsize 9
+        font Helvetica
+        precision 0
+  label
+        fontsize 9
+        font Helvetica
+        : Training data size (MiB)
+  mhash 0
+
+yaxis
+  size 1.75
+  min 0 max 200
+  hash_labels
+        fontsize 9
+        font Helvetica
+        precision 1
+  label
+        fontsize 9
+        font Helvetica
+        : Compressed file (MiB)
+  mhash 0
+
+curve 1
+  marktype circle
+  linetype solid
+  label : Entire file
+  pts
+20.000000 128.660439
+40.000000 124.405968
+80.000000 120.651811
+120.000000 119.007522
+160.000000 116.404245
+240.000000 114.147926
+320.000000 107.621767
+400.000000 103.567348
+508.495377 102.8482618  (* Source:  /home/vipe/c/rwan/expt/5/char-remerge/e  *)
+
+curve 2
+  marktype triangle
+  linetype dashed
+  label : Training data
+  pts
+20.000000 4.425134
+40.000000 8.564701
+80.000000 16.672467
+120.000000 24.563880
+160.000000 32.762575
+240.000000 48.619492
+320.000000 65.556959
+400.000000 81.876666
+508.495377 102.8482618
+

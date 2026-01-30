@@ -1,0 +1,263 @@
+vike:~/nlp/RULE_BASED_TAGGER_V1.14/Bin_and_Data > tagger LEXICON.WSJ test BIGRAMS LEXICALRULEFILE.WSJ CONTEXTUALRULEFILE.WSJ
+START STATE TAGGER::LEXICON READ
+START STATE TAGGER:: CORPUS READ
+START STATE TAGGER:: RULEFILE READ
+START STATE TAGGER:: BIGRAMS READ
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+FINAL STATE TAGGER:: READ IN OUTPUT FROM START
+FINAL STATE TAGGER:: READ IN LEXICON
+ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+John/NNP Blair/NNP &/CC amp/JJ ;/: Co/NNP ./. is/VBZ close/RB to/TO an/DT agreement/NN to/TO sell/VB its/PRP$ TV/NN station/NN advertising/NN representation/NN operation/NN and/CC program/NN production/NN unit/NN to/TO an/DT investor/NN group/NN led/VBN by/IN James/NNP H/NNP ./. Rosenfield/NNP ,/, a/DT former/JJ CBS/NNP Inc/NNP ./. executive/NN ,/, industry/NN sources/NNS said/VBD ./. 
+
+Script started on Thu Jun 19 13:34:11 2003
+vipe:~/nlp/system-4.1/link-4.1 > parse
+++++Time                                         21.14 seconds (21.14 total)
+Found 94212 linkages (810 of 1000 random linkages had no P.P. violations)
+  Linkage 1, non-canonical, cost vector = (UNUSED=0 DIS=1 AND=2 LEN=134)
+
+    +-------------------------------------------------------------------------
+    |                           +---------------------------------------------
+    |                           +---------------------------------------------
+    |                           |                                +------------
+    |                           |                                |    +-------
+    |                           |                                |    |    +--
+    |                           +------------MVi------------+    |    |    |  
+    +---------Wd---------+--Ss--+----Pp---+----Jp---+       |    |    |    |  
+    |       +--G-+-G-+-G-+Xi+   |    +IDVP+  +--Dsu-+       +--I-+    |    |  
+    |       |    |   |   |  |   |    |    |  |      |       |    |    |    |  
+LEFT-WALL John Blair & Co.y . is.v close to an agreement.n to sell.v its TV.n 
+
+
+-----------------------------------------------------------------CP
+------------------------------------MVp----------------------------
+--------------------MVp--------------------------------------------
+----------------Os----------------------------+                    
+------------------D*u-------------------------+                    
+---------------------AN-----------------------+                    
+    +--------------------AN-------------------+                    
+    |           +--------------AN-------------+                    
+    |           |               +------AN-----+                    
+    |           |               |             |                    
+station.n advertising.n representation.n operation.n and program.n 
+
+
+------------------------------------------------------------------------------
+----------------------------------------------------+                         
+---------------------+                              |                         
+                     |                              |               +---------
+                     |                              |               |     +---
+                     |                              |               |     | +-
+                     +---------J--------+           |               |     | | 
+                     |  +-------Ds------+           +-------Js------+     | | 
+                     |  |      +---AN---+--Mv--+    |   +--G-+---G--+     | | 
+                     |  |      |        |      |    |   |    |      |     | | 
+production.n unit.n to an investor.n group.n led.v by James H. Rosenfield , a 
+
+
+-----------------------------------------------------------+    
+                                                           |    
+                                                           |    
+--------MX----------------+                                |    
+-----------Xd-------------+                                |    
+------------Ds------------+                                |    
+    +----------A----------+                                |    
+    |          +----AN----+      +------------Xd-----------+    
+    |     +--G-+-Xi+      +--Xca-+      +----AN---+---Sp---+-Xc+
+    |     |    |   |      |      |      |         |        |   |
+former.a CBS Inc.y . executive.n , industry.n sources.n said.q . 
+
+
+    +-------------------------------------------------------------------------
+    |                           +---------------------------------------------
+    |                           +---------------------------------------------
+    |                           |                                +------------
+    |                           +------------MVi------------+    |    +-------
+    +---------Wd---------+--Ss--+----Pp---+----Jp---+       |    |    |       
+    |       +--G-+-G-+-G-+Xi+   |    +IDVP+  +--Dsu-+       +--I-+    |       
+    |       |    |   |   |  |   |    |    |  |      |       |    |    |       
+LEFT-WALL John Blair & Co.y . is.v close to an agreement.n to sell.v its TV.n 
+
+
+-----------------------------------------------------------------CP
+------------------------------------MVp----------------------------
+--------------------MVp--------------------------------------------
+-----------------------------------Os------------------------------
+-------------------------------------Ds----------------------------
+                                                             +-----
+                                                             |     
+                                                             |     
+station.n advertising.n representation.n operation.n and program.n 
+
+
+------------------------------------------------------------------------------
+----------------------------------------------------+               +---------
+---------------------+                              |               |     +---
+----------------+    |                              |               |     | +-
+----------------+    +---------J--------+           |               |     | | 
+-----AN---------+    |  +-------Ds------+           +-------Js------+     | | 
+      +----AN---+    |  |      +---AN---+--Mv--+    |   +--G-+---G--+     | | 
+      |         |    |  |      |        |      |    |   |    |      |     | | 
+production.n unit.n to an investor.n group.n led.v by James H. Rosenfield , a 
+
+
+-----------------------------------------------------------+    
+--------MX----------------+                                |    
+-----------Xd-------------+                                |    
+------------Ds------------+                                |    
+    +----------A----------+                                |    
+    |          +----AN----+      +------------Xd-----------+    
+    |     +--G-+-Xi+      +--Xca-+      +----AN---+---Sp---+-Xc+
+    |     |    |   |      |      |      |         |        |   |
+former.a CBS Inc.y . executive.n , industry.n sources.n said.q . 
+
+(S (S (NP John Blair & Co .)
+      (VP is
+          (PP close to
+              (NP an agreement))
+          (S (VP to
+                 (VP sell
+                     (NP its TV station advertising representation operation and program production unit))))
+          (PP to
+              (NP (NP an investor group)
+                  (VP led)))
+          (PP by
+              (NP (NP James H. Rosenfield)
+                  ,
+                  (NP a former CBS Inc . executive)))))
+   ,
+   (NP industry sources)
+   (VP said .))
+
+Press RETURN for the next linkage.
+linkparser>   Linkage 2, cost vector = (UNUSED=0 DIS=2 AND=0 LEN=106)
+
+                                                         +------------
+                                                         +------------
+                                                         +------------
+                                                         |    +-------
+                                                         |    |    +--
+                                                         |    |    |  
+                                                         |    |    |  
+                            +----------MVi----------+    |    |    |  
+               +--Ss--+     |     +----Jp---+       |    |    |    |  
+  +--G-+-G-+-G-+Xi+   +--Pa-+-MVp-+  +--Dsu-+       +--I-+    |    |  
+  |    |   |   |  |   |     |     |  |      |       |    |    |    |  
+John Blair & Co.y . is.v close.a to an agreement.n to sell.v its TV.n 
+
+
+----------------------------------------------------MVp------------
+-------------------------------------MVp---------------------------
+-----------------------------------Os------------------------------
+-------------------------------------Ds----------------------------
+----------------------------------------AN-------------------------
+    +--------------------------------------AN----------------------
+    |           +--------------------------------AN----------------
+    |           |               +------------------------AN--------
+    |           |               |             +-----------------AN-
+    |           |               |             |                    
+    |           |               |             |                    
+station.n advertising.n representation.n operation.n and program.n 
+
+
+----------------------------------------------------+                         
+---------------------+                              |                         
+----------------+    |                              |                         
+----------------+    |                              |                         
+----------------+    |                              |               +---------
+----------------+    |                              |               |     +---
+----------------+    |                              |               |     | +-
+----------------+    +---------J--------+           |               |     | | 
+----------------+    |  +-------Ds------+           +-------Js------+     | | 
+      +----AN---+    |  |      +---AN---+--Mv--+    |   +--G-+---G--+     | | 
+      |         |    |  |      |        |      |    |   |    |      |     | | 
+production.n unit.n to an investor.n group.n led.v by James H. Rosenfield , a 
+
+
+--------MX----------------+                                     
+-----------Xd-------------+                                     
+------------Ds------------+-----------------Xc-----------------+
+    +----------A----------+             +----------Xca---------+
+    |          +----AN----+-----MXs-----+--------Bs--------+   |
+    |     +--G-+-Xi+      |      +--Xd--+----Rn---+---Sp---+   |
+    |     |    |   |      |      |      |         |        |   |
+former.a CBS Inc.y . executive.n , industry.n sources.n said.v . 
+
+
+                                                         +------------
+                                                         +------------
+                                                         +------------
+                                                         |    +-------
+                                                         |    |    +--
+                                                         |    |    |  
+                                                         |    |    |  
+                            +----------MVi----------+    |    |    |  
+               +--Ss--+     |     +----Jp---+       |    |    |    |  
+  +--G-+-G-+-G-+Xi+   +--Pa-+-MVp-+  +--Dsu-+       +--I-+    |    |  
+  |    |   |   |  |   |     |     |  |      |       |    |    |    |  
+John Blair & Co.y . is.v close.a to an agreement.n to sell.v its TV.n 
+
+
+----------------------------------------------------MVp------------
+-------------------------------------MVp---------------------------
+-----------------------------------Os------------------------------
+-------------------------------------Ds----------------------------
+----------------------------------------AN-------------------------
+    +--------------------------------------AN----------------------
+    |           +--------------------------------AN----------------
+    |           |               +------------------------AN--------
+    |           |               |                            +-----
+    |           |               |                            |     
+    |           |               |                            |     
+station.n advertising.n representation.n operation.n and program.n 
+
+
+----------------------------------------------------+                         
+---------------------+                              |                         
+----------------+    |                              |                         
+----------------+    |                              |                         
+----------------+    |                              |               +---------
+----------------+    |                              |               |     +---
+----------------+    |                              |               |     | +-
+----------------+    +---------J--------+           |               |     | | 
+-----AN---------+    |  +-------Ds------+           +-------Js------+     | | 
+      +----AN---+    |  |      +---AN---+--Mv--+    |   +--G-+---G--+     | | 
+      |         |    |  |      |        |      |    |   |    |      |     | | 
+production.n unit.n to an investor.n group.n led.v by James H. Rosenfield , a 
+
+
+--------MX----------------+                                     
+-----------Xd-------------+                                     
+------------Ds------------+-----------------Xc-----------------+
+    +----------A----------+             +----------Xca---------+
+    |          +----AN----+-----MXs-----+--------Bs--------+   |
+    |     +--G-+-Xi+      |      +--Xd--+----Rn---+---Sp---+   |
+    |     |    |   |      |      |      |         |        |   |
+former.a CBS Inc.y . executive.n , industry.n sources.n said.v . 
+
+(S (NP John Blair & Co .)
+   (VP is
+       (ADJP close
+             (PP to
+                 (NP an agreement))
+             (S (VP to
+                    (VP sell
+                        (NP its TV station advertising representation operation and program production unit)
+                        (PP to
+                            (NP (NP an investor group)
+                                (VP led)))
+                        (PP by
+                            (NP (NP James H. Rosenfield)
+                                ,
+                                (NP (NP a former CBS Inc . executive)
+                                    ,
+                                    (NP (NP industry)
+                                        (SBAR (S (NP sources)
+                                                 (VP said))))
+                                    .)))))))))
+
+Press RETURN for the next linkage.
+linkparser> exit
+Freeing dictionary 4.0.dict
+Freeing dictionary 4.0.affix
+Good news: no space leaked.

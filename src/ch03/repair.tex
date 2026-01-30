@@ -1,0 +1,1213 @@
+\newchapter{Compression by Recursive Pairing}{chap:repair}
+
+%% * Did not mention:  \repair needs to keep track with a hash table
+%%   the pairs that have already been replaced, to prevent duplicates
+%%   in the phrase hierarchy.
+
+\repair is a dictionary-based compression algorithm developed by
+\citet{lm00:procieee}.  \repair operates off-line and commences the
+compression process only after the entire message has been seen.
+This is in contrast to dictionary-based algorithms such as \lza 
+and \lzb, described in \chapref{chap:tc}, which build 
+dictionaries on-line.  
+
+Off-line compression algorithms have gained 
+attention recently for two reasons.  First, the amount of memory
+available in computers has steadily increased in recent years.
+Earlier on-line
+algorithms were able to operate with just enough memory to
+perform the compression, but not enough to also hold the
+entire message.  With more memory to use, off-line algorithms
+which examine an entire message before starting
+compression offer an alternative to on-line algorithms.
+Second, decompression occurs more frequently than compression 
+in retrieval systems.  In these circumstances,
+an underlying off-line compression mechanism that operates slower
+than its on-line counterparts but ensures fast decompression may
+be preferred.  
+As with on-line dictionary-based algorithms, off-line ones build
+a dictionary of phrases.  Occurrences of these phrases in the
+message are replaced by references to them.  However, off-line
+dictionary-based algorithms are faster because the model does not
+have to be updated throughout decompression.
+
+\repair transmits the dictionary explicitly as a separate stream
+to the receiver instead of incrementally like \lza.  This 
+results in two outputs:  the dictionary, and a sequence of 
+references to entries in the dictionary.  These two parts are coded 
+independently and transmitted to the decompressor, \despair, 
+as two distinct streams in order to
+reconstruct the message.  As is discussed later in this chapter, 
+it is \repair's separation of the message into two separate
+streams that makes it ideal for phrase browsing.
+
+The remainder of the chapter is structured as follows.  
+\secref{sec:repair-model} provides an overview of the \repair 
+algorithm.  While recent computers have more memory available 
+for off-line algorithms to use, memory is still limited and 
+\secref{sec:repair-analysis} gives a detailed analysis of 
+the data structures used by \repair.  These data structures 
+provide a balance between memory space and
+execution time.  \secref{sec:repair-coding} describes how the
+two outputs of \repair are represented as coded sequences.  \secref{sec:repair-expt}
+gives experimental results for the implementation of \repair
+used, and \secref{sec:repair-related} describes other algorithms
+similar to \repair.  Finally, \secref{sec:repair-retrieve}
+discusses the features of \repair that make it attractive for 
+fast searching and retrieval, and the issues that prevent it 
+from being used for that purpose.
+
+\newsection{The \repair Model}{sec:repair-model}
+
+\repair reduces the length of a message by replacing repeated
+pairs of symbols with a new symbol which does not appear in the
+message.  
+Initially, the most frequently occurring pair of characters
+is located and all occurrences of it are replaced with a new symbol.
+Each replacement reduces the length of the message by one.
+The new symbol is added to a dictionary, together with a 
+record of how it should be expanded.  This process is 
+repeated, and the next most frequently occurring pair of symbols 
+(now including any new symbols introduced by 
+\repair) is replaced.  The process terminates when no 
+pair of adjacent symbols occurs more than once in the message.  
+The source of the name ``\repair''
+arises from the recursive pairing nature of the algorithm.
+
+In order to describe \repair in greater detail, some more precise 
+definitions and notations are necessary.  The alphabet ($\Sigma$)
+of the original message are also called {\emph {primitives}}.  
+\repair
+creates and adds {\emph {phrases}} to the dictionary.  The set
+of all phrases is denoted as $\rho$.  
+
+Primitives and phrases are collectively called {\emph {symbols}}, 
+and are denoted using, for example, $\alpha$, $\beta$, $\delta$, and
+$\gamma$.  
+If it is important to indicate that a symbol $\alpha$ is a 
+phrase introduced by \repair and not a primitive, then it 
+is circled, \tc{$\alpha$}.  If the
+order in which the phrase was added to the dictionary is important,
+then the phrase is instead indicated by a circled number, \tc{1}.
+
+Every symbol $\alpha$ has a generation
+$g(\alpha)$ which indicates how deep 
+it is in the hierarchy of paired symbols.  By definition, 
+the generation of any primitive is zero.  The generation of a 
+phrase $\alpha$ is one more than the higher generation of its 
+two components.
+
+The outputs of \repair are a dictionary, and a sequence of 
+references to entries in the dictionary.  
+The dictionary contains all of the primitives and
+phrases composed out of them by the pairing process.
+Since every phrase consists of two symbols from
+a lower generation (either shorter phrases or primitives), the
+dictionary resembles a hierarchy of phrases.  To underscore this
+fact, the dictionary generated by \repair is called the 
+{\emph {phrase hierarchy}}, denoted as $\Ph$.
+The list of pointers to symbols in the phrase hierarchy is called the 
+{\emph {reduced sequence}}, and is denoted as $\Seq$.
+
+
+A sample application of \repair is shown in 
+\tabref{tab:repair-short}.  The sample message used is 
+part of the ``Woodchuck'' message of \figref{fig:tc-woodchuck}.
+The initial message is shown in the first entry of the first column.
+Each subsequent row of the table indicates the identification 
+of the most frequently occurring pair of symbols in the previous 
+row, and the replacement of all occurrences of it with a new 
+symbol.  The new phrase added to the phrase hierarchy as a 
+result of that set of replacements is shown in the second column.  
+For each phrase, the frequency with which it occurs in the 
+message is shown in the third column, and the generation of that 
+phrase is shown in the fourth column.  As expected, the 
+sequence of replacements performed by \repair is in decreasing 
+frequency.  In this example, the generation numbers of the phrases 
+are in increasing order, but this is not always the case.
+
+\tab{llcc}
+{
+\multicolumn{1}{c}{Sequence} & \multicolumn{1}{c}{Phrase hierarchy} & \emph{f} & $g(\alpha)$ \\
+}
+{
+\input{woodchuck-short}
+}
+{A sample application of \repair on part of the ``Woodchuck'' message.  
+Each line represents the replacement of all occurrences of
+a pair of symbols.  The effect on the sequence and the phrase
+hierarchy is shown, along with the frequency of the symbol pair,
+and the generation number of the replacing phrase.}
+{Sample application of \repair}{tab:repair-short}
+
+Several phrases from the same generation may occur with
+equal frequencies.  The order in which they are chosen depend
+on the data structures used by \repair.  Discussion of the 
+method for breaking ties appears in \secref{subsec:repair-time}.
+
+After the last replacement in the table, no pair of 
+symbols occurs more than once.  \repair then terminates, and the 
+final sequence (last entry in the first column) is 
+encoded.  The phrase hierarchy is also a necessary part of the 
+coded message, which includes all of the second column as well 
+as a description of the set of primitives.
+
+\newsubsection{The Decompressor}{subsec:repair-despair}
+
+The \repair decompressor (nicknamed, for good reason, \despair) 
+is simpler than the
+compressor.  After decoding the stream representing the phrase 
+hierarchy, the entire structure is built within memory so that
+each phrase requires two words of memory to indicate its two
+components.  
+
+A symbol in the reduced sequence is decoded by expanding the
+phrase hierarchy until the string of primitives that it 
+represents are found.  A recursive traversal for each symbol 
+in the reduced message can be slow, depending on the size of
+the phrase hierarchy and the generation of each symbol.
+A more economical approach
+is to decode every phrase in the phrase hierarchy first, 
+so that a decoding table could be made.
+Then, for each symbol in the sequence, each decoded symbol can be 
+copied directly from the decoding table to the output stream.  
+This method is significantly 
+faster, and is similar to the \lzb algorithm discussed in the 
+previous chapter.
+A third approach, which strikes a balance between the other two, 
+maintains a buffer of recently decoded symbols for later use.  
+When a symbol is decoded, the buffer is consulted first before
+it is recursively expanded.
+
+\tabref{tab:repair-despair} presents some experimental results
+which compare the differences in
+time and memory usage of these three methods.  The test data
+is \wsja, which was compressed in experiments described later
+in \secref{sec:repair-expt}.  The compressed
+message has 90 primitives, 310,486 phrases, and 1,904,118
+references.  The longest phrase was composed of 1,257 
+primitives, and there were 21 generations in the phrase
+hierarchy.  The third method listed in 
+\tabref{tab:repair-despair} employs a \kib{256} buffer
+of recently expanded symbols.
+Decompression time was measured in CPU seconds, averaged 
+over 3 trials.  Memory is stated in \mibonly, and represents
+the maximum memory consumed during execution.
+
+\tab{lcc}
+{
+\multicolumn{1}{c}{Method} & Time (s) & Memory (\mibonly) \\
+}
+{
+Recursive expansion       & 4.3 & 11.5 \\   %%  favouring memory
+Fully expanded symbols    & 2.2 & 30.2 \\   %%  favouring time
+Buffer of recent symbols  & 2.3 & 11.8 \\   %%  compromise
+}
+{The trade-offs between decoding time and maximum memory usage 
+of \despair using the three approaches on \wsja.  The third method
+uses a buffer of \kib{256}.}
+{Trade-offs between decoding time and
+memory usage for \despair (\wsja)}{tab:repair-despair}
+
+Expanding the phrase
+hierarchy before decoding the sequence was only slightly faster
+than employing a buffer of recently expanded symbols.  The 
+difference in time is expected to be larger if the reduced
+sequence had more symbols.  That is, the cost of fully expanding
+symbols is recovered when more symbols are decoded.
+Recursively expanding the phrase hierarchy with each symbol
+requires more time, but less memory.  The difference in memory
+between the first and the third methods is equal to the size of
+the buffer.  Also, note that the amount of extra memory required
+by the second method is equal to the size of the document
+due to the recursive nature of the phrase hierarchy.
+
+The results show that the creation of a modest buffer offers
+a compromise between execution time and memory usage.
+This approach has been adopted in the implementation of \despair
+for later experiments.
+
+\newsection{Analysis of \repair}{sec:repair-analysis}
+
+As with any compression system, implementation choices in \repair
+allow a range of trade-offs between memory space and processing
+time.  The three different approaches to the implementation of
+\despair is one example of the choices available.  A similar
+balance is required by \repair between memory space and 
+execution time.  This section discusses data structures 
+described by \citet{lm00:procieee}, and the trade-offs 
+that they allow.
+
+\newsubsection{Data Structures}{subsec:repair-datastructs}
+
+The three main data structures used by \repair are shown in
+\figref{fig:repair-datastruct}, with part of the text of 
+\tabref{tab:repair-short} used as an example.  The purpose 
+of the data structures is to
+locate {\emph {active pairs}} and {\emph{active phrases}}
+efficiently.  An active pair is a pair of symbols 
+in the sequence that is under consideration for replacement.
+Likewise, an active phrase is a potential 
+replacement for all
+active pairs which have the same left and right components.
+For example, if the pair {$\alpha$$\beta$} appears 10 times
+in the sequence, each of the occurrences is an
+active pair, and the 10 active pairs are associated with a
+single active phrase.  Active phrases are required when
+considering a set of replacements, while active pairs are 
+required for a particular replacement.
+
+\fig{\input{./repair-datastruct.pstex_t}}
+{The main data structures used by \repair.  The active pair
+pointers for one occurrence of the pair ``ch'' are shown.  
+Since the list of
+active pairs is a circular list, the ``next'' pointer of the
+last ``ch'' leads to the first ``ch''.  The shaded areas
+indicate pointers used for the two sets of double-linked
+lists, one pair to link items in the hash table and one 
+pair to link items in the priority queue structure.}
+{Main \repair data structures}{fig:repair-datastruct}
+
+The first data structure is an array of {\emph {sequence nodes}},
+shown along the top of \figref{fig:repair-datastruct}.  Initially,
+each sequence node holds a primitive from the message so that
+for a message of $n$ primitives, $n$ sequence nodes are 
+required.  During compression, a pair of adjacent symbols is replaced
+with a single symbol.  Each sequence node contains 
+a symbol and two pointers.  The pointers serve two purposes.  
+Active pairs are formed by taking pairs of adjacent sequence nodes 
+so that every node (except for the first and last ones) 
+can be a left component and a right component of an active pair.
+The first purpose of the sequence node pointers is to 
+form a circular double-linked list of active pairs 
+so that each node points to the left components of the previous 
+and next equivalent active pairs.  In 
+\figref{fig:repair-datastruct}, the first ``ch'' active pair 
+shown is the second of three that appear in the 
+``Woodchuck'' message.  When the
+active phrase ``ch'' is chosen, each occurrence of ``ch'' 
+can be replaced in $O(1)$ time.  As active pairs are replaced,
+gaps appear in the sequence.  The second purpose of the node
+pointers is to allow each gap to be traversed in $O(1)$
+time, as illustrated in \figref{fig:repair-seqnode}.  
+Four snapshots of the sub-sequence of 
+\figref{fig:repair-datastruct} are shown at various points
+during the recursive pairing process.
+As gaps appear in the sequence array, the pointers at
+either end of each gap lead to the other end of the gap.  The nodes
+within a gap are unused, and are coloured grey.
+
+\fig{\begin{tabular}{l}
+\input{./repair-seqnode-a.pstex_t} \\
+\multicolumn{1}{c}{(a)} \\[1ex]
+\input{./repair-seqnode-b.pstex_t} \\
+\multicolumn{1}{c}{(b)} \\[1ex]
+\input{./repair-seqnode-c.pstex_t} \\
+\multicolumn{1}{c}{(c)} \\[1ex]
+\input{./repair-seqnode-d.pstex_t} \\
+\multicolumn{1}{c}{(d)} \\
+\end{tabular}}{The re-using of sequence node pointers to 
+jump over gaps created during the \repair process.  For
+simplicity, pointers indicating active 
+pairs are not shown.  The parts of a sequence node which
+are no longer used have been shaded.}{Re-using \repair sequence nodes}
+{fig:repair-seqnode}
+
+At the centre of \figref{fig:repair-datastruct} are active phrase
+nodes.  An active phrase node contains a pointer to its active
+pairs, as well as a count of the number of active pairs.  Each
+active phrase needs to be locatable either by its
+active pair count or its components.  To accomplish this, each 
+node is placed on two circular double-linked lists.  One
+list permits fast look-up of symbol pairs through a hash table,
+with collisions resolved by chaining.  The other list is placed in
+a priority queue data structure implemented as an array.  Each slot 
+in the priority queue corresponds to active phrases of a given number
+of active pairs.  The number of slots in the priority queue 
+is equal to the number of active pairs associated with the active
+phrase with the most active pairs.
+The active phrases in a list at a given priority
+queue slot are placed so that the oldest active phrase node is at
+the head of the list.  Active phrase nodes are attached to the 
+hash table and priority queue using circular double-linked lists, 
+so as to allow $O(1)$ time addition and removal from their respective 
+lists, once they have been located.
+
+A fourth data structure, not shown in the figure, records 
+the active phrases that have been 
+added to the phrase hierarchy.  Each phrase in the 
+phrase hierarchy contains pointers to its two component phrases
+and its generation number.
+
+\newsubsection{Space Analysis}{subsec:repair-space}
+
+The amount of space used by the four main data structures of
+\repair is linear in the length of the message.  To see this, 
+suppose that a message of $n$ primitives is to be processed.  The 
+greatest number of active phrases throughout the processing of 
+the message is $p$.  The size of the hash table is fixed at $h$ slots.
+The most active pairs an active phrase can have is $\lfloor n/2 \rfloor$,
+which is equal to the maximum number of slots for the priority queue.  
+The most active pairs occur when every primitive in the message is
+the same.  In this case, there
+are $n - 1$ pairs of primitives, but only half of them are made active
+because \repair prevents the existence of overlapping pairs.
+For example, when there are three consecutive symbols with 
+the same value, only one active pair exists.  Overlapping pairs are 
+elaborated further below.
+
+The amount of memory used by the main data structures
+and the active phrase nodes in words is summarised in
+\tabref{tab:repair-memory}.  Since an active phrase node is
+larger than a phrase in the phrase hierarchy, the space
+occupied by an active phrase node can be re-used by its corresponding
+phrase in the phrase hierarchy.  So, the memory required for
+the phrase hierarchy is not shown in \tabref{tab:repair-memory}.
+Initially, as many as $n - 1$ active phrases may be created, each
+with one active pair.  However, as none of them would be 
+candidates for replacement, \repair would then terminate.  
+Indeed, in order to minimise memory usage, \citet{lm00:procieee} 
+showed how only useful active phrases that have at least two
+active pairs each would be created by performing an additional
+pass through the message.
+
+\tab{lc}
+{Data structure & Space used \\}
+{sequence         & $3n$ \\
+active phrases   & $6p$ \\
+hash table       & $h$ \\
+priority queue   & $\lfloor n/2 \rfloor$ \\}
+{The amount of memory used by the most important data structures
+in \repair, in words.  The initial message has $n$ symbols.
+The most active phrases in memory during compression is $p$.  
+The hash table has $h$ slots.}
+{Memory usage of \repair data structures}{tab:repair-memory}
+
+
+While the exact relationship between $p$ and $n$ cannot 
+be determined theoretically, empirically, it can be shown 
+that $n$ is the dominant term for average text.  To investigate
+the relationship, \repair was
+used to process \wsja.  (Details of these experiments appear
+in \secref{sec:repair-expt}.)  For \wsja, 
+$|\Sigma| = 90$, $|\rho| = 310\mbox{,}486$, 
+and $n = 20\mbox{,}971\mbox{,}520$.  
+\figref{fig:repair-activeph} shows the number of active phrases
+in memory after a certain number of phrases have been added to
+the phrase hierarchy by \repair for \wsja.  The number of 
+phrases that have been added to the phrase hierarchy 
+(horizontal axis) was sampled at regular intervals.  The total 
+number of active phrases peaks at 482,370 after
+13,137 phrases have been created in the hierarchy.
+Afterwards, the number of active phrases decreases until the last 
+replacement, which creates symbol number 310,486, deletes 
+the last active phrase.  The size of the priority queue is 
+initialised to the most frequent symbol, which for \wsja, 
+occurred 466,082 times.
+
+\fig{\includegraphics*{./wsja-activeph.eps}}
+{The relationship between the number of
+active phrases and the number of phrases added to the
+phrase hierarchy for \wsja.}{Number of active
+phrases during \repair execution (\wsja)}
+{fig:repair-activeph}
+
+Using the above values for 
+$n$ and $h$, if $p = 482\mbox{,}370$, then $n$ is easily the
+most important factor with respect to memory usage.  
+The sequence nodes occupy the most space out of all 
+the data structures.  Therefore, \repair requires $3.5n + O(p)$ words 
+of memory.
+
+The memory space analysis presented is slightly different from the
+one given by \citet{lm00:procieee} due to minor changes to the data 
+structures used.  For example, \citeauthor{lm00:procieee} limited 
+the size of the priority queue to $\sqrt{n}$ words of memory so 
+that the last list in the priority queue contains active phrase nodes
+which have $\sqrt{n}$ or more active pairs.  This final list is
+again ordered so that the least recently created active phrase 
+node is at the head of the list.  However, to locate the next
+active phrase on the list with the most active pairs would require
+a linear search through the list.  Instead, a larger priority queue 
+was chosen to avoid this linear search.
+\citeauthor{lm00:procieee} also
+showed a method of periodically compacting the sequence nodes if
+memory becomes a serious constraint.  By reclaiming the space
+occupied by the gaps, no new active phrase nodes need to be
+created after the replacement process has begun.  Each compaction 
+operation requires an additional pass over the sequence node
+array to locate the gaps and an update of the pointers of each
+sequence node.
+
+A shorter priority queue and sequence node compaction 
+reduces the amount of memory used by \repair by
+using additional execution time.  Neither of these approaches were
+incorporated into the implementation of \repair for this 
+thesis because a higher priority was given to execution time.
+Furthermore, if longer messages are processed which require 
+more memory than available, then an 
+alternative method is employed, which is described in 
+\chapref{chap:remerge}.
+
+\newsubsection{Time Analysis}{subsec:repair-time}
+
+The data structures described in the last section
+allow a message to be processed efficiently.  With the data
+structures described, the \repair algorithm is shown in
+\algref{alg:repair-alg}.  
+
+\algo{
+\begin{minipage}{13cm}
+\begin{raggedright}
+\begin{enumerate}
+\item Scan the message and create up to $n - 1$ active pairs.  Create 
+      active phrases as necessary and add them to the hash table. 
+      \label{algline:repair-alg:scan}
+\item Add every hashed active phrase with at least two active pairs
+      to the appropriate position in the priority queue.  Active
+      phrases that have less than the minimum number of active pairs
+      are deleted.
+\item Recursively pair symbols as follows until no pair of adjacent
+      symbols occur twice or more in the sequence.
+  \begin{enumerate}
+  \item Retrieve the first active phrase node from the list 
+        located at the last priority queue slot that is in use. 
+        This node corresponds to the active phrase, 
+        $\alpha$$\beta$, which currently has the most active pairs.  
+        Let the replacement be \tc{$\gamma$}.
+    \begin{enumerate}
+    \item Locate the next active pair for $\alpha$$\beta$ and its 
+          context, $\delta$$\alpha$$\beta$$\delta$.
+    \item  Decrement the active phrase frequency counts of 
+           $\delta$$\alpha$ and $\beta$$\delta$ and move them one 
+           priority queue list to the left.  Remove any active 
+           phrase with a frequency count of 0.
+    \item Replace $\alpha$$\beta$ with \tc{$\gamma$}. 
+    \item Increment the active phrase frequency counts of 
+          $\delta$\tc{$\gamma$} and \tc{$\gamma$}$\delta$ and 
+          insert them to the end of the appropriate priority 
+          queue lists.  Create new active phrases if necessary.
+          \label{algline:repair-alg:incrcount}
+    \end{enumerate}
+  \item Add the phrase \tc{$\gamma$} $\rightarrow \alpha$$\beta$ 
+        to the phrase hierarchy. 
+  \item Remove the active phrase $\alpha$$\beta$ from the hash 
+        table and priority queue.
+  \item Remove all active phrases with counts less than 2. 
+  \end{enumerate}
+\item Transmit the phrase hierarchy and the reduced sequence using
+      an appropriate representation.
+\end{enumerate}
+\end{raggedright}
+\end{minipage}
+}{The \repair algorithm.}{\repair}{alg:repair-alg}
+
+
+An analysis of the time complexity of the algorithm 
+is as follows.  In the first step, an initial pass over the
+sequence is performed which considers every symbol as a left
+and a right component with its two immediately adjacent 
+symbols.  Active phrases are created if necessary and inserted
+into the hash table.  Then, in step 2, a pass is performed
+over the hash table to insert active phrases into the priority
+queue lists.
+
+The dominant step of the algorithm is the recursive pairing loop 
+that begins at step 3.  Each replacement reduces the length of 
+the sequence by one symbol.  During a single replacement, the
+most costly steps involve adding, removing, and updating active 
+phrases.  By using double-linked lists in the hash table and 
+priority queue, all of these operations 
+execute in $O(1)$ expected time.  Therefore, \repair runs in time
+linear to the length of the message.
+
+Furthermore, the number of active 
+phrases created by replacing the $k$ active pairs of 
+${\alpha}{\beta}$ can never exceed $k$.  That is, after the
+priority queue has been initialised in step 2, it does not 
+enlarge in size.  Also, once an active phrase has been placed
+on the priority queue list at slot $k$, it is guaranteed to
+be used by \repair for pairing or moved to a lower slot in the
+priority queue.  That is, \repair is guaranteed to terminate.
+
+The algorithm also stipulates how active phrases with equal 
+frequency counts are handled.  A ``least recently used'' 
+policy is enforced by adding active phrases to the end of the 
+priority queue lists.  This ensures that active phrases 
+are processed first in decreasing frequency, and then 
+in the order in which they were encounterd by
+\repair.  An exception to this rule are generation 1 active 
+phrases.  Generation 1 active phrases are created in step 1 but
+are added to the priority queue in step 2 from the first 
+slot in the hash table to the last.  
+
+\newsubsection{Problems with \repair}{subsec:repair-problems}
+
+There are two problems with the \repair algorithm which 
+were not discussed by \citet{lm00:procieee}.  They
+arise in certain isolated cases.  They appear because
+of \repair's handling of overlapping pairs.  
+Overlapping pairs occur when a sequence of length 3 or more 
+of a single symbol appear in the message.  During
+the initial scanning, the second of two overlapping pairs is
+not considered as an active pair.  For example, in the
+string ``$\text{a}_1\text{a}_2\text{a}_3$'' (where the
+subscripts are used to distinguish between occurrences of 
+``a''), ``$\text{a}_1\text{a}_2$'' is the only active pair.
+A false count would result if these three primitives were 
+considered as two active pairs.
+
+However, suppose a section of a sequence appears like
+this:  $\delta\alpha{\beta_1}\underline{{\beta_2}{\beta_3}}{\delta}$.  
+Every pair of symbols is an active pair except for the underlined
+pair because of the three consecutive $\beta$ symbols.  If
+the replacement \tc{$\gamma$} $\rightarrow {\alpha}{\beta}$ is made
+next, then the sequence becomes 
+$\delta$\tc{$\gamma$}$\underline{{\beta_2}{\beta_3}}{\delta}$.
+According to the algorithm, after the replacement, two new
+active pairs are considered:  $\delta$\tc{$\gamma$} and \tc{$\gamma$}{$\beta_2$}.
+But with ${\beta_1}$ replaced, ${\beta_2}{\beta_3}$ should be
+considered an active pair.  While the algorithm looks for new
+active pairs by examining the immediately preceding and following
+symbols to a replacement, when overlapping pairs are concerned,
+this example shows that a look-ahead of two symbols from where
+the replacement was made is required to ensure that an active
+pair is not missed.
+
+Unfortunately, longer sequences of consecutive symbols may require 
+more look-ahead.  Suppose there are five consecutive symbols as in 
+the following section of a sequence:
+$\delta\alpha{\beta_1}\underline{{\beta_2}{\beta_3}}\overline{{\beta_4}{\beta_5}}{\delta}$.
+Two pairs of symbols are inactive, as shown.
+As before, suppose ${\alpha}{\beta}$ is replaced, resulting in:
+$\delta$\tc{$\gamma$}$\underline{{\beta_2}{\beta_3}}\overline{{\beta_4}{\beta_5}}{\delta}$.
+The consecutive sequence of four $\beta$'s now only contains one active pair.
+After the replacement, the sequence should have been examined up to
+four symbols after \tc{$\gamma$} so that the active pair ${\beta_3}$${\beta_4}$ 
+gets replaced by the two active pairs ${\beta_2}$${\beta_3}$ and 
+${\beta_4}$${\beta_5}$.  The amount of look-ahead required, 
+though, depends on the number of consecutive symbols.  In 
+the implementation of \repair used, a look-ahead of just two 
+symbols is performed, and when more consecutive symbols appear 
+in a message, active pairs are missed.  However, a missed active
+pair causes a problem only if it would have been replaced.
+Suppose in the above example, ${\beta_5}$${\delta}$ is replaced by
+\tc{$\alpha$}.  The sequence then becomes
+$\delta$\tc{$\gamma$}$\underline{{\beta_2}{\beta_3}}{\beta_4}$\tc{$\alpha$}.
+Three $\beta$'s remain with only one active pair among them, which
+is correct.  Even though the active pair ${\beta_4}$${\beta_5}$ was
+missed, it was unimportant because of a replacement involving 
+${\beta_5}$.
+
+The problem of consecutive symbols causing missed active pairs that
+should have been replaced generally occurs for only whitespace
+in average text.
+In the \mib{20} of \wsja mentioned earlier, only one active pair was
+missed which could have been replaced.  The problem may be more
+serious for pathological cases and binary data, such as
+graphic files.  The word-based parsing for \repair 
+described in the next chapter make this situation even
+more rare, though still possible.
+
+\label{memo:repair:phdups}The second problem with the 
+\repair algorithm is the appearance
+of duplicate phrases caused by consecutive symbols.  After the
+replacement of ${\alpha}{\alpha}$ with \tc{$\gamma_1$}, three
+consecutive symbols may appear multiple times in the sequence,
+requiring another replacement.  However, based on what pairs of
+consecutive symbols are active and which are inactive, two
+phrases may result.  The first replacement might be 
+\tc{$\gamma_2$} $\rightarrow {\alpha}{\gamma_1}$ and the second
+might be \tc{$\gamma_3$} $\rightarrow {\gamma_1}{\alpha}$.
+These two phrases are identical if they are expanded
+to primitives.  This problem is also not handled by the
+implementation of \repair used in this thesis, but 
+a resolution is discussed in \chapref{chap:remerge}.
+
+\newsection{Coding for \repair}{sec:repair-coding}
+
+The phrase hierarchy and the sequence produced by the \repair 
+model need to be coded separately before transmission.  The 
+coding requirements of each are different because of how they are 
+used.  The phrase hierarchy needs to be fully 
+decoded due to the inter-dependency between symbols across
+generations.  On the other hand, it is possible that only
+small sections of the sequence are
+required during retrieval.  Any part of the sequence can be
+displayed as long as the phrase hierarchy is already available.  
+This decoding requirement for the sequence is set aside for the 
+moment and is considered in \chapref{chap:review}.
+
+\newsubsection{The Phrase Hierarchy}{subsec:repair-ph}
+
+\citet{lm00:procieee} discuss a variety of methods for encoding 
+the phrase hierarchy.  The best method, chiastic slide followed 
+by interpolative coding, is used in the implementation 
+of \repair considered in this thesis.
+
+Interpolative coding \citep{ms00:ir} encodes a sorted list
+of non-uniformly distributed integers by first encoding the 
+median, and then recursively representing the 
+two half lists of values which are less than or
+greater than the median.  Since
+the number of possible values is restricted by the endpoints of 
+the intervals, the medians within each interval can be encoded within the range established by its endpoints instead of the entire list.  This allows 
+shorter codes to be used when large number of values cluster 
+together.
+
+The two components of each phrase in the phrase hierarchy form
+a two-dimensional space of approximately 
+$(|\Sigma| + |\rho|)^2$ in size.  To apply
+interpolative coding each phrase is mapped to a single number using its
+left ($l$) and right ($r$) components.  The method used
+is called the chiastic slide, denoted as $\chi(l,r)$.
+
+Chiastic slide values are calculated incrementally starting from
+the first generation of phrases.  The way that
+generations are defined ensures that each phrase has
+at least one of its components in the immediately preceding
+generation, as otherwise it would have been placed in an earlier
+generation.  To calculate the chiastic slide values for
+phrases in generation $i$, the two-dimensional space 
+where at least one component is in generation $i - 1$ is 
+enumerated.  The set of primitives is also interpolative 
+coded, but does not need to be mapped using the chiastic 
+slide.  Instead, they are encoded using their underlying values.
+For example, the primitives of the text 
+message of \tabref{tab:repair-short} are encoded as a sorted
+list of their \eascii representations.
+
+\figref{fig:repair-chi} shows how chiastic slide is used to 
+enumerate the primitives and the first generation of phrases for 
+the example of \tabref{tab:repair-short}.  On the left is a list
+of all possible left components and along the bottom is a list
+of all possible right components.  
+
+\input{./tab_repair-chi.tex}
+
+The set of all possible first generation phrases (unshaded region)
+can be calculated once all of the primitives have been sorted
+and encoded.  The five boxed numbers in this region represent the
+five phrases from the first generation.  This sorted list 
+$[0, 13, 45, 46, 114]$ is then interpolative coded.
+
+The encoding of the first generation of phrases is a special
+case since only one previous generation (the primitives) 
+exists.  The encoding of subsequent generations all
+resembles the encoding of the second generation (shaded region).
+Phrases in the second generation must have either both
+components in the first generation (dark grey region) or one
+component in an earlier generation (light grey regions).
+Since it is more likely that one of the two components of a
+phrase is from a different generation, the chiastic slide assigns 
+values starting from where one of the components is zero up to
+the top right corner of the dark grey region.  The sorted list
+$[98, 110]$ is used to represent the second generation of 
+phrases; they are assigned symbol numbers 16 and 17.
+
+In order to assign chiastic slide values for the current generation, 
+$i$, the size of the shaded region is required.  This region is bounded
+by the total number of primitives and phrases up to and including 
+the immediately preceding generation, $g_{i-1}$, and up to but
+excluding it, $g_{i-2}$.  The size of the shaded region is thus
+$g^2_{i-1} - g^2_{i-2}$.  In the example, to encode the second
+generation of phrases, $i = 2$, $g_{1} = 16$, $g_{0} = 11$, and
+$g^2_{1} - g^2_{0} = 134$.
+
+
+The formula used to calculate the chiastic slide, adapted from 
+\citeauthor{lm00:procieee}, is shown in \eqnref{eqn:repair-chi}.  The first 
+two cases are the light grey regions, while the last 
+two are used for the dark grey region.  While calculating
+the chiastic slide requires multiplication and squaring operations
+(and division and square roots for decoding),
+many of the terms are calculated per generation
+and not per phrase.
+
+\neweqn{\chi(l,r) = 
+\begin{cases}
+2l (g_{i-1} - g_{i-2}) + g_{i-1} - 1 - r & \text{for $l < g_{i-2}$} \\
+(2r + 1) (g_{i-1} - g_{i-2}) + l - g_{i-2} & \text{for $r < g_{i-2}$}\\
+(l (2g_{i-1} - l)) + g_{i-1} - 1 - r - g_{i-2}^2 & \text{for $g_{i-2} \leq l \leq r$} \\
+(r (2g_{i-1} - r - 2)) + g_{i-1} - 1 + l - g_{i-2}^2 & \text{for $g_{i-2} \leq r < l$} \\
+\end{cases}}{eqn:repair-chi}
+
+In order to use interpolative coding with the chiastic slide, the
+phrase hierarchy needs to be sorted twice.  First, the phrases
+are sorted by generation number, since they were added to the phrase
+hierarchy by decreasing frequency and not increasing generation.
+Second, for each generation, the phrases are assigned values 
+using the chiastic slide, 
+and are sorted by these values before being interpolative coded.
+As shown in \figref{fig:repair-chi}, after the primitives and 
+phrases have been assigned chiastic slide values and sorted
+by them, they are enumerated starting from 0 (shown along the two
+axes).  A final pass through the sequence is also required
+to ensure it uses the re-numbered phrase hierarchy, rather 
+than the one that corresponds to decreasing pair frequency.
+
+The encoding of the phrase hierarchy 
+resembles a context-free grammar in Chomsky normal form (CNF) 
+\citep{chomsky59:ic}.  In CNF, every production rule consists of a 
+non-terminal which generates either two other non-terminal, or a 
+single terminal.  The encoding of phrase ``ch'' represents
+\tc{14} $\rightarrow$ \tc{2}\tc{4} while the primitive ``c''
+is represented as \tc{2} $\rightarrow$ ``c''.  It is
+for this reason that each entry in the phrase hierarchy can
+be considered to be a rule.  The significant differences 
+between a \repair phrase hierarchy and a more general CNF is 
+that the phrase hierarchy is used to generate a single message
+using the sequence as a starting rule whereas a context-free 
+grammar in CNF is  usually expected to generate 
+a language with more than one string in it.
+
+\newsubsection{The Reduced Sequence}{subsec:repair-seq}
+
+The other output of the \repair process is the reduced sequence.  
+As the primitives and phrases are enumerated from 0 at the end
+of the chiastic slide encoding, references in the reduced
+sequence are just integers which refer to a rule in the phrase hierarchy.
+Since the purpose of \repair is to remove redundancy 
+in the message, no pair of symbols appears more than once in
+the reduced sequence.  An entropy coder using a zero-order model on the
+symbols in the sequence captures the great majority of 
+the remaining structure.  Certainly, using a higher 
+order model would be counter productive.
+The semi-static Huffman coder and the arithmetic coder described
+in the last chapter 
+can be used without further modification to the sequence.
+
+\newsection{Experiments}{sec:repair-expt}
+
+
+Experiments were conducted on the Large Canterbury Corpus 
+and \wsja on a \vipe machine, described in the last chapter.  
+Larger test data could not be 
+compressed because of the amount of memory used by \repair.  
+The next chapter demonstrates how
+this limitation can be overcome by partitioning the message
+into blocks.  For all experiments described in this chapter,
+each message is processed as a single block.
+
+Some statistics from applying \repair
+on these files are shown in \tabref{tab:repair-stats}.  As
+an example of the phrases formed by \repair, the beginning
+of \wsja is presented in \figref{fig:repair-wsjhead}.
+
+%%  Note:  \Seq length includes the terminating 0 symbol.
+\tab{lccccc}
+{\multirow{2}*{Filename} & \multirow{2}*{$|\Sigma|$} & \multirow{2}*{$|\rho|$}  & \multirow{2}*{$|\Seq|$}   & Number of & Longest phrase \\
+                         &            &          &   & generations & (in primitives) \\}
+{ 
+{\texttt {E.coli}}       & \D4           & \D67,368 & \C652,665        & 20 & 1,800 \\
+{\texttt {world192.txt}} & 94            & \D55,473 & \C212,648        & 19 & \D432 \\
+{\texttt {bible.txt}}    & 63            & \D81,229 & \C386,095        & 19 & \D548 \\
+\wsja                   & 90            & 310,486  & 1,904,118 & 21 & 1,257 \\
+}{Statistics from experiments with \repair.}
+{Statistics from \repair experiments (\largecc, \wsja)}{tab:repair-stats}
+
+\fig{
+\begin{tabular}{l}
+\input{./repair-wsjhead.tex}  
+\end{tabular}
+}{Expanding the first 20 symbols of the \wsja sequence into 
+primitives.  For the purposes of display, {\tb} 
+indicate linefeeds and long phrases are broken at the locations
+indicated by {\crarrow}.}{Expanding the beginning of the  
+sequence (\wsja)}{fig:repair-wsjhead}
+
+%%%%  Removed as no value can be gained from such a figure.
+%% The longest phrase in \wsja, with 1,257 primitives 
+%% and occurring twice in the whole message, is the following:
+%% \fig{
+%% \begin{tabular}{l}
+%% \input{./repair-wsjlong.tex}
+%% \end{tabular}
+%% }{(long)}{(short)}{fig:repair-wsjlong}
+
+
+The compression ratios achieved by \repair on these four
+files are shown in \tabref{tab:repair-bpc}.  The last three
+columns of this table represent compression ratios for \bzip,
+\gzip, and \ppmd, taken from \tabref{tab:tc-bpc} on \pgref{tab:tc-bpc}.
+Recall that \gzip and \bzip were executed with the {\texttt {-9}}
+option, while a seventh order model for \ppmd was used to ensure 
+the best possible compression.  
+Execution of \ppmd was limited to \mib{255} of memory, so as
+to effectively remove
+the restriction on its memory usage and reduce the
+chance of requiring the model to be re-constructed.  For the results
+reported in \tabref{tab:repair-bpc}, the model was not re-built
+by \ppmd.  While \repair has the potential to use more memory 
+than any of these compression systems, they are reasonable 
+benchmarks due to their widespread popularity.
+
+\tab{lcccccc}
+{\multirow{3}*{Filename} & \multicolumn{3}{c}{\repair} & \multirow{3}*{\gzip} & \multirow{3}*{\bzip} &  \\ \cline{2-4}
+& Phrase & Total using & Total using & & & \ppmd \\
+& hierarchy & \shuff & \uint & & & \\}
+{
+{\texttt {E.coli}}        & 0.108 & 2.086 & 2.081   & 2.240 & 2.158 & 2.034 \\
+{\texttt {world192.txt}}  & 0.312 & 1.624 & 1.597   & 2.333 & 1.584 & 1.454 \\
+{\texttt {bible.txt}}     & 0.290 & 1.763 & 1.749   & 2.326 & 1.671 & 1.564 \\
+\wsja                    & 0.223 & 1.774 & 1.770   & 2.907 & 2.078 & 1.656 \\
+}{Compression ratios for the Large Canterbury Corpus and \wsja 
+using \repair.  Total compression ratios for \repair include
+the phrase hierarchy and the coded sequence with either \shuff
+or \uint.  Compression results from the last three columns have been
+taken from \tabref{tab:tc-bpc}.}{Compression ratios
+using \repair (\largecc, \wsja)}{tab:repair-bpc}
+
+Compression effectiveness using \repair is better than \gzip in 
+all cases and varies with \bzip, depending on the file.  This
+is an expected result given the differences in the amount
+of memory used.  \ppmd achieves better compression than \repair, 
+but as mentioned in the last chapter, statistical models 
+can be expected to outperform dictionary-based ones.  The 
+arithmetic coder gives better compression than
+the Huffman coder.  Note also that the 
+phrase hierarchy is small compared to the original message
+and the reduced sequence, occupying less than 20\% of the final
+message for all of the files.
+
+Compression and decompression times for \repair are shown in 
+\tabref{tab:repair-time} in CPU seconds, averaged
+over three trials.  Even though the coding of the phrase 
+hierarchy is logically separate from the \repair process, in the 
+implementation of \repair used,
+the coding of the phrase hierarchy is tightly coupled with \repair,
+and so, the execution times of \repair and \despair both include the
+encoding and decoding times of the phrase hierarchy.
+
+\tab{lccccccc}
+{\multirow{2}*{Filename} & \multicolumn{3}{c}{Encoding} & & \multicolumn{3}{c}{Decoding} \\ \cline{2-4} \cline{6-8}
+                  & \repair & \shuff & \uint & & \despair & \shuff & \uint \\}
+{
+{\texttt {E.coli}}            & 16.2   & 0.3  & 1.1  & & 0.4  & \hphantom{{\tl}}0.1  & 1.2  \\
+{\texttt {world192.txt}}      & \D9.1  & 0.1  & 0.4  & & 0.3  & {\tl}0.1  & 0.4  \\
+{\texttt {bible.txt}}         & 15.0   & 0.3  & 0.9  & & 0.4  & \hphantom{{\tl}}0.1  & 1.0  \\
+\wsja                        & 88.5   & 1.6  & 6.7  & & 2.5  & \hphantom{{\tl}}0.4  & 7.5  \\
+}
+{Compression and decompression times for the Large Canterbury 
+Corpus and \wsja using \repair and \despair in seconds.  
+Times have been averaged over three trials.}{Compression 
+times using \repair (\largecc, \wsja)}{tab:repair-time}
+
+Comparing the compression times of \repair with the other 
+programs (\tabref{tab:tc-time}), \repair takes more time
+even if entropy coding is not taken into account.  However, 
+decoding with the two dictionary-based systems, \despair 
+and \gzip, are fast.  Of the two, \gzip is consistently 
+faster.  Furthermore, the encoding and decoding times are 
+higher for arithmetic coding compared to Huffman coding.  
+Because of this speed difference and the very slight difference 
+in compression, the entropy coder used by experiments in later 
+chapters is the Huffman coder.  The downside of this decision is 
+the slightly worse compression, as shown in \tabref{tab:repair-bpc}.
+
+\newsection{Related Work}{sec:repair-related}
+
+Other than operating off-line, several other differences exist
+between \repair and the dictionary-based algorithms of 
+\chapref{chap:tc}.  First, \repair explicitly separates the
+dictionary from the sequence of references, producing two
+streams that together, make up the compressed message.
+Second, every primitive and phrase must be used at least
+once in order to appear in the \repair phrase hierarchy.
+In contrast, phrases may be added to the dictionaries
+formed by \lza or \lzb, but never
+referred to.
+
+\citet{ss82:jacm} showed that, in a dictionary-based 
+compression algorithm,
+determining the phrases that would achieve the best compression for
+a given message is NP-hard.  Therefore, like \lza and \lzb, many 
+dictionary-based compression algorithms use heuristics for phrase
+construction.  \citet{bm01:is} considered a 
+pre-processor to compression which identifies long repeated 
+strings appearing far apart.
+
+\citet{wolff75:bjp} described a program called \mka 
+for identifying
+breaks in text in the absence of any whitespaces.  The
+system operates similar to \repair by identifying
+and recursively replacing pairs of symbols.  However, unlike
+\repair, the message is scanned from left to right and
+replacements are made after a pre-determined threshold has
+been met (for example, 10 occurrences).  Later, \citet{wolff77:bjp}
+extended this work by selecting the most frequent pair of
+symbols after one complete scan of the message.  However,
+since the primary goal of \citeauthor{wolff75:bjp} was the
+segmentation of text, little attention was given to the compression
+effectiveness or efficiency of \mka.
+
+The incremental encoding of \citet{rubin76:cacm}, like \repair,
+uses frequency of digrams (pairs of symbols) and operates
+through recursive pairing for compression.  However, more 
+emphasis is placed on conditions for program termination 
+rather than a compact method of storing the dictionary.  Some
+of these conditions include phrase frequency and phrase length.
+There were also few details given on an efficient 
+implementation with respect to time or memory space.
+However, as an indication of the amount of time and space 
+that such an algorithm would require, 
+\citet{rubin76:cacm} noted that the methods
+used have ``fairly high computation time and large storage 
+requirements''.
+
+\citet{manber97:tis} used digrams for searching in compressed
+text.  Even though \eascii is a character set of size 256, half
+of it is unused by most English documents.  The remaining 128
+values were assigned to frequently occurring pairs of primitives
+and used to compress a message.  The search pattern was similarly
+compressed so that a general-purpose string matching algorithm
+could be used to locate occurrences of the pattern within the
+compressed message.  The problem of overlapping pairs is avoided
+by ensuring that a symbol which is a left component of one pair of
+symbols cannot be a right component of another pair.  Earlier,
+\citet{gage94:cusers} devised a technique called Byte-Pair
+Encoding (\bpe) which resembles the algorithm
+by \citeauthor{manber97:tis}, except that searching was not 
+considered.
+
+More recently, the \offline mechanism of \citet{al00:procieee} 
+showed how an annotated trie for a message could be used to
+locate candidates for a dictionary.  The phrases in the
+dictionary were created directly from substrings of the message
+without referring to other phrases in the dictionary.
+Central to \offline is the computation of a
+{\emph {gain measure}}.  The gain measure determines
+the next best phrase to add to the dictionary using criteria
+such as substring length, substring frequency, and pointer costs 
+to all occurrences.  Three methods of dictionary encoding
+were employed, one of which stored the phrases as literal text
+in an external dictionary.  \citet{ts02:acsc} extended this work
+by looking at other methods of computing the gain measure.
+
+The \ray system \citep{cw01:jasist} also compresses a message
+off-line, but through multiple passes so that the message itself
+does not need to be stored in memory.  It builds a dictionary by 
+recursively replacing diagrams, similar to \repair.  Each pass 
+over the message is roughly equivalent to a generation in 
+\repair.  The \ray algorithm consists of three steps:  
+accumulation of frequencies, the identification of candidates, 
+and replacement of symbol pairs.  The first step is only 
+performed once since the sequence's statistics are updated as 
+replacements are made.  The remaining two steps are repeated 
+until either no pair of symbols appears twice or more, or a preset 
+limit on generations has been reached.  Pairs of symbols of 
+equal frequency were handled differently than \repair.  If the 
+three symbols ${\alpha}$${\beta}$${\delta}$ appear in the sequence 
+and step 2 is being performed, ${\alpha}{\beta}$ is identified 
+as a candidate for replacement only if ${\alpha}$ occurs with 
+an equal or higher frequency than ${\beta}$.  If this is not 
+the case, then this pair of symbols is skipped, and the 
+next pair, ${\beta}{\delta}$, is considered.  The \ray dictionary
+is encoded using Elias and Huffman codes.
+
+
+Finally, operating on-line instead of off-line is the \sequitur 
+algorithm of \citet{nw97:cj}.  The \sequitur algorithm 
+builds a dictionary resembling a grammar, but unlike \repair,
+a rule can generate more than two symbols.  During 
+compression, as each message symbol is read, the grammar is 
+updated according to two rules:  {\emph {digram uniqueness}} and 
+{\emph {rule utility}}.  Digram uniqueness ensures that no pair
+of adjacent symbols appear more than once in the grammar.
+Digram uniqueness effectively adds phrases to the dictionary 
+as symbols appear in the sequence (rule $\Seq$).  The creation
+of rules can cascade from rule $\Seq$, and results in a 
+hierarchical grammar.  Rule utility prohibits any rule
+from being used only once.  When a rule created earlier ends
+up appearing once in the right-hand sides of all of the rules,
+it is expanded at the location it is
+used and then removed from the grammar.
+Adherence to rule utility results in the right-hand sides of
+rules becoming longer than just digrams.  Rule S is transmitted
+to the receiver while the rest of the grammar is sent implicitly
+using back-pointers, similar to a \lza implementation.  Also, 
+\citet{nw00:procieee} compared on-line and off-line techniques for 
+\sequitur by using phrase heuristics such as most frequent, longest, 
+and most compressive.
+
+An example of \sequitur is shown in \tabref{tab:repair-sequitur} 
+using the same ``Woodchuck'' message as the one from the
+example of \tabref{tab:repair-short}.
+Each row of the table indicates the current rule $\Seq$, the \sequitur
+rule that was violated, and the action required to fix the grammar.
+The first row shows the first time a rule violation has occurred.
+If a rule already 
+exists when digram uniqueness is enforced, 
+no new rule is added to the dictionary, as shown with the third
+occurrence of ``ch''.  After phrase 
+\tc{3} is added to the dictionary, phrase \tc{2} is used only once.
+Phrase \tc{2} is expanded in phrase \tc{3} and removed from the
+dictionary because of rule utility.  At the end of this example,
+the rules sent to the receiver are $\Seq$, \tc{1}, \tc{3}, 
+\tc{4}, \tc{5}, and \tc{8}.
+
+\newcommand{\digram}{digram uniqueness}
+\newcommand{\utility}[1]{rule \tc{#1}}
+\newcommand{\addseq}[2]{Add \tc{#1} $\rightarrow$ #2}
+\newcommand{\removeseq}[1]{Remove rule \tc{#1}}
+\newcommand{\useseq}[1]{Use rule \tc{#1}}
+
+\tab{lll}
+{
+\multicolumn{1}{c}{\multirow{2}*{Rule $\Seq$}} & \multicolumn{1}{c}{Rule} & \multicolumn{1}{c}{Action applied} \\
+& \multicolumn{1}{c}{enforced} & \multicolumn{1}{c}{to grammar} \\
+}
+{
+how{\tvs}much{\tvs}wood{\tvs}could{\tvs}  & \digram & \addseq{1}{d{\tvs}} \\
+how{\tvs}much{\tvs}woo\tc{1}coul\tc{1}a{\tvs}w & \digram & \addseq{2}{{\tvs}w} \\
+how{\tvs}much\tc{2}oo\tc{1}coul\tc{1}a\tc{2}o & \digram & \addseq{3}{\tc{2}o} \\
+how{\tvs}much\tc{3}o\tc{1}coul\tc{1}a\tc{3} & rule utility of & Expand \tc{2}: \tc{3} $\rightarrow$ {\tvs}wo \\
+& \utility{2} & \removeseq{2} \\
+how{\tvs}much\tc{3}o\tc{1}coul\tc{1}a\tc{3}o & \digram & \addseq{4}{\tc{3}o} \\
+how{\tvs}much\tc{4}\tc{1}coul\tc{1}a\tc{4}dch & \digram & \addseq{5}{ch} \\
+%how{\tvs}mu\tc{5}\tc{4}\tc{1}coul\tc{1}a\tc{4}d\tc{5} & \digram & \addseq{5}{ch} \\
+how{\tvs}mu\tc{5}\tc{4}\tc{1}coul\tc{1}a\tc{4}d\tc{5}uck{\tvs}ch & \digram & \useseq{5} \\
+how{\tvs}mu\tc{5}\tc{4}\tc{1}coul\tc{1}a\tc{4}d\tc{5}uck{\tvs}\tc{5}u & \digram & \addseq{6}{\tc{5}u} \\
+how{\tvs}mu\tc{5}\tc{4}\tc{1}coul\tc{1}a\tc{4}d\tc{6}ck{\tvs}\tc{6}c & \digram & \addseq{7}{\tc{6}c} \\
+how{\tvs}mu\tc{5}\tc{4}\tc{1}coul\tc{1}a\tc{4}d\tc{7}k{\tvs}\tc{7} & rule utility of & Expand \tc{6}: \tc{7} $\rightarrow$ \tc{5}uc \\
+& \utility{6} & \removeseq{6} \\
+how{\tvs}mu\tc{5}\tc{4}\tc{1}coul\tc{1}a\tc{4}d\tc{7}k{\tvs}\tc{7}k & \digram & \addseq{8}{\tc{7}k} \\
+how{\tvs}mu\tc{5}\tc{4}\tc{1}coul\tc{1}a\tc{4}d\tc{8}{\tvs}\tc{8} & rule utility of & Expand \tc{7}:  \tc{8} $\rightarrow$ \tc{5}uck \\
+& \utility{7} & \removeseq{7} \\
+}{A sample application of the \sequitur algorithm on the message
+used in \tabref{tab:repair-short}.  Message symbols are read 
+one at a time and appended to rule $\Seq$, shown in the first
+column.  Each row represents the moment when one of the
+two rules of \sequitur (digram uniqueness or rule utility) need
+to be enforced.  The \sequitur rule that is violated and the 
+action performed to enforce it are shown in columns 2 and 3, 
+respectively.}{Sample application of \sequitur}{tab:repair-sequitur}
+
+While the \sequitur algorithm differs from \repair in the above
+points, a system for phrase browsing has also been developed called
+\phind \citep{nwp97:acmdl}.  The methods used by \phind, discussed 
+later in \chapref{chap:rephine},
+are similar to the ones for \repair, but differences emerge due
+to their underlying compression mechanisms.  
+
+\newsection{Retrieval with \repair}{sec:repair-retrieve}
+
+In \chapref{chap:tc}, a wide range of algorithms for modelling
+were presented.  This chapter adds another dictionary-based
+model to the list, which is more suited for both retrieval
+and browsing.  
+
+The most important characteristic of the \repair algorithm is that
+recursive pairing based on frequency is more appropriately implemented
+in a semi-static manner, so that the entire message is available.  As 
+a consequence of this, the compressed message is composed of two
+separate streams, which each has its own advantages.
+The phrase hierarchy is small and occupies only 3\% of the space
+taken by the original message.  Moreover, the phrase hierarchy
+contains a significant amount of information about the document.
+The hierarchical structure of the phrase hierarchy means that it
+describes the many relationships symbols form with lower and 
+higher generation symbols.  The phrase hierarchy is not only crucial
+for decompression, but appears suitable for phrase browsing, as well.
+The second stream is the reduced message of references to the
+dictionary.  
+
+Searching the reduced sequence has been examined by 
+\citet{manber97:tis} and \citet{skftssa99:tech}, who based their
+work on algorithms similar to \repair.  
+While \citeauthor{manber97:tis} modified the pattern prior to
+searching, \citeauthor{skftssa99:tech}\ presented two approaches.
+First, they expanded all corresponding 
+encodings of the pattern before applying a pattern matching 
+algorithm.  Second, they used the Knuth-Morris-Pratt 
+automaton \citep{kmp77:siam} for the pattern to aid the search.
+In addition to searching, the reduced sequence can be decoded
+from any reference, provided the phrase hierarchy has been processed
+already.
+
+At the conclusion of the last chapter, three requirements
+were mentioned which a compression algorithm should satisfy in
+order to be adapted for retrieval.  First, the algorithm should
+allow decoding from an arbitrary point in the compressed message,
+which is satisfied by the structure of the two streams from \repair.
+In contrast, since algorithms like \ppm and block sorting rely on 
+symbol contexts, a random point in the compressed representation
+cannot be decoded without examining everything before.  Alternatively,
+a compressed message made with block sorting can be 
+pre-processed in-memory so that an indexing structure is available
+for searching \citep{fm00:focs}.
+The \lza and \lzb algorithms are both dictionary-based like 
+\repair, but they were designed to be adaptive and so,
+combine the dictionary and the references into
+a single stream.
+
+The second requirement is that decoding should be fast so that
+the amount of time that a user of a retrieval system waits 
+is minimised.  While \repair is slower than \gzip for 
+decoding, a comparison between the results
+of \tabref{tab:repair-time} and \tabref{tab:tc-time} show that
+\repair is noticeably faster than \bzip and \ppmd.
+
+Finally, the alignment of codewords to bits rather than bytes
+would facilitate more efficient decoding.  Experiments in this
+chapter compressed the reduced sequence with \shuff and \uint.
+Even though Huffman coding was advocated after
+examining the decoding times of \shuff and \uint, an alternative coding
+mechanism which is able to decode the sequence faster may be
+possible which sacrifices some compression effectiveness.  
+As for the phrase hierarchy, the good compression effectiveness 
+attained with interpolative coding make the 
+lack of any byte-alignment acceptable.
+
+There are, however, four changes to \repair before it can be
+included into a retrieval system.
+First, the use of 
+frequency alone to select phrases for the phrase hierarchy
+presents problems for retrieval.  
+In a retrieval system, it is expected that the query terms match
+the primitives or phrases in the phrase hierarchy.
+The solution to this problem requires the 
+attention to shift to how \repair can be forced to select
+words and phrases which resemble the ones displayed to the
+user in the interface.
+
+The second change deals with the problem of memory
+space required by \repair.
+While \repair operates in space linear in the 
+length of the message, the constant factor is quite high.  
+Assuming four bytes per word, compressing
+\wsja requires \mib{240} for the sequence nodes alone.
+In order for a retrieval system to be useful, files
+one or even two orders of magnitude larger 
+may need to be processed using reasonable 
+amounts of memory.
+
+The third improvement is with the entropy coding applied to the 
+sequence. While phrase browsing is performed solely with the 
+phrase hierarchy, searching for those phrases involves the 
+reduced sequence.  By using an entropy coder, if appearances 
+of a phrase are being sought, the reduced sequence 
+needs to be sequentially decoded.  Instead, a
+coding mechanism is required which allows efficient searching
+through the reduced sequence.
+
+Finally, an interface is required which allows users
+to browse phrases and then locate and examine the contexts in 
+which they occur.
+
+Solutions to each of these
+four problems are investigated separately in the next
+four chapters, in the order they have been listed.  
+\chapref{chap:prepair} describes alternatives to \repair's
+method of selecting phrases by first aligning phrases to
+whitespaces, and then by using a word-based pre-processing scheme
+using punctuation as a guide.  \chapref{chap:remerge} shows how
+a message can be partitioned into blocks by \repair so that 
+larger messages can be compressed.  Compressed blocks are merged
+in order to produce a single phrase hierarchy for browsing.
+\chapref{chap:review} examines alternatives to
+entropy coding the entire reduced message to allow fast 
+searching for phrases.  And finally, \chapref{chap:rephine}
+describes phrase browsing and an interface which ties the
+above components together.
+

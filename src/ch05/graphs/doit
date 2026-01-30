@@ -1,0 +1,5 @@
+jgraph wsj-char-repair.jgr >../wsj-char-repair.eps
+jgraph wsj-char-remerge-e.jgr >../wsj-char-remerge-e.eps
+jgraph throughput.jgr >../throughput.eps
+jgraph wsj-char-append.jgr >../wsj-char-append.eps
+

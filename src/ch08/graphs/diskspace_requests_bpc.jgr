@@ -1,0 +1,102 @@
+newgraph
+X 5.60
+Y 1.50
+
+noclip
+
+xaxis
+  size 2.50
+  min 1 max 23000
+  label
+  	fontsize 9
+  	font Helvetica
+  : Number of sessions
+  	hash_labels
+  		fontsize 9
+  		font Helvetica
+  		precision 0
+  log
+  log_base 10
+  no_auto_hash_labels
+  mhash 0
+  hash_labels 
+    rotate 90
+    hjr vjc
+  hash_label at 1 : 1
+  hash_label at 10 : 10
+  hash_label at 100 : 100
+  hash_label at 1000 : 1000
+  hash_label at 10000 : 10000
+
+yaxis
+  size 1.10
+  min 8.0 max 100
+  hash_labels
+  	fontsize 9
+  	font Helvetica
+  	precision 0
+  label
+  	fontsize 9
+  	font Helvetica
+  	  : File size (% of original)
+  log
+  log_base 2
+
+legend defaults 
+  font Helvetica fontsize 9 
+  hjl vjc
+(*  x 2 y 80 hjl vjc *)
+
+curve 1
+  marktype circle
+  linetype solid
+  gray 0.5
+  label : INDEPENDENT
+(*  label : gzip (A) *)
+  pts 1 16.178216 2 18.092365 4 19.429830 8 21.025071 16 21.651907 32 22.055058 64 22.552002 128 23.306243 256 23.706255 512 24.589740 1024 24.985328 2048 25.835751 4096 26.253281 8192 26.587558 16384 27.600318 21066 27.913977 
+
+curve 2
+  marktype cross
+  linetype solid
+  label : COMMON-DICTIONARY
+(*  label : gzip (C + A) - gzip (C) *)
+  pts 1 15.982320 2 17.782268 4 19.088109 8 20.578409 16 21.187237 32 21.562832 64 22.021058 128 22.714492 256 23.092493 512 23.932687 1024 24.292696 2048 25.094289 4096 25.522853 8192 25.922675 16384 26.854318 21066 27.160145 
+
+curve 3
+  marktype triangle
+  linetype solid
+  label : TRANSMITTED-DICTIONARY
+(*  label : gzip (C + A) *)
+  pts 1 16.009039 2 17.830846 4 19.170585 8 20.721439 16 21.450634 32 22.022807 64 22.828221 128 24.131454 256 25.446547 512 27.759121 1024 30.221559 2048 34.324014 4096 39.431781 8192 46.597426 16384 62.000393 21066 71.184028 
+
+curve 4
+  marktype none   
+  linetype dashed
+  label : ONE-PRIOR
+(*  label : gzip ([A - 1] + A) - gzip ([A - 1]) *)
+  pts 1 10.976776 2 12.719334 4 14.194847 8 15.511557 16 16.030174 32 16.454773 64 16.885385 128 17.556257 256 18.046433 512 18.929063 1024 19.442345 2048 20.408069 4096 21.311822 8192 22.523684 16384 24.146125 21066 24.548891 
+
+curve 5
+  marktype none    
+  linetype dotted
+  label : ALL-PRIOR
+(*  label : gzip (A1 + ... + An) *)
+  pts 1 9.818741 2 11.415170 4 12.905975 8 14.157888 16 14.605651 32 15.017074 64 15.446593 128 16.038491 256 16.550884 512 17.447290 1024 18.043606 2048 19.136265 4096 20.290292 8192 21.764464 16384 23.500806 21066 23.920220 
+
+
+(*
+  ALL-AVAILABLE not required
+
+curve 4
+  marktype triangle
+  linetype longdash
+  label : gzip (C + A1 + ... + An)
+  pts 1 9.843944 2 11.460244 4 12.982478 8 14.294456 16 14.863247 32 15.469842 64 16.242811 128 17.437646 256 18.875995 512 21.223967 1024 23.890047 2048 28.230104 4096 34.003371 8192 42.197243 16384 58.260344 21066 67.540461 
+
+curve 5
+  marktype x
+  linetype dotdash
+  label : gzip (C + A1 + ... + An) - gzip (C)
+  pts 1 9.817225 2 11.411666 4 12.900002 8 14.151425 16 14.599850 32 15.009868 64 15.435647 128 16.020684 256 16.521941 512 17.397532 1024 17.961183 2048 19.000379 4096 20.094443 8192 21.522492 16384 23.114269 21066 23.516579 
+*)
+

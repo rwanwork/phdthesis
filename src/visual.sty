@@ -1,0 +1,312 @@
+%%
+%% visual.tex
+%%
+%% visual formatting elements
+%% eg page styles, header formats, figure, pictures, algorithms
+%% anything really which has measurements or trickiness and might
+%% not be suitable for cut-and-paste to other documents.
+%%
+%%  Lots of hints at: http://www.iam.ubc.ca/~newbury/tex/page-set-up.html
+
+%%%  Received from mjl on February 8, 2002
+
+%%%%%%%%%%%%%%%%%
+% Page Format
+%%%%%%%%%%%%%%%%%
+
+\raggedbottom                 % bottom of page text.  allow vertical uneveness.
+\emergencystretch=4pt         % reduce warnings re full hboxes.
+
+%%  Set the headheight to avoid the warnings while running latex
+\setheadfoot{20.4pt}{27.46295pt}
+
+%%  Set page margins and then check it
+\setlrmarginsandblock{3cm}{3cm}{*}
+\checkandfixthelayout
+
+%%  Set abstract settings
+\renewcommand{\abstractnamefont}{\normalfont\bfseries}
+
+%%%%%%%%%%%%%%%%%%
+% Page Headers
+%%%%%%%%%%%%%%%%%%
+
+%%  Create a page style with only a footer
+\copypagestyle{rwanfootonly}{empty}
+\makeevenfoot{rwanfootonly}%
+  {\normalfont\thepage}{}{}
+\makeoddfoot{rwanfootonly}%
+  {}{}{\normalfont\thepage}
+
+%%  Create the page style for most of the chapter
+\makepagestyle{rwanpage}
+\makeheadrule{rwanpage}{\textwidth}{\normalrulethickness}
+\makeheadposition{rwanpage}{flushright}{flushleft}{}{}
+\makepsmarks{rwanpage}{%
+  \let\@mkboth\markboth
+  \def\chaptermark##1{\markboth{##1}{##1}}% % left & right marks
+  \def\sectionmark##1{\markright{%          % right mark
+    \ifnum \c@secnumdepth>\z@
+      \thesection \ \                       % section number
+    \fi
+    ##1}}
+}
+\makeevenhead{rwanpage}%
+  {\normalfont\bfseries\leftmark}{}{}
+\makeoddhead{rwanpage}%
+  {}{}{\normalfont\bfseries\rightmark}
+\makeevenfoot{rwanpage}%
+  {\normalfont\thepage}{}{}
+\makeoddfoot{rwanpage}%
+  {}{}{\normalfont\thepage}
+
+%%  Switch to an empty page style
+\pagestyle{empty}
+
+\renewcommand{\@pnumwidth}{2.00em}
+\renewcommand{\@tocrmarg}{3.00em}
+
+%%%%%%%%%%%%%%%%%
+% Table of contents
+%%%%%%%%%%%%%%%%%
+%%  \setsecnumdepth (page 68 of memoir documentation)
+%%  \maxtocdepth (page 89 of memoir docs)
+\maxtocdepth{section}
+
+%%  Uncomment next line to set depth of table of contents up to only
+%%  section.  Default is ``2'' -- up to subsection.
+%% \setcounter{tocdepth}{1}
+%\setcounter{tocdepth}{5}
+
+%%%%%%%%%%%%%%%%%
+% Generic Floats (algs, figures etc)
+%%%%%%%%%%%%%%%%%
+
+%%  Minimise the chance of having a page of just floats
+\renewcommand\floatpagefraction{.9}
+\renewcommand\topfraction{.9}
+\renewcommand\bottomfraction{.9}
+\renewcommand\textfraction{.1}   
+\setcounter{totalnumber}{50}
+\setcounter{topnumber}{50}
+\setcounter{bottomnumber}{50}
+
+%%  Change caption size for memoir class
+\captionnamefont{\small}
+\captiontitlefont{\small}
+
+%%%%%%%%%%%%%%%%%%
+% Line Spacing
+%%%%%%%%%%%%%%%%%%
+
+\newcommand{\myspace}{1.5}
+\setstretch{\myspace}    % line spacing.  requires \usepackage{doublespace}
+%\newcommand{\mylabel}[1]{\label{#1}[[{\scriptsize\emph{#1}}]]}
+\newcommand{\mylabel}[1]{\label{#1}}
+\newcommand{\pgref}[1]{page~\pageref{#1}}
+
+%%%%%%%%%%%%%%%%%
+% Equations
+%%%%%%%%%%%%%%%%%
+
+\numberwithin{equation}{chapter}
+
+\newcommand{\neweqn}[2]{%
+        \begin{align}
+        #1\label{#2}%
+        \end{align}
+}
+
+\newcommand{\eqnref}[1]{Equation~\ref{#1}}
+
+%%%%%%%%%%%%%%%%%
+%%%  Misc. references
+%%%%%%%%%%%%%%%%%
+
+\newcommand{\newterm}[1]{\label{#1}}
+\newcommand{\newpageref}[1]{Page~\pageref{#1}}
+
+%%%%%%%%%%%%%%%%%
+% Chapters, Sections  (and see below)
+%%%%%%%%%%%%%%%%%
+
+\makechapterstyle{rwanchap}{%
+  \renewcommand{\chapnamefont}{\centering \bfseries \Huge}
+  \renewcommand{\chapnumfont}{\bfseries \Huge}
+  \renewcommand{\chaptitlefont}{\centering \bfseries \Huge}
+}
+\chapterstyle{rwanchap}
+
+\newcommand{\newchapter}[2]
+   {             
+     \setstretch{1}
+        \chapter{#1}
+	\mylabel{#2}
+        \setcounter{figure}{0}
+     \setstretch{\myspace}
+   }                                    
+
+\newcommand{\newsection}[2]
+   {
+        \section{#1}
+	\mylabel{#2}
+   }
+
+
+\newcommand{\newsubsection}[2]
+   {
+        \subsection{#1}
+	\mylabel{#2}
+   }
+
+\newcommand{\newsubsubsection}[2]
+   {
+        \subsubsection{#1}
+	\mylabel{#2}
+   }
+
+\newcommand{\appref}[1]{Appendix~\ref{#1}}
+\newcommand{\chapref}[1]{Chapter~\ref{#1}}
+\newcommand{\secref}[1]{Section~\ref{#1}}
+\newcommand{\subsecref}[1]{Subsection~\ref{#1}}
+
+%%%%%%%%%%%%%%%%%
+% Figures
+%%%%%%%%%%%%%%%%%
+
+\renewcommand{\thefigure}{\thechapter.\arabic{figure}}
+
+%
+% Standard figure style
+% from aht thesis
+%
+% arg1 = body of figure
+% arg2 = caption
+% arg3 = caption for table of figures
+% arg4 = label for the figure
+%
+
+\newcommand{\fig}[4]{%
+  \begin{figure}[tbp]%
+    \centering
+      {\framebox {#1}}%
+      \caption[#3]{\mylabel{#4}#2}%
+  \end{figure}%
+}
+
+\newcommand{\sidefig}[4]{%
+        \begin{sidewaysfigure}[tbp]%
+        \centering%
+        #1%
+        \caption[#3]{\mylabel{#4}#2}%
+        \end{sidewaysfigure}%
+}
+
+\newcommand{\figref}[1]{Figure~\ref{#1}}
+\newcommand{\subfigref}[2]{Figure~\ref{#1}{(#2)}}
+
+%%%%%%%%%%%%%%%%%%%
+% Tables
+%%%%%%%%%%%%%%%%%%%
+
+
+%
+% Standard table style
+% from aht thesis
+%
+% arg1 = column definition string (eg |cc|r|lp{2cm}||)
+% arg2 = column headings
+% arg3 = body of table
+% arg4 = caption
+% arg5 = entry for list of tables
+% arg6 = label for the figure
+%
+\newcommand{\tab}[6]{%
+  \begin{table}[tbp]
+    \centering
+      \begin{tabular}{#1}%
+        \hline #2 \hline%
+        #3%
+        \hline%
+      \end{tabular}%
+      \caption[#5]{\mylabel{#6}#4}%
+  \end{table}
+}
+
+
+\newcommand{\tabnoline}[6]{%
+  \begin{table}[tbp]
+    \centering
+      \begin{tabular}{#1}%
+        #2%
+        #3%
+        %
+      \end{tabular}%
+      \caption[#5]{\mylabel{#6}#4}%
+  \end{table}
+}
+
+\newcommand{\sidetab}[6]{%
+  \begin{sidewaystable}[tbp]
+    \centering
+      \begin{tabular}{#1}%
+      \hline #2 \hline%
+      #3%
+      \hline%
+      \end{tabular}%
+      \caption[#5]{\mylabel{#6}#4}%
+  \end{sidewaystable}
+}
+
+\newcommand{\tabref}[1]{Table~\ref{#1}}
+
+%%%%%%%%%%%%%%%%%
+% Algorithm Boxes
+%%%%%%%%%%%%%%%%%
+% requires \usepackage{algorithm2e}
+%
+% Standard algorithm style
+%
+% arg1 = body of algorithm
+% arg2 = entry for list of tables
+% arg3 = caption
+% arg4 = label for the figure
+%
+\newcommand{\algo}[4]{
+  \begin{algorithm}[boxed,tbp]
+  \centering
+  {#1}
+  \caption[#3]{\mylabel{#4}#2}%
+  \end{algorithm}
+}
+
+\newcommand{\algref}[1]{Algorithm~\ref{#1}}
+
+%%  Memoir class:  Define a \listofalgs which creates a list of
+%%  algorithms and adds its entry into the table of contents,
+%%  unlike the \listofalgorithms of the algorithm2e package.
+\newcommand{\listalgs}{List of Algorithms}
+\newlistof{listofalgs}{loa}{\listalgs}
+
+%%  Definitions
+\theoremstyle{plain}
+\newtheorem{Def}{Definition}
+\numberwithin{Def}{chapter}  %%  Number within a chapter
+
+%%%%%%%%%%%%%%%%%
+% Miscellaneous
+%%%%%%%%%%%%%%%%%
+
+% Editted by rwan 2002/06/05 
+% make urls not quite so offensive, requires \usepackage{url}
+\newcommand{\myurl}[1]{{\small\url{#1}}} 
+
+%\newcommand{\var}[1]{\mbox{\em #1\/}}
+%\newcommand{\remark}[1]{{\scriptsize{[[--#1--]]}}}
+
+%%  Other abbreviations
+\def\D{\hphantom{1}}
+\def\C{\hphantom{1,}}
+\def\E{\hphantom{\tl}}
+
+

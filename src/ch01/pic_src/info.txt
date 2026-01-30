@@ -1,0 +1,5 @@
+book.gif	http://www.mathematik.uni-marburg.de/~hampel/clipart/books/
+bookcase.gif	http://www.mathematik.uni-marburg.de/~hampel/clipart/books/
+3rdfloor.jpg	http://buffy.lib.unimelb.edu.au/floorplans/
+lib-cat-src.png	http://cat.lib.unimelb.edu.au/screens/opacmenu.html
+		import -frame -window "Netscape: University of Melbourne Web OPAC menu" ./lib-cat-src.png

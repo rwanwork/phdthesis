@@ -1,0 +1,470 @@
+\newchapter{Introduction}{chap:intro}
+
+I find bookstores irresistible.  Recently, a new one opened
+near my home and while this store was no different from others 
+already in the neighbourhood, I ended up spending half an hour
+wandering through its bookshelves.  I didn't purchase a book
+that day, but the visit was not wasted.  On my next trip, I was
+in search of a particular title.  By then,
+I knew that it would have the book I wanted, and also
+its most likely location.
+I was correct, and ended up purchasing the book with relative ease.
+
+These two separate trips to the bookstore illustrate two methods
+of approaching a complex object:  {\emph {browsing}} and {\emph {searching}}.
+The Australian Concise Oxford Dictionary (third edition) defines
+browsing as, ``[to] read 
+desultorily (going constantly from one subject to another, especially
+in a half-hearted way)''.  While this definition resembles my 
+first visit to the bookstore, it is not a complete description of
+my action.  Without a doubt, if I constantly went from
+one bookshelf to another, I would have received some suspicious looks
+from the staff.  Moreover, {\emph {browsing}} a store, whether it 
+is a bookstore
+or a clothing store, may not have anything to do with reading.
+Intuitively, browsing can also be defined
+as casually looking at various facets of an object in order to
+get an overall impression of what it represents.  Surprisingly,
+this definition resembles the one for
+``browser'', also from the same dictionary:  
+``{\emph {(Computing)}} a software program that enables one to 
+search for and access documents on the World Wide Web''.  
+In contrast to browsing, {\emph {searching}} requires a concise
+specification of what is being sought; for a book, this could be
+an author's name, a book title, or a subject area.
+
+As a second example of searching and browsing, \figref{fig:intro-bs} 
+depicts the two main ways of approaching
+a university library.  Along the top of the figure
+are the browsing options available to students on their first
+visit.  Some libraries provide a 
+building directory, either as a sign at the entrance, or in the
+form of a pamphlet.  The directory may contain a map, as is the
+case in the figure, with words indicating the different sections of
+the library.  After looking at the directory, students may choose
+to browse the bookshelves until finally arriving at a book that
+piques their interest.  Alternatively, the student may arrive at the
+library because a book is required for an assignment.  The assignment's
+guidelines usually provide information such as
+a catalogue number or a book title.  This information
+can be entered as a query into a library catalogue 
+interface, similar to the one shown at the 
+bottom of the figure.  A set of results is returned by
+the system in the
+form of a list of books that satisfy the query.  
+The list may lead the student to the book 
+required, or if that particular book is not available,
+the student may choose to browse the bookshelf where
+the subject is covered.
+
+\fig{
+\includegraphics*{./browse-search.eps}
+}{The options available to a library patron, with the end result
+being a particular book.  The different levels of browsing are shown
+along the top, while a search window for a library catalogue is
+displayed at the bottom.}{The options available to a library
+patron}{fig:intro-bs}
+
+Note that the figure has been somewhat
+simplified.  For example, after
+the catalogue at the University of 
+Melbourne\footnote{\myurl{http://cat.lib.unimelb.edu.au/}} returns a
+set of results, a library patron may select a book followed by
+the option labelled, ``Show Items Nearby on Shelf''.
+Books that are physically near the selected book on the 
+bookshelf are displayed to the user in a way that
+resembles browsing.  Searching and browsing are
+so tightly entwined, we may not realise which action is being
+performed.  A student entering a library, with or without an
+assignment to do, may jump back and forth between these two methods
+during a single library visit without noticing.
+Moreover, \figref{fig:intro-bs} implies that once a book has been found, the
+student's retrieval task has been completed.  In fact, both browsing and searching occur at
+multiple levels, and continues after the book of interest
+has been located.  The table of contents
+and index both provide support for searching, while any part
+of the book, from the front cover to the brief description on the
+back, offer chances for browsing.
+
+As for the library's directory, interesting problems are faced
+when designing it.  Including too little or too much
+information would make the directory either unhelpful, or too 
+cumbersome for library customers.  
+A balancing act is required between the needs for information,
+and the need to avoid information overload.
+
+The main investigation in this thesis is to explore the
+compromises required to permit both retrieval and compression
+of documents when stored in a computer.  
+As with the library's directory, these tasks are
+in tension.  Documents occupy disk space and network bandwidth 
+which need to be minimised for storage or transmission efficiency.  
+Compression is applied to achieve this.
+However, after a certain point, the document becomes too 
+compressed to offer any information for retrieval.  The only solution,
+then, is to completely decompress the document.  Retrieval and 
+compression are elaborated in the following sections.
+
+\newsection{Information Retrieval}{sec:intro-ir}
+
+Information retrieval (IR) is the study of methods for
+obtaining information from a repository.  The repository
+may contain a single document, or a collection of documents,
+and can be managed in a variety of ways.
+The quality of the documents stored might range from
+a hastily-written memo, to important contracts, and possess
+a range of requirements for authentication and archiving.  
+
+The World Wide Web \citep{bernerslee96:computer}
+is perhaps the largest
+document collection in existence at the moment, built
+without any rules for publication.  Since almost anyone can create a
+web page (and probably has!), the quality of the information 
+varies from outright lies
+to high-quality journal articles.  Despite this anarchic nature, the
+Web is nevertheless an extraordinarily rich source of 
+information.
+
+Another method of obtaining information is through digital 
+libraries \citep{wb02:book}, which vary in size, but are typically much 
+smaller than the Web.  Just as in a physical library, a digital
+library is governed by guidelines which specify an acquisition
+policy,
+a method of ensuring longevity, and a comprehensive
+index.  Because of their low cost of duplication (for example,
+on CD), digital libraries of this form offer the possibility of
+becoming an enormously useful resource in societies without access
+to conventional libraries.
+
+Both of these examples are applications of IR techniques, and
+the document
+repository that lies behind an IR system can vary greatly in size and 
+in the method with which it has been assembled.  
+Perhaps the most common type of repository is a 
+homogeneous collection of documents that 
+might even be physically stored as a
+single large file.  This is the model used in this 
+thesis, a structure that is elaborated on in \chapref{chap:tc}.
+
+The interactions between a user and a document repository
+are illustrated in \figref{fig:intro-ir}.
+At first, the user has an information need, which is entered as a
+query via the retrieval system's interface.  The interface 
+sends the query to the retrieval system for processing.
+The data repository is accessed and
+the results from the query are returned by the system for
+display within the interface seen by the user.  The result is usually
+a summary of the document, or document sections, which 
+satisfy the query.  But the actual relevance of
+the result to the original information need of the user is 
+something that only the user can judge.  To assist the user to
+make that decision, the IR system may
+employ heuristics that attempt to highlight the most likely
+relevant results, for example, by sorting.
+The suitability of the results depends on the design of
+the system, as well as how the information need was represented
+in the interface.  
+
+\fig{
+\includegraphics*{./ir.eps}
+}{Information flow between a user and a repository
+maintained by an IR system.}{Accessing a repository through 
+an IR system}{fig:intro-ir}
+
+The quality of a retrieval system is measured in terms of efficiency
+and effectiveness \citep{wmb99:book}.
+The efficiency of a retrieval system refers to the time and hardware 
+resources required to provide a response to 
+the user.  Effectiveness refers to the accuracy, or correctness, 
+of the result.
+
+If the query is in the form of a single word or a 
+precise phrase, a
+string matching algorithm such as Boyer-Moore 
+\citep{bm77:cacm} can be used to locate 
+sections of documents where that word or phrase appears.
+The search is performed sequentially from the beginning of each
+document.  The \grep system 
+\citep{unix7:misc} for UNIX operating systems can be used to search
+across whole directories of documents, and the ``search'' 
+feature in a word processor is an example of sequential
+searching within a document.
+
+On the other hand, if a collection of documents
+needs to be accessed with a variety of queries, 
+information retrieval techniques are required.  Data
+structures should be created to provide efficient,
+repeated searching.
+Some facility may also be required to
+store the data in the repository, while
+providing simultaneous access from multiple users.
+Examples of such systems include an 
+encyclopedia CD ROM with a built-in ``find'' dialog box, or
+a search engine for the Web.  The purpose of a search engine is
+to assist users in locating web pages which satisfy their 
+information
+need.  In this scenario, the query is a set of words (or terms) 
+and the result is a list of web
+pages which the system believes satisfies the query.  
+
+Traditional IR systems provide two main methods of
+querying.
+A retrieval system that supports {\emph {Boolean queries}} 
+retrieves documents based on the presence or absence of query
+terms.  Alternatively, a 
+{\emph {ranked query}} system returns a list of results,
+ordered according to a heuristic similarity score that is
+based on the number of query terms that appear in
+documents, and the frequency with which they appear in that
+document and in the collection as a whole.
+Instead of sequentially searching the entire repository for
+each query term given, these two retrieval techniques are usually
+implemented using data structures which index the collection.
+More detailed descriptions of retrieval systems and their
+implementation
+can be found in the books of \citet{fb92:book}, \citet{korfhage97:book}, 
+\citet{br99:book}, and \citet{wmb99:book}.  
+Recent books which provide more information 
+about digital libraries include \citet{lesk97:book},
+\citet{wb02:book} and \citet{borgman03:book}.
+
+As with the bookstore and the university library, 
+searching alone may be insufficient to meet all needs, and providing
+the user with multiple tools can only aid the searching
+experience.  One additional tool that helps is browsing
+\citep{pf81:irr, br99:book}.  
+In a document repository, the {\emph {lexicon}} is an ideal
+candidate for browsing \citep{kowalski97:book}.  
+The lexicon is the list of all words found
+in the collection.  
+An extension to lexicon browsing is
+{\emph {phrase browsing}}, where the dictionary used for perusal
+consists of phrases in the repository, rather than just individual words.
+
+The extraction of phrases from a document can be performed in
+many ways.  The simplest, yet most tedious approach, is to manually
+select key phrases.  If computers are used, then two main
+methods exist.  First, phrases can be formed statistically, based on
+frequency of word combinations.  Second, phrases can be chosen 
+through semantic methods with the help of natural language processing 
+techniques.  \citet{wm01:sigirforum} provide an 
+overview of these and other methods of phrase selection and 
+phrase browsing, and \chapref{chap:rephine} considers phrase
+browsing in greater detail, as well as the related work in 
+the area.
+
+Browsing a document using phrases drawn from it is one of the two
+topics examined in this thesis.  The second is text 
+compression.
+
+\newsection{Text Compression}{sec:intro-compress}
+
+Text compression is the process of identifying and representing
+the redundant information in a document in a more economical
+way, so as to minimise the storage space or transmission
+cost and time.
+
+The desire to find ways to minimise the amount of writing 
+required to speed message transmissions
+has been around for centuries in the form of 
+abbreviations and symbols.  Shorthand, the art of rapid writing using 
+abbreviations, has been used as far back as 2,000 years
+ago when debates were recorded within the Roman Senate
+during the Roman Empire.  Around that time, Tiro 
+developed a method of shorthand, and is believed to have 
+invented the ampersand (\&) \citep{kreitzman99:jcr}, a symbol 
+commonly found today in informal text.
+Attention was drawn to the symbol during Medieval times
+when monks used it as a
+sophisticated substitute for the Latin word,
+``et'', meaning ``and'' \citep{todd01:book}.  
+The symbol is derived from the ligature of the
+letters ``e'' and ``t'', as shown in 
+\figref{fig:intro-ampersand}.
+Moreover, the phrase ``et cetera'', which means ``and similar
+things or people'', is often abbreviated now as ``etc.'', but
+was further shorted to ``\&c'' up until the end of the 19th
+century, according to \citeauthor{todd01:book}.
+The word ``ampersand'' comes from the contraction of the 
+expression ``and per se = and'', whose literal meaning 
+is:  ``\& by itself is and'' \citep{moore97:book}.
+
+\fig{
+\begin{tabular}{ccc}
+\includegraphics*{./amper1.ps} & \includegraphics*{./amper3.ps} & \includegraphics*{./amper5.ps} \\
+(a) Pompeiian graffiti & (b) Scottish writing & (c) Humanist minuscule \\
+79 A.D. & 9th century & 1453 A.D. \\
+\end{tabular}}
+{Changes to the ampersand through time.  Figures and captions taken
+from \citet{caflisch:online}.}
+{Changes to the ampersand through time}{fig:intro-ampersand}
+
+Another symbol found in the English language is the ditto
+mark ($''$).  The word ditto comes from the Tuscan dialect of
+Italian, and has been a part of the English language since the
+seventeenth century \citep{todd01:book}.  The symbol is used
+in informal writing as a way to avoid writing the same word or
+phrase multiple times.
+
+Generally, a fundamental requirement of abbreviations and symbols
+is to be able to reproduce what they represent --
+during the Roman Empire, one method was to have multiple people
+record a dictation and then consolidate the differences
+afterwards \citep{pitman91:book}.
+In the two millennia since the use of shorthand by the Romans,
+the compression field has evolved into a highly-studied
+discipline, primarily because of computers.
+Manual shorthand is limited to the speed at which text can
+be spoken.  Its purpose is to increase the bandwidth
+of the person talking, at the cost of writing out the
+text in full later.  Computers have allowed
+complex methods of compression to be used on large documents
+at very high speeds for both efficient transmission and
+storage.  Compression with computers
+is not only fast in comparison, but also less error prone than shorthand.
+Compression algorithms differ in many ways, including the speed 
+at which they process text and how effectively they can 
+compress a document.  Books which cover the different 
+approaches in the field of compression include 
+\citet{storer88:book}, \citet{bcw90:book}, \citet{ng96:book},
+\citet{sayood96:book}, \citet{wmb99:book}, \citet{salomon00:book},
+and \citet{mt02:book}.  A more 
+detailed discussion of compression is provided 
+in \chapref{chap:tc}.
+
+\newsection{Browsing and Compression}{sec:intro-aim}
+
+Browsing and compression are two key areas of text management,
+but serve different purposes.  The
+aim of browsing is to present information about a document in order 
+to help satisfy a user's information need.  The purpose of 
+compression is to minimise the size of a document prior to 
+storage or transmission.
+These two goals are not necessarily compatible with 
+each other.  The more compressed a document is, the more difficult
+it is to search it without completely reversing the transformation.
+These two areas of text management are in tension, and the
+challenge is to find a useful balance point between them.  
+
+The aim of this thesis is to investigate the relationship
+between compression and retrieval, in the context of a homogeneous
+document collection, and to develop principles 
+that demonstrate how a compromise between the two can be achieved.  
+The emphasis is on phrase browsing, so a
+more precise objective of this thesis is to consider how a document
+can be compressed so that phrases drawn from it can
+still be browsed, and then used as the basis for the retrieval of
+documents and document fragments.  The system described here 
+builds on a compression mechanism
+called \repair\ \citep{lm00:procieee}.  This thesis investigates
+aspects of the \repair algorithm that need to be improved in order
+to provide feasible browsing.
+
+\newsection{Structure}{sec:intro-structure}
+
+This thesis is structured as follows.  \chapref{chap:tc} presents
+an overview of compression, beginning with some
+definitions from information theory, and followed by an explanation 
+of how a compression system is composed of a model, a probability
+estimation process, and a coder.
+Algorithms representing these three parts are shown, as well
+as implementations of the compression systems that are used in
+this thesis for experimental comparisons.  A
+description of the test data for experiments throughout the 
+thesis is also provided.
+
+The \repair compression process is explained 
+in \chapref{chap:repair}.  \repair is a dictionary-based 
+compression algorithm which builds a collection of 
+phrases \citep{lm00:procieee}.  
+Experimental results are presented that validate the analysis of
+\citeauthor{lm00:procieee}, and demonstrate
+\repair's compression efficiency and effectiveness.
+While previous work has
+looked at the time and memory space
+requirements of \repair in the context of the data
+structures employed, the work in \chapref{chap:repair}
+extends this analysis by
+considering problems with the algorithm which become evident
+when compression is not the only goal.  An overview of four 
+proposed changes to the algorithm is given, as well as
+the reasons for choosing \repair for phrase browsing, despite
+the problems noted.  The 
+four changes are explained in detail in the four 
+following chapters.
+
+The original \repair algorithm selects phrases based on
+symbol pair frequencies.  In \chapref{chap:prepair}, 
+three new methods of 
+selecting phrases for \repair are given as alternatives to the
+one used in the implementation of \citet{lm00:procieee}.  
+The addition of these 
+alternatives provides better quality phrases for phrase browsing, 
+while ensuring that they are properly aligned on word 
+boundaries.  Experimental results show
+the difference in compression effectiveness and the improvement
+in the types of phrases available to the user.
+
+The amount of memory used by \repair limits the
+size of the documents it can process.  The solution employed by 
+\citet{lm00:procieee} is to
+partition large documents into blocks and then process each block
+independently.  Unfortunately, this approach separates the 
+dictionary into disjoint components, making it difficult to 
+browse as a whole.  \chapref{chap:remerge} proposes
+a block merging
+scheme whose primary goal is to combine the separate dictionaries
+into a single one.  As a secondary goal, the block
+merging scheme improves the compression effectiveness of \repair
+by removing redundancies between blocks.  
+Experimental results are given that show the usefulness of this
+technique.
+
+The coder accompanying the \repair algorithm is equally 
+important for efficient browsing, and is the subject of 
+\chapref{chap:review}.  Since the original intention of \repair
+was good compression effectiveness, 
+\citet{lm00:procieee} selected an entropy coder to couple with
+the parser.  However, a static coder that sacrifices
+some compression effectiveness for retrieval efficiency has the
+potential to reduce the amount of waiting time experienced by
+a user and support searching operations better.  
+An experimental comparison between the new coder proposed 
+and a standard Huffman coder concludes the chapter.
+
+The last enhancement to \repair is the addition 
+of a phrase browsing interface and a random access decoding 
+tool, described in \chapref{chap:rephine}.  
+While \citet{nwp97:acmdl} shows how a phrase 
+browsing mechanism can be based on the compression 
+algorithm \sequitur \citep{nw97:cj}, inherent
+differences between the two compression algorithms,
+coupled with the choices made in the previous chapters 
+yield a system with different capabilities.
+This chapter describes the tool and the
+interface which allow the user to
+browse phrases and, when a phrase of interest has been found,
+quickly access the contexts in which the phrase occurs.  
+An analysis of the phrase browser is conducted with respect
+to efficiency, effectiveness, phrase quality, and related work.
+The \sequitur algorithm is described earlier in \chapref{chap:repair}.
+
+\chapref{chap:web} considers a problem which is separate from
+the work covered in previous 
+chapters.  Instead of large document collections, 
+this chapter investigates how
+compression can reduce bandwidth requirements for interactive 
+web browsing.  Information 
+contained in web server logs are exploited in order to 
+provide an experimental framework based on the \html files.
+
+Finally, \chapref{chap:summary} concludes this thesis by returning
+to its main theme.  This final chapter looks at
+how \repair and the additions to \repair combine to form 
+a phrase browsing system for homogeneous document collections of
+up to a gigabyte or more.  Future directions for this work are
+also suggested.
+
+To complete the thesis, \appref{chap:notation} lists 
+notation and \appref{chap:porter} describes
+the Porter stemming algorithm, employed in \chapref{chap:prepair}.

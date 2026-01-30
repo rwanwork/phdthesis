@@ -1,0 +1,11 @@
+Title:  Browsing and Searching Compressed Documents
+
+In a phrase browsing retrieval system, the user explores a text
+repository by building a phrase of interest, and then using
+that phrase to locate relevant answers.  This thesis builds on an
+existing off-line dictionary-based compression mechanism, and shows
+how it can be employed as the basis of a phrase browsing retrieval
+system.  Trade-offs between the requirements of the browsing and
+the compression systems are explored, including word-based parsing,
+merging of compressed blocks, efficient decoding of the reduced
+message, and the design of the browsing interface.

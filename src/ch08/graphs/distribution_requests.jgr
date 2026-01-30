@@ -1,0 +1,89 @@
+newgraph
+X 3.50
+Y 2.35
+
+legend defaults x 0.8 y 6.75 hjl vjt font Helvetica fontsize 9
+
+xaxis
+  size 2.50
+  min 0.3 max 10.5
+  label
+  	fontsize 9
+  	font Helvetica
+  : Number of requests within browsing session
+  no_auto_hash_marks
+  no_auto_hash_labels
+  	hash_labels
+  		fontsize 9
+  		font Helvetica
+  		precision 0
+  hash_labels 
+    rotate 90
+    hjr vjc
+  draw_hash_labels_at -4
+
+  hash_label at 1.0 : 1
+  hash_label at 2.0 : 2
+  hash_label at 3.0 : 3 ~ 4
+  hash_label at 4.0 : 5 ~ 8
+  hash_label at 5.0 : 9 ~ 16
+  hash_label at 6.0 : 17 ~ 32
+  hash_label at 7.0 : 33 ~ 64
+  hash_label at 8.0 : 65 ~ 128
+  hash_label at 9.0 : 129 ~ 256
+  hash_label at 10.0 : > 256
+
+yaxis
+  size 1.10
+  min 0 max 40
+  hash_labels
+  	fontsize 9
+  	font Helvetica
+  	precision 0
+  label
+  	fontsize 9
+  	font Helvetica
+  	  : % of total HTML page requests
+  mhash 0
+
+curve 1
+  marktype xbar fill .5 marksize .4
+  pts
+    1 30.1606791286492
+curve 2
+  marktype xbar fill .5 marksize .4
+  pts
+    2 13.8874187607172
+curve 3
+  marktype xbar fill .5 marksize .4
+  pts
+    3 13.7603996866863
+curve 4
+  marktype xbar fill .5 marksize .4
+  pts
+    4 13.6397315663569
+curve 5
+  marktype xbar fill .5 marksize .4
+  pts
+    5 8.72832737049347
+curve 6
+  marktype xbar fill .5 marksize .4
+  pts
+    6 5.31786523276245
+curve 7
+  marktype xbar fill .5 marksize .4
+  pts
+    7 2.58483815652984
+curve 8
+  marktype xbar fill .5 marksize .4
+  pts
+    8 1.38239092237018
+curve 9
+  marktype xbar fill .5 marksize .4
+  pts
+    9 1.35063615386244
+curve 10
+  marktype xbar fill .5 marksize .4
+  pts
+    10 9.18771302157207
+

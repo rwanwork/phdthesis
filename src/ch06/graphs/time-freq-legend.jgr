@@ -1,0 +1,35 @@
+newgraph
+  X 0.5
+  Y 0.5   
+
+  xaxis 
+    min 0 max 5
+    size 0.5
+    hash_labels
+      fontsize 9
+      font Helvetica
+    label 
+      fontsize 9
+      font Helvetica
+    no_auto_hash_labels no_draw_hash_marks no_draw_axis
+    hash_labels
+      rotate 45
+      hjr vjc
+  yaxis 
+    min 0 max 5
+    size 0.5
+    hash_labels
+      fontsize 9
+      font Helvetica
+    label 
+      fontsize 9
+      font Helvetica
+    no_auto_hash_labels no_draw_hash_marks no_draw_axis
+
+  legend top defaults hjl vjb font Helvetica fontsize 9
+    x 0 y 0
+  newcurve marktype xbar fill 0.5 marksize 2 2 pattern solid
+    label : Elapsed time     
+  newcurve marktype xbar fill 0.1 marksize 2 2 pattern stripe -45
+    label : CPU time
+
