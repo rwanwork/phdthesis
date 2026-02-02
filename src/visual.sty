@@ -141,11 +141,11 @@
 
 \newcommand{\newchapter}[2]
    {             
-     \setstretch{1}
+     %\setstretch{1}
         \chapter{#1}
 	\mylabel{#2}
         \setcounter{figure}{0}
-     \setstretch{\myspace}
+     %\setstretch{\myspace}
    }                                    
 
 \newcommand{\newsection}[2]
@@ -275,7 +275,7 @@
 % arg4 = label for the figure
 %
 \newcommand{\algo}[4]{
-  \begin{algorithm}[boxed,tbp]
+  \begin{algorithm}[tbp]
   \centering
   {#1}
   \caption[#3]{\mylabel{#4}#2}%

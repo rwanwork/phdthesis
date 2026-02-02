@@ -11,9 +11,14 @@ The PDF version of the thesis can be found at the [University of Melbourne libra
 List of changes
 ---------------
 
-List of changes in order for the LaTeX file to compile are:
+List of changes in order for the LaTeX file to compile in 2026 are:
 
 * Replaced the deprecated [doublespace](https://ctan.org/pkg/doublespace?lang=en) package with [setspace](https://ctan.org/pkg/setspace).
+* Downloaded [psboxit.sty](https://ctan.org/pkg/psboxit?lang=en).
+* Removed `\setstretch{}` from the `\newchapter` command in `visual.sty`.
+* Changed `\begin{algorithm}[boxed,tbp]` to `\begin{algorithm}[tbp]`.
+* Changed `\dontprintsemicolon` to `\DontPrintSemicolon` in algorithm2e environments.
+
 
 
 About PhD Thesis
