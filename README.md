@@ -1,24 +1,46 @@
 PhD Thesis
 ==========
 
-LaTeX source code for my PhD thesis, submitted in late 2003
+LaTeX source code for my PhD thesis, submitted in late 2003 to the University of Melbourne.
 
-Currently (2026) does not compile with recent versions of LaTeX...  Working on this...
+Currently (2026) does not compile with recent versions of LaTeX...  Working on this and listing the necessary changes below.
 
-The PDF version of the thesis can be found at the [University of Melbourne library](http://cat.lib.unimelb.edu.au/record=b2867173).
+At the Unviersity of Melbourne's library, you can access:
+  * [record](http://cat.lib.unimelb.edu.au/record=b2867173)
+  * [PDF download](https://hdl.handle.net/11343/38920)
+
+
+Directory Organisation
+----------------------
+
+After cloning this repository from GitHub using the `git clone` command, the following file/directory structure is obtained:
+
+.
+├── src                      LaTeX source code for the thesis
+└── submit                   Files submitted to the University of Melbourne library in 2004
+    ├── 01front.pdf            Submitted front matter of the thesis (PDF on 2004/04/20)
+    ├── 01front.ps             Submitted front matter of the thesis (Postscript, which was then converted to PDF)
+    ├── 02whole.pdf            Submitted main part of the thesis (PDF on 2004/04/20)
+    ├── 02whole.ps             Submitted main part of the thesis (Postscript, which was then converted to PDF)
+    ├── phd.pdf                Entire thesis (PDF)
+    └── phd.ps                 Entire thesis (Postscript)
+
+
+Compiling
+---------
+
 
 
 List of changes
 ---------------
 
-List of changes in order for the LaTeX file to compile in 2026 are:
+The changes to the original (i.e., where the original is the very first version in this Git repository) List of changes in order for the LaTeX file to compile in 2026 are:
 
 * Replaced the deprecated [doublespace](https://ctan.org/pkg/doublespace?lang=en) package with [setspace](https://ctan.org/pkg/setspace).
 * Downloaded [psboxit.sty](https://ctan.org/pkg/psboxit?lang=en).
 * Removed `\setstretch{}` from the `\newchapter` command in `visual.sty`.
 * Changed `\begin{algorithm}[boxed,tbp]` to `\begin{algorithm}[tbp]`.
 * Changed `\dontprintsemicolon` to `\DontPrintSemicolon` in algorithm2e environments.
-
 
 
 About PhD Thesis
@@ -39,7 +61,7 @@ Copyright and License
 ---------------------
 
      PhD Thesis
-     Copyright (C) 2003,2026 by Raymond Wan
+     Copyright (C) 2003-2026 by Raymond Wan
 
 "PhD thesis" is distributed under the terms of the GNU General Public License (GPL, version 3 or later) -- see the file LICENSE for details.
 
