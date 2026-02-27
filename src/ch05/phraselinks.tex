@@ -1,3 +1,9 @@
+\tab{clccl}
+{
+Phrase hierarchy & Expanded & Primary & Secondary & \multicolumn{1}{c}{Set of extended} \\
+index & \multicolumn{1}{c}{phrase} & prefix & prefix & \multicolumn{1}{c}{symbols} \\
+& & symbol & symbol & \\
+}
 0 & d              & $\lambda$ & $\lambda$ & \\
 1 & o              & $\lambda$ & $\lambda$ & [ (``d'', 4), (``o'', 5), y($\epsilon$, 2) ] \\
 4 & od             & 1         & 0         & \\
@@ -9,3 +15,15 @@
 9 & woody          & 8         & 5         & \\
 3 & y              & $\lambda$ & $\lambda$ & \\
 10 & \multicolumn{4}{c}{(End of phrase hierarchy)} \\
+{The additional symbol links required for the phrase hierarchy
+before starting phase 2b.  Primary and secondary prefix symbols
+are shown in the third and fourth columns, after the expanded
+symbols.  These symbols do not exist for primitives, and are
+indicated by the empty symbol, $\lambda$.
+In the last column, sets of extended symbols are either
+empty, or made up of at least two pairs, with the last pair
+being of the form $(\epsilon, \alpha)$.  Note that the pair
+$(\epsilon, 7)$ of symbol 2 points to symbol 7 and not 10.
+While symbols 7 to 9 start with ``w'', none of them have a
+primary prefix symbol of 2.}{Additional phrase hierarchy
+symbol links}{tab:remerge-phraselinks}

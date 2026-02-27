@@ -1,3 +1,10 @@
+##  Files specific to this repository
+latex_msgs
+t.pdf
+t.ps
+t2.ps
+t.uncited
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof

@@ -10,9 +10,11 @@
 LATEX	=	latex
 DVIPS	=	dvips
 BIBTEX	=	bibtex
+BIBER	=	biber
 JGRAPH	=	jgraph
 MKINDEX	=	makeindex
 PSNUP	=	psnup
+PSPDF	=	ps2pdf
 FIGDEV	=	fig2dev
 MAKEBIB =       ~/latex/bib/make-bib.pl
 
@@ -46,7 +48,7 @@ CH01	=	ch01/intro.tex ${CH01PST:.fig=.pstex} \
 		${CH01PST:.fig=.pstex_t} ${CH01EPS:.fig=.eps}
 CH02PST	=	
 CH02EPS =	ch02/modelcoder.fig  ch02/huffman.fig \
-		ch02/semistruct.fig ch02/arith.fig
+		ch02/arith.fig
 CH02	=	ch02/tc.tex ${CH02PST:.fig=.pstex} \
 		${CH02PST:.fig=.pstex_t} ${CH02EPS:.fig=.eps}
 CH03PST	=	ch03/repair-datastruct.fig ch03/repair-seqnode-a.fig \
@@ -129,7 +131,7 @@ bib:
 
 $(THESIS).dvi:  $(EXTRAS) $(NONCHAP) $(CHAPS)
 	$(LATEX) $(THESIS).tex
-	$(BIBTEX) -min-crossrefs=5 $(THESIS)
+	$(BIBER) -mincrossrefs 5 $(THESIS)
 #	$(MKINDEX) $(THESIS)
 	$(LATEX) $(THESIS).tex
 	$(LATEX) $(THESIS).tex 1>/dev/null 2>&1
@@ -137,12 +139,11 @@ $(THESIS).dvi:  $(EXTRAS) $(NONCHAP) $(CHAPS)
 
 $(DOC):  $(THESIS).dvi
 	$(DVIPS) $(THESIS).dvi -o $(DOC)
+	$(PSPDF) $(DOC) t.pdf
 	$(PSNUP) -2 $(THESIS).ps >t2.ps
-#	ps2pdf t2.ps ~/main/www_public/t2.pdf
-#	chmod ugo+r ~/main/www_public/t2.pdf
 
 clean:
-	rm -f -r *~ $(THESIS).dvi $(THESIS).ps
+	rm -f -r *~ $(THESIS).dvi $(THESIS).ps $(THESIS).pdf
 	rm -f -r *.bbl *.blg *.aux *.aux.bak *.dep *.log *.bak
 
 clobber:  clean
