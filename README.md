@@ -34,13 +34,20 @@ Compiling
 List of changes
 ---------------
 
-The changes to the original (i.e., where the original is the very first version in this Git repository) List of changes in order for the LaTeX file to compile in 2026 are:
+The list of changes to the original (i.e., where the original is the very first version in this Git repository) necessary to compile in 2026 are:
 
-* Replaced the deprecated [doublespace](https://ctan.org/pkg/doublespace?lang=en) package with [setspace](https://ctan.org/pkg/setspace).
+* Removed the deprecated [doublespace](https://ctan.org/pkg/doublespace?lang=en) and replaced it with the `\DoubleSpace` command from the Memoir class in `t.tex`.
 * Downloaded [psboxit.sty](https://ctan.org/pkg/psboxit?lang=en).
 * Removed `\setstretch{}` from the `\newchapter` command in `visual.sty`.
 * Changed `\begin{algorithm}[boxed,tbp]` to `\begin{algorithm}[tbp]`.
 * Changed `\dontprintsemicolon` to `\DontPrintSemicolon` in algorithm2e environments.
+* Used `biber` instead of `biblatex` in `t.tex`, `packages.tex`, and `Makefile`.  The `natbib` and `citeref` packages were also removed from `packages.tex`.
+* Renamed Chapter 1's `amper?.ps` to `.eps` (they were encapsulated PostScript files anyway).
+* Newer version of LaTeX seems to disallow `\input{}` just the body of a table.  Column headers and captions of these tables have been moved from the chapter's main text to the file `\input{}` in:  
+     * `ch03/woodchuck-short.tex`
+     * `ch04/woodchuck-short-wa.tex`
+     * `ch05/example2b-longph.tex`
+     * `ch05/phraselinks.tex`
 
 
 About PhD Thesis
