@@ -797,21 +797,7 @@ binary search on the entire phrase hierarchy, extended symbols permit
 sections of the phrase hierarchy to be isolated based on the 
 primitives that have already been compared.
 
-\tab{clcl}
-{
-Phrase & \multicolumn{1}{c}{Expanded} & Primary & \multicolumn{1}{c}{Set of extended} \\
-hierarchy & \multicolumn{1}{c}{phrase} & prefix & \multicolumn{1}{c}{symbols} \\
-index & & symbol & \\
-}
-{
 \input{./example2b-longph.tex}
-}
-{Binary search on the phrase hierarchy using
-extended symbols.  The numbering for the index (first column) is
-referred to by the third and fourth columns.  In the second column,
-every symbol has been expanded into primitives, and the entire phrase
-hierarchy has been sorted on this column.}{Binary searching a phrase
-hierarchy using extended symbols}{tab:remerge-example2b-longph}
 
 The steps performed for the example of 
 \tabref{tab:remerge-example2b-longph} is as follows.  
@@ -847,25 +833,7 @@ In case an $\epsilon$-pair points outside
 of the phrase hierarchy, an extra symbol has been added at
 position 10 of the phrase hierarchy.
 
-\tab{clccl}
-{
-Phrase hierarchy & Expanded & Primary & Secondary & \multicolumn{1}{c}{Set of extended} \\
-index & \multicolumn{1}{c}{phrase} & prefix & prefix & \multicolumn{1}{c}{symbols} \\
-& & symbol & symbol & \\
-}
-{\input{./phraselinks.tex}}
-{The additional symbol links required for the phrase hierarchy
-before starting phase 2b.  Primary and secondary prefix symbols
-are shown in the third and fourth columns, after the expanded 
-symbols.  These symbols do not exist for primitives, and are 
-indicated by the empty symbol, $\lambda$.
-In the last column, sets of extended symbols are either
-empty, or made up of at least two pairs, with the last pair
-being of the form $(\epsilon, \alpha)$.  Note that the pair 
-$(\epsilon, 7)$ of symbol 2 points to symbol 7 and not 10.
-While symbols 7 to 9 start with ``w'', none of them have a 
-primary prefix symbol of 2.}{Additional phrase hierarchy
-symbol links}{tab:remerge-phraselinks}
+%% \input{./phraselinks.tex}
 
 Phase 2b requires the phrase hierarchy to be sorted by
 strings of expanded symbols.  Then, symbols are linked

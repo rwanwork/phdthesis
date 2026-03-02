@@ -16,6 +16,9 @@
 %%  \makeglossary
 
 \begin{document}
+
+\DoubleSpacing  %%  Command from the memoir class
+
 \frontmatter
 \subimport*{}{front}
 
@@ -51,11 +54,12 @@
 %% \subimport*{app/}{expt}
 
 \backmatter
-\bibliographystyle{plainnat}
+%\bibliographystyle{plainnat}
 %%\bibintro{The pages which cite a bibliography entry are listed at the end
 %%of each entry in square parentheses.}
 \addcontentsline{toc}{chapter}{Bibliography}
-\bibliography{t}
+%\bibliography{t}
+\printbibliography
 
 %%  Uncomment to print an index out
 %%  2002/06/07
