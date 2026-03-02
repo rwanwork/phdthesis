@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+title: Browsing and Searching Compressed Documents
+message: 'If you use this thesis, please cite it as below.'
+authors:
+  - given-names: R
+    family-names: Wan
+type: "thesis"
+thesis-type: "PhD thesis"
+year: 2003
+date-released: 2004-04-20
+institution: "University of Melbourne"
+location: "Melbourne, Australia"
+url: "https://hdl.handle.net/11343/38920"
