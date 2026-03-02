@@ -29,15 +29,21 @@ After cloning this repository from GitHub using the `git clone` command, the fol
 Compiling
 ---------
 
-This PhD thesis was last compiled successfully using Ubuntu 25.10.  The software required were as follows, though earlier versions may work as well:
+This PhD thesis was last compiled successfully using Ubuntu 25.10.  The software used were as follows, though earlier and later versions may work as well:
 
-| Software                | Version                 | Required? | Ubuntu package      |
-|:-----------------------:|:-----------------------:|:---------:|:-------------------:|
-| GNU Make                | 4.4.1-2                 | Yes       | make                |
-| pdfTeX                  | 3.141592653-2.6-1.40.26 | Yes       | texlive-latex-base  |
-| dvips                   | 2024.1                  | Yes       | texlive-binaries    |
-| biber                   | 2.20-2                  | Yes       | biber               |
-| psnup                   | 3.3.8                   | Yes       | psutils             |
+| Software                | Version                 | Required? | Ubuntu package        |
+|:-----------------------:|:-----------------------:|:---------:|:---------------------:|
+| biber                   | 2.20-2                  | Yes       | biber                 |
+| dvips                   | 2024.1                  | Yes       | texlive-binaries      |
+| GNU Make                | 4.4.1-2                 | Yes       | make                  |
+| pdfTeX                  | 3.141592653-2.6-1.40.26 | Yes       | texlive-latex-base    |
+| psnup                   | 3.3.8                   | Yes       | psutils               |
+| texlive-bibtex-extra    | 2024.20250309-2         | Yes       | texlive-bibtex-extra  |
+| texlive-latex-extra     | 2024.20250309-2         | Yes       | texlive-latex-extra   |
+| texlive-pictures        | 2024.20250309-1         | Yes       | texlive-pictures      |
+| texlive-plain-generic   | 2024.20250309-2         | Yes       | texlive-plain-generic |
+| texlive-pstricks        | 2024.20250309-2         | Yes       | texlive-pstricks      |
+| texlive-science         | 2024.20250309-2         | Yes       | texlive-science       |
 
 Compile with the `make clean;make` command.
 
