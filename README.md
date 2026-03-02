@@ -29,6 +29,17 @@ After cloning this repository from GitHub using the `git clone` command, the fol
 Compiling
 ---------
 
+This PhD thesis was last compiled successfully using Ubuntu 25.10.  The software required were as follows, though earlier versions may work as well:
+
+| Software                | Version                 | Required? | Ubuntu package      |
+|:-----------------------:|:-----------------------:|:---------:|:-------------------:|
+| GNU Make                | 4.4.1-2                 | Yes       | make                |
+| pdfTeX                  | 3.141592653-2.6-1.40.26 | Yes       | texlive-latex-base  |
+| dvips                   | 2024.1                  | Yes       | texlive-binaries    |
+| biber                   | 2.20-2                  | Yes       | biber               |
+| psnup                   | 3.3.8                   | Yes       | psutils             |
+
+Compile with the `make clean;make` command.
 
 
 List of changes
@@ -43,11 +54,13 @@ The list of changes to the original (i.e., where the original is the very first 
 * Changed `\dontprintsemicolon` to `\DontPrintSemicolon` in algorithm2e environments.
 * Used `biber` instead of `biblatex` in `t.tex`, `packages.tex`, and `Makefile`.  The `natbib` and `citeref` packages were also removed from `packages.tex`.
 * Renamed Chapter 1's `amper?.ps` to `.eps` (they were encapsulated PostScript files anyway).
-* Newer version of LaTeX seems to disallow `\input{}` just the body of a table.  Column headers and captions of these tables have been moved from the chapter's main text to the file `\input{}` in:  
+* Newer version of LaTeX seems to disallow `\input{}` just the body of a table.  Column headers and captions of these tables have been moved from the chapter's main text to the file `\input{}` in:
      * `ch03/woodchuck-short.tex`
      * `ch04/woodchuck-short-wa.tex`
      * `ch05/example2b-longph.tex`
      * `ch05/phraselinks.tex`
+
+Note that the page numbers of the document obtained from the source do **not** line up exactly with the original in the `submit/` directory.  The double spacing being used now with the Memoir class is slightly different from what the `doublespace` package used to do.
 
 
 About PhD Thesis

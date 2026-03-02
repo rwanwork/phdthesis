@@ -329,12 +329,8 @@ LaTeX Font Warning: Font shape `OT1/cmr/m/scit' undefined
 
 [76] (./ch04/woodchuck-short-phrases.tex)
 [77] (/usr/share/texlive/texmf-dist/tex/latex/base/omscmr.fd)
-[78]
+[78] (./ch04/woodchuck-short-wa.tex) (./ch04/woodchuck-complete-wa-phrases.tex)
 
-LaTeX Warning: Reference `tab:woodchuck-short-wa' on page 79 undefined on input
- line 265.
-
-(./ch04/woodchuck-complete-wa-phrases.tex)
 [79]
 [80]
 [81] <ch04/./wordbased.eps>
@@ -359,15 +355,15 @@ LaTeX Warning: Reference `tab:woodchuck-short-wa' on page 79 undefined on input
 [99]
 [100]
 [101]
-[102] <ch04/./bargraph-all.eps>
-[103]
+[102]
+[103] <ch04/./bargraph-all.eps>
 [104]
 [105] (./ch04/./wsjhead-word-align.tex) (./ch04/./wsjhead-word-fcode-cs.tex)
 [106]
+[107]
 Overfull \hbox (3.15457pt too wide) in paragraph at lines 1540--1540
  [][] 
 
-[107]
 [108]) (./ch05/remerge.tex
 [109]
 [110]
@@ -397,43 +393,28 @@ Overfull \hbox (33.42503pt too wide) in paragraph at lines 1--543
 [126]
 [127]
 [128] (./ch05/./example2b-longph.tex)
-[129]
-
-LaTeX Warning: Reference `tab:remerge-phraselinks' on page 130 undefined on inp
-ut line 824.
-
-
+[129] (./ch05/./phraselinks.tex)
 [130]
 [131] (./ch05/./example2b-seq.pstex_t <ch05/example2b-seq.pstex>)
-
-LaTeX Warning: Reference `tab:remerge-phraselinks' on page 132 undefined on inp
-ut line 928.
-
-
 [132]
 [133]
-
-LaTeX Warning: Reference `tab:remerge-phraselinks' on page 134 undefined on inp
-ut line 991.
-
-(./ch05/./example2b-cutvertex1.pstex_t <ch05/example2b-cutvertex1.pstex>)
-(./ch05/./example2b-cutvertex2.pstex_t <ch05/example2b-cutvertex2.pstex>)
+[134] (./ch05/./example2b-cutvertex1.pstex_t <ch05/example2b-cutvertex1.pstex>)
+ (./ch05/./example2b-cutvertex2.pstex_t <ch05/example2b-cutvertex2.pstex>)
 (./ch05/./example2b-cutvertex3.pstex_t <ch05/example2b-cutvertex3.pstex>)
 (./ch05/./example2b-cutvertex4.pstex_t <ch05/example2b-cutvertex4.pstex>)
-[134] (./ch05/./alg-phase2b.tex)
+[135] (./ch05/./alg-phase2b.tex)
 Overfull \hbox (33.42503pt too wide) in paragraph at lines 1--1062
  []$[]$ 
 
-[135]
 [136]
 [137]
 [138]
 [139]
 [140]
-[141] (./ch05/./Bhashing-first.tex) (./ch05/./Bhashing-second.tex)
-[142]
-[143] (./ch05/./pa-2b.pstex_t <ch05/pa-2b.pstex>)
-[144]
+[141]
+[142] (./ch05/./Bhashing-first.tex) (./ch05/./Bhashing-second.tex)
+[143]
+[144] (./ch05/./pa-2b.pstex_t <ch05/pa-2b.pstex>)
 [145]
 [146]
 [147]
@@ -444,8 +425,8 @@ Overfull \hbox (33.42503pt too wide) in paragraph at lines 1--1062
 [152]
 [153]
 [154]
-[155] <ch05/./wsj-char-append.eps>
-[156]
+[155]
+[156] <ch05/./wsj-char-append.eps>
 [157]
 [158]
 [159] <ch05/./throughput.eps>
@@ -659,10 +640,7 @@ Package biblatex Warning: Month out of range or not an integer
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-
-LaTeX Warning: There were undefined references.
-
  )
 (see the transcript file for additional information)
-Output written on t.dvi (290 pages, 981736 bytes).
+Output written on t.dvi (290 pages, 988828 bytes).
 Transcript written on t.log.

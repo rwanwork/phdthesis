@@ -16,7 +16,6 @@ MKINDEX	=	makeindex
 PSNUP	=	psnup
 PSPDF	=	ps2pdf
 FIGDEV	=	fig2dev
-MAKEBIB =       ~/latex/bib/make-bib.pl
 
 
 ############################################################################
@@ -124,15 +123,9 @@ BIBINPUTS=
 
 all:  $(DOC) 
 
-bib:  
-	find  -name '*.tex' -exec grep "cite" {} \; >tmp
-	cat tmp | $(MAKEBIB) -b $(BIBPATH) -m 1 | sort | uniq | $(MAKEBIB) -b $(BIBPATH) -m 2 >$(THESIS).bib
-	rm -f tmp
-
 $(THESIS).dvi:  $(EXTRAS) $(NONCHAP) $(CHAPS)
 	$(LATEX) $(THESIS).tex
 	$(BIBER) -mincrossrefs 5 $(THESIS)
-#	$(MKINDEX) $(THESIS)
 	$(LATEX) $(THESIS).tex
 	$(LATEX) $(THESIS).tex 1>/dev/null 2>&1
 	$(LATEX) $(THESIS).tex 1>latex_msgs 2>&1
